@@ -1,0 +1,189 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content"
+    android:layout_marginBottom="24dp"
+    android:paddingStart="4dp"
+    android:paddingTop="4dp"
+    android:paddingEnd="6dp"
+    android:paddingBottom="10dp"
+    android:background="@drawable/bg_whitebox_dropsd"
+    android:orientation="vertical">
+
+    <!-- Colored header, tint set at runtime -->
+    <LinearLayout
+        android:id="@+id/headerContainer"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:background="@drawable/bg_card_header_lblue"
+        android:paddingStart="16dp"
+        android:paddingEnd="16dp"
+        android:paddingTop="8dp"
+        android:paddingBottom="8dp">
+
+        <TextView
+            android:id="@+id/tvSessionTitle"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:text="Calculus II Midterm Cram"
+            android:textStyle="bold"
+            android:textSize="20sp"
+            android:textColor="@color/graphite"
+            android:fontFamily="@font/bricolagegrotesque_bold" />
+
+    </LinearLayout>
+
+    <View
+        android:layout_width="match_parent"
+        android:layout_height="2dp"
+        android:background="@color/graphite" />
+
+    <!-- White body -->
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:orientation="vertical"
+        android:padding="16dp"
+        android:background="@color/white">
+
+        <TextView
+            android:id="@+id/tvSubtitle"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:text="MATH 220 • Homework 4 collaboration."
+            android:textSize="14sp"
+            android:textColor="@color/graphite"
+            android:fontFamily="@font/pjsans_regular" />
+
+        <!-- Meta row 1: time + spots -->
+        <androidx.constraintlayout.widget.ConstraintLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="8dp">
+
+            <TextView
+                android:id="@+id/tvTime"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="Today, 2:00 PM"
+                android:textStyle="bold"
+                android:textSize="14sp"
+                android:textColor="@color/graphite"
+                android:drawableStart="@drawable/ic_clock"
+                android:drawablePadding="8dp"
+                android:fontFamily="@font/bricolagegrotesque_bold"
+                app:layout_constraintTop_toTopOf="parent"
+                app:layout_constraintStart_toStartOf="parent" />
+
+            <TextView
+                android:id="@+id/tvSpots"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="4/6 Spots"
+                android:textStyle="bold"
+                android:textSize="14sp"
+                android:textColor="@color/graphite"
+                android:drawableStart="@drawable/ic_ppl"
+                android:drawablePadding="8dp"
+                android:fontFamily="@font/bricolagegrotesque_bold"
+                app:layout_constraintTop_toTopOf="@id/tvTime"
+                app:layout_constraintEnd_toEndOf="parent" />
+
+        </androidx.constraintlayout.widget.ConstraintLayout>
+
+        <!-- Meta row 2: location + duration -->
+        <androidx.constraintlayout.widget.ConstraintLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="8dp">
+
+            <TextView
+                android:id="@+id/tvLocation"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="Library 9th Floor (0.2m)"
+                android:textStyle="bold"
+                android:textSize="14sp"
+                android:textColor="@color/graphite"
+                android:drawableStart="@drawable/ic_location_pin"
+                android:drawablePadding="8dp"
+                android:fontFamily="@font/bricolagegrotesque_bold"
+                app:layout_constraintTop_toTopOf="parent"
+                app:layout_constraintStart_toStartOf="parent" />
+
+            <TextView
+                android:id="@+id/tvDuration"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="2 hours"
+                android:textStyle="bold"
+                android:textSize="14sp"
+                android:textColor="@color/graphite"
+                android:drawableStart="@drawable/ic_timer"
+                android:drawablePadding="8dp"
+                android:fontFamily="@font/bricolagegrotesque_bold"
+                app:layout_constraintTop_toTopOf="@id/tvLocation"
+                app:layout_constraintEnd_toEndOf="parent" />
+
+        </androidx.constraintlayout.widget.ConstraintLayout>
+
+        <!-- Tag chips -->
+        <LinearLayout
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="8dp"
+            android:orientation="horizontal">
+
+            <TextView
+                android:id="@+id/tagType"
+                android:layout_width="wrap_content"
+                android:layout_height="28dp"
+                android:background="@drawable/bg_pill_unselected"
+                android:text="MIDTERM"
+                android:textStyle="bold"
+                android:textSize="12sp"
+                android:gravity="center"
+                android:paddingStart="8dp"
+                android:paddingEnd="8dp"
+                android:paddingTop="4dp"
+                android:paddingBottom="4dp"
+                android:fontFamily="@font/bricolagegrotesque_bold" />
+
+            <TextView
+                android:id="@+id/tagCourse"
+                android:layout_width="wrap_content"
+                android:layout_height="28dp"
+                android:layout_marginStart="10dp"
+                android:background="@drawable/bg_pill_unselected"
+                android:text="MTH252"
+                android:textStyle="bold"
+                android:textSize="12sp"
+                android:gravity="center"
+                android:paddingStart="8dp"
+                android:paddingEnd="8dp"
+                android:paddingTop="4dp"
+                android:paddingBottom="4dp"
+                android:fontFamily="@font/bricolagegrotesque_bold" />
+
+            <TextView
+                android:id="@+id/tagEffort"
+                android:layout_width="wrap_content"
+                android:layout_height="28dp"
+                android:layout_marginStart="10dp"
+                android:background="@drawable/bg_pill_unselected"
+                android:text="Grind"
+                android:textStyle="bold"
+                android:textSize="12sp"
+                android:gravity="center"
+                android:paddingStart="8dp"
+                android:paddingEnd="8dp"
+                android:paddingTop="4dp"
+                android:paddingBottom="4dp"
+                android:fontFamily="@font/bricolagegrotesque_bold" />
+
+        </LinearLayout>
+
+    </LinearLayout>
+
+</LinearLayout>

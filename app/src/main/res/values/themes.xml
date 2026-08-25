@@ -6,6 +6,6 @@
       the screens rely on (TextInputLayout, ChipGroup, MaterialDatePicker)
       crash at inflation time under a plain platform theme.
     -->
-    <style name="Theme.StudyFinder" parent="Theme.Material3.DayNight.NoActionBar" />
+    <style name="Theme.StudyFinder" parent="Theme.MaterialComponents.Light.NoActionBar" />
 
 </resources>

@@ -1,0 +1,28 @@
+<?xml version="1.0" encoding="utf-8"?>
+<layer-list xmlns:android="http://schemas.android.com/apk/res/android">
+
+    <!-- shadow layer (offset black shape) -->
+    <item android:left="4dp"
+        android:top="4dp">
+        <shape android:shape="rectangle">
+            <solid android:color="@color/graphite" />
+            <corners android:radius="9999dp" />
+        </shape>
+    </item>
+
+    <!-- foreground card layer -->
+    <item
+        android:top="1dp"
+        android:left="1dp"
+        android:bottom="4dp"
+        android:right="4dp">
+        <shape android:shape="rectangle">
+            <solid android:color="@color/ginkgo_yellow" />
+            <stroke
+                android:width="3dp"
+                android:color="@color/graphite" />
+            <corners android:radius="9999dp" />
+        </shape>
+    </item>
+
+</layer-list>

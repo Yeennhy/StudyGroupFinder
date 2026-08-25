@@ -1,8 +1,223 @@
 <?xml version="1.0" encoding="utf-8"?>
-<!-- Skeleton: layout is intentionally empty. See the fragment's KDoc for what
-     goes here. -->
 <androidx.constraintlayout.widget.ConstraintLayout
     xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    android:padding="@dimen/spacing_medium" />
+    android:background="@drawable/bg_dotted_paper_brown">
+
+    <!-- White card frame, already has shadow drawable -->
+    <androidx.constraintlayout.widget.ConstraintLayout
+        android:id="@+id/cardLogin"
+        android:layout_width="0dp"
+        android:layout_height="wrap_content"
+        android:layout_marginStart="32dp"
+        android:layout_marginEnd="32dp"
+        android:background="@drawable/bg_whitebox_dropsd"
+        android:padding="32dp"
+        app:layout_constraintBottom_toBottomOf="parent"
+        app:layout_constraintTop_toTopOf="parent"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintVertical_bias="0.4">
+
+        <!-- Logo -->
+        <TextView
+            android:id="@+id/tvLogo"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="StudyCohort"
+            android:textSize="40sp"
+            android:textStyle="bold"
+            android:fontFamily="@font/bricolagegrotesque_bold"
+            android:textColor="@color/theme_blue"
+            app:layout_constraintTop_toTopOf="parent"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintEnd_toEndOf="parent" />
+
+        <!-- Tagline -->
+        <TextView
+            android:id="@+id/tvTagline"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="8dp"
+            android:text="Study smarter, together"
+            android:textSize="14sp"
+            android:fontFamily="@font/pjsans_regular"
+            android:textColor="@color/graphite"
+            app:layout_constraintTop_toBottomOf="@id/tvLogo"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintEnd_toEndOf="parent" />
+
+        <!-- Divider -->
+        <View
+            android:id="@+id/dividerTop"
+            android:layout_width="0dp"
+            android:layout_height="1dp"
+            android:layout_marginTop="32dp"
+            android:background="@color/graphite"
+            app:layout_constraintTop_toBottomOf="@id/tvTagline"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintEnd_toEndOf="parent" />
+
+        <!-- Email field -->
+        <EditText
+            android:id="@+id/etEmail"
+            android:layout_width="0dp"
+            android:layout_height="52dp"
+            android:layout_marginTop="32dp"
+            android:background="@drawable/bg_input_field"
+            android:hint="Email Address"
+            android:inputType="textEmailAddress"
+            android:drawableStart="@drawable/ic_mail"
+            android:drawablePadding="12dp"
+            android:paddingStart="16dp"
+            android:paddingEnd="16dp"
+            android:gravity="center_vertical"
+            android:textSize="16sp"
+            android:singleLine="true"
+            android:fontFamily="@font/bricolagegrotesque_regular"
+            app:layout_constraintTop_toBottomOf="@id/dividerTop"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintEnd_toEndOf="parent" />
+
+        <!-- Email error -->
+        <TextView
+            android:id="@+id/tvEmailError"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="10dp"
+            android:text="Invalid email address"
+            android:textColor="@color/theme_clay"
+            android:textStyle="bold"
+            android:textSize="12sp"
+            android:fontFamily="@font/pjsans_bold"
+            android:drawableStart="@drawable/ic_warning"
+            android:drawablePadding="8dp"
+            android:drawableTint="@color/theme_clay"
+            android:gravity="center_vertical"
+            app:layout_constraintTop_toBottomOf="@id/etEmail"
+            app:layout_constraintStart_toStartOf="parent" />
+
+        <!-- Password field -->
+        <EditText
+            android:id="@+id/etPassword"
+            android:layout_width="0dp"
+            android:layout_height="56dp"
+            android:layout_marginTop="14dp"
+            android:background="@drawable/bg_input_field"
+            android:hint="Password"
+            android:inputType="textPassword"
+            android:drawableStart="@drawable/ic_lock"
+            android:drawablePadding="12dp"
+            android:paddingStart="16dp"
+            android:paddingEnd="16dp"
+            android:gravity="center_vertical"
+            android:fontFamily="@font/bricolagegrotesque_regular"
+            android:textSize="16sp"
+            android:singleLine="true"
+            app:layout_constraintTop_toBottomOf="@id/tvEmailError"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintEnd_toEndOf="parent" />
+
+
+        <!-- Confirm Password field -->
+        <EditText
+            android:id="@+id/etCfPassword"
+            android:layout_width="0dp"
+            android:layout_height="56dp"
+            android:layout_marginTop="16dp"
+            android:background="@drawable/bg_input_field"
+            android:hint="Confirm Password"
+            android:inputType="textPassword"
+            android:drawableStart="@drawable/ic_lock"
+            android:drawablePadding="12dp"
+            android:paddingStart="16dp"
+            android:paddingEnd="16dp"
+            android:gravity="center_vertical"
+            android:fontFamily="@font/bricolagegrotesque_regular"
+            android:textSize="16sp"
+            android:singleLine="true"
+            app:layout_constraintTop_toBottomOf="@id/etPassword"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintEnd_toEndOf="parent" />
+
+        <!-- Password error -->
+        <TextView
+            android:id="@+id/tvPasswordError"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="10dp"
+            android:text="Confirmation doesn't match password"
+            android:textColor="@color/theme_clay"
+            android:textStyle="bold"
+            android:textSize="13sp"
+            android:drawableStart="@drawable/ic_warning"
+            android:drawablePadding="8dp"
+            android:drawableTint="@color/theme_clay"
+            android:gravity="center_vertical"
+            app:layout_constraintTop_toBottomOf="@id/etCfPassword"
+            app:layout_constraintStart_toStartOf="parent" />
+        <!-- Log in button -->
+        <com.google.android.material.button.MaterialButton
+            android:id="@+id/btnLogin"
+            android:layout_width="0dp"
+            android:layout_height="56dp"
+            android:layout_marginTop="18dp"
+            android:text="Sign Up"
+            android:textAllCaps="false"
+            android:textStyle="bold"
+            android:textSize="20sp"
+            android:fontFamily="@font/bricolagegrotesque_bold"
+            android:textColor="@color/graphite"
+            app:backgroundTint="@null"
+            android:background="@drawable/bg_yellow_btn"
+            app:layout_constraintTop_toBottomOf="@id/tvPasswordError"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintEnd_toEndOf="parent" />
+
+        <!-- Divider -->
+        <View
+            android:id="@+id/dividerBottom"
+            android:layout_width="0dp"
+            android:layout_height="1dp"
+            android:layout_marginTop="32dp"
+            android:background="@color/graphite"
+            app:layout_constraintTop_toBottomOf="@id/btnLogin"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintEnd_toEndOf="parent" />
+
+        <!-- Sign up row -->
+        <TextView
+            android:id="@+id/tvSignUpPrompt"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="24dp"
+            android:layout_marginBottom="4dp"
+            android:text="Already have an account?"
+            android:textColor="@color/graphite"
+            android:textSize="14sp"
+            app:layout_constraintTop_toBottomOf="@id/dividerBottom"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintEnd_toStartOf="@id/tvSignUp"
+            app:layout_constraintHorizontal_chainStyle="packed"
+            app:layout_constraintBottom_toBottomOf="parent" />
+
+        <TextView
+            android:id="@+id/tvSignUp"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginStart="6dp"
+            android:text="Sign in"
+            android:textStyle="bold"
+            android:textColor="@color/graphite"
+            android:textSize="14sp"
+            app:layout_constraintTop_toTopOf="@id/tvSignUpPrompt"
+            app:layout_constraintStart_toEndOf="@id/tvSignUpPrompt"
+            app:layout_constraintEnd_toEndOf="parent"
+            app:layout_constraintBottom_toBottomOf="@id/tvSignUpPrompt" />
+
+    </androidx.constraintlayout.widget.ConstraintLayout>
+
+</androidx.constraintlayout.widget.ConstraintLayout>
