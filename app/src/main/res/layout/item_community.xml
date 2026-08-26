@@ -1,7 +1,110 @@
 <?xml version="1.0" encoding="utf-8"?>
-<!-- Skeleton: row layout is intentionally empty. -->
-<androidx.constraintlayout.widget.ConstraintLayout
-    xmlns:android="http://schemas.android.com/apk/res/android"
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
     android:layout_width="match_parent"
     android:layout_height="wrap_content"
-    android:padding="@dimen/spacing_medium" />
+    xmlns:tools="http://schemas.android.com/tools"
+    android:layout_margin="6dp"
+    android:orientation="vertical"
+    android:padding="12dp"
+    android:background="@drawable/bg_bluebox_dropsd_lite">
+
+
+
+    <!-- Photo window (fixed-size polaroid-style frame) -->
+    <FrameLayout
+        android:id="@+id/logoWindow"
+        android:layout_width="match_parent"
+        android:layout_height="140dp"
+        android:background="@drawable/bg_photo_frame">
+
+        <ImageView
+            android:id="@+id/ivLogo"
+            android:layout_width="match_parent"
+            android:layout_height="match_parent"
+            android:scaleType="centerCrop"
+            android:contentDescription="Community logo"
+            tools:ignore="ContentDescription" />
+
+    </FrameLayout>
+
+    <!-- Name -->
+    <TextView
+        android:id="@+id/tvCommunityName"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="8dp"
+        android:text="University of Science"
+        android:textStyle="bold"
+        android:textSize="16sp"
+        android:textColor="@color/graphite"
+        android:fontFamily="@font/bricolagegrotesque_bold" />
+
+    <!-- Location -->
+    <TextView
+        android:id="@+id/tvLocation"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="2dp"
+        android:text="Cho Quan, HCMC"
+        android:textSize="12sp"
+        android:drawableStart="@drawable/ic_location_pin"
+        android:drawablePadding="4dp"
+        android:textColor="@color/graphite"
+        android:fontFamily="@font/pjsans_medium" />
+
+    <!-- Member count -->
+    <TextView
+        android:id="@+id/tvMembers"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="8dp"
+        android:text="12k Members"
+        android:textStyle="bold"
+        android:textSize="14sp"
+        android:textColor="@color/graphite"
+        android:fontFamily="@font/bricolagegrotesque_bold" />
+
+    <!-- Join button -->
+    <FrameLayout
+        android:id="@+id/btnJoinCommunity"
+        android:layout_width="match_parent"
+        android:layout_height="36dp"
+        android:layout_marginTop="8dp"
+        android:background="@drawable/bg_white_btn_lite"
+        android:foreground="?attr/selectableItemBackground"
+        android:clickable="true"
+        android:focusable="true">
+
+        <LinearLayout
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_gravity="center"
+            android:orientation="horizontal"
+            android:gravity="center_vertical">
+
+            <ImageView
+                android:id="@+id/ivJoinCheck"
+                android:layout_width="20dp"
+                android:layout_height="20dp"
+                android:layout_marginEnd="8dp"
+                android:src="@drawable/ic_full_check"
+                android:visibility="gone"
+                tools:visibility="visible" />
+
+            <TextView
+                android:id="@+id/tvJoinLabel"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="Join Community"
+                android:paddingBottom="2dp"
+                android:textStyle="bold"
+                android:textSize="12sp"
+                android:textColor="@color/graphite"
+                android:fontFamily="@font/pjsans_bold" />
+
+        </LinearLayout>
+
+    </FrameLayout>
+
+</LinearLayout>
