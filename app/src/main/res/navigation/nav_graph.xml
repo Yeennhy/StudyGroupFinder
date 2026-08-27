@@ -216,7 +216,7 @@
         android:id="@+id/mySessionsFragment"
         android:name="com.studyfinder.app.ui.mysessions.MySessionsFragment"
         android:label="@string/title_my_sessions"
-        tools:layout="@layout/fragment_my_sessions">
+        tools:layout="@layout/fragment_my_sessions_list">
 
         <action
             android:id="@+id/action_mySessionsFragment_to_sessionDetailFragment"
