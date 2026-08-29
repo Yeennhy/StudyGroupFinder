@@ -9,4 +9,7 @@
     <cache-path
         name="exports"
         path="exports/" />
+    <cache-path
+        name="images"
+        path="images/" />
 </paths>

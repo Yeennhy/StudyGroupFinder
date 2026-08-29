@@ -89,12 +89,13 @@ class SignupFragment : Fragment() {
                 }
                 is ActionResult.Success -> {
                     Toast.makeText(context, "Account created!", Toast.LENGTH_SHORT).show()
+                    viewModel.signOut()
                     findNavController().navigate(
                         SignupFragmentDirections.actionSignupFragmentToSuccessFragment(
-                            message = "Account Created",
+                            message = "Account Created Successfully",
                             subtitle = "Welcome to StudyCohort!",
-                            buttonText = "Select Community",
-                            isSignupSuccess = true
+                            buttonText = "Back to Login",
+                            isSignupSuccess = false
                         )
                     )
                 }
