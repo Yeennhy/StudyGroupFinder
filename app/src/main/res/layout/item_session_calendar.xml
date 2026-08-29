@@ -106,13 +106,18 @@
             android:fontFamily="@font/pjsans_regular" />
 
         <!-- View Details button — same style/format as btnJoinSession / btnSaveChanges -->
-        <TextView
+        <com.google.android.material.button.MaterialButton
             android:id="@+id/btnViewDetails"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:layout_marginTop="12dp"
             android:background="@drawable/bg_yellow_btn_lite"
+            app:backgroundTint="@null"
+            android:insetTop="0dp"
+            android:insetBottom="0dp"
+            android:minHeight="0dp"
             android:text="View Details"
+            android:textAllCaps="false"
             android:textStyle="bold"
             android:textSize="14sp"
             android:textColor="@color/graphite"
@@ -120,9 +125,7 @@
             android:paddingTop="10dp"
             android:paddingBottom="12dp"
             android:includeFontPadding="false"
-            android:fontFamily="@font/pjsans_bold"
-            android:clickable="true"
-            android:focusable="true" />
+            android:fontFamily="@font/pjsans_bold" />
 
     </LinearLayout>
 

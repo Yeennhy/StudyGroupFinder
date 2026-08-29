@@ -22,6 +22,7 @@ sealed interface UiState<out T> {
 
 /** Result of a one-shot action (join, approve, upload) rather than a stream. */
 sealed interface ActionResult {
+    data object Idle : ActionResult
     data object Success : ActionResult
     data class Failure(val message: String, val cause: Throwable? = null) : ActionResult
 }

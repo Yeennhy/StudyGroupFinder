@@ -25,6 +25,10 @@ class AuthViewModel : ViewModel() {
         // Implementation logic can be added later
     }
 
+    fun clearResult() {
+        _result.value = ActionResult.Idle
+    }
+
     fun signIn(email: String, password: String) {
         viewModelScope.launch {
             _result.value = authRepository.signIn(email, password)

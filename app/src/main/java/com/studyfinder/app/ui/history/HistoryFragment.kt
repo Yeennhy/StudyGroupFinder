@@ -35,7 +35,7 @@ class HistoryFragment : Fragment() {
 
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
-        setupHeader(binding.appHeader, "History", showHistory = false)
+        setupHeader(binding.appHeader, "History", showHistory = false, showBackBtn = true, showAvatar = false)
         // §7.6 Implementation: past list.
     }
 

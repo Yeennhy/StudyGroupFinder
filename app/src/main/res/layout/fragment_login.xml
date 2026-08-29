@@ -69,6 +69,7 @@
             android:layout_marginTop="32dp"
             android:background="@drawable/bg_input_field"
             android:hint="Email Address"
+            android:textColor="@color/graphite"
             android:inputType="textEmailAddress"
             android:drawableStart="@drawable/ic_mail"
             android:drawablePadding="12dp"
@@ -97,6 +98,7 @@
             android:drawablePadding="8dp"
             android:drawableTint="@color/theme_clay"
             android:gravity="center_vertical"
+            android:visibility="gone"
             app:layout_constraintTop_toBottomOf="@id/etEmail"
             app:layout_constraintStart_toStartOf="parent" />
 
@@ -108,6 +110,7 @@
             android:layout_marginTop="14dp"
             android:background="@drawable/bg_input_field"
             android:hint="Password"
+            android:textColor="@color/graphite"
             android:inputType="textPassword"
             android:drawableStart="@drawable/ic_lock"
             android:drawablePadding="12dp"
@@ -135,6 +138,7 @@
             android:drawablePadding="8dp"
             android:drawableTint="@color/theme_clay"
             android:gravity="center_vertical"
+            android:visibility="gone"
             app:layout_constraintTop_toBottomOf="@id/etPassword"
             app:layout_constraintStart_toStartOf="parent" />
 

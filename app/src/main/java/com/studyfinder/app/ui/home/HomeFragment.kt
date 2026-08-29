@@ -38,7 +38,7 @@ class HomeFragment : Fragment() {
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
         setupNavbar(binding.navBar)
-        setupHeader(binding.appHeader, "Home", showHistory = true)
+        setupHeader(binding.appHeader, "Home", showHistory = true, showBackBtn = false, showAvatar = true)
         // §7.2 Implementation: adapter, sort toggle, search, both chip groups, etc.
     }
 

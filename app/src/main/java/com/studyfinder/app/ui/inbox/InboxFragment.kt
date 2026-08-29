@@ -40,7 +40,7 @@ class InboxFragment : Fragment() {
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
         setupNavbar(binding.navBar)
-        setupHeader(binding.header, "Inbox", showHistory = true)
+        setupHeader(binding.header, "Inbox", showHistory = true, showBackBtn = false, showAvatar = false)
         // §7.8 Implementation: inbox list, hide blocked, etc.
     }
 

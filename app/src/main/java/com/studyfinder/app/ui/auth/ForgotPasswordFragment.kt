@@ -1,12 +1,17 @@
 package com.studyfinder.app.ui.auth
 
+import android.graphics.Paint
 import android.os.Bundle
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
+import android.widget.Toast
+import androidx.core.view.isVisible
 import androidx.fragment.app.Fragment
 import androidx.fragment.app.viewModels
+import androidx.navigation.fragment.findNavController
 import com.studyfinder.app.databinding.FragmentForgotPasswordBinding
+import com.studyfinder.app.util.ActionResult
 
 /**
  * `sendPasswordResetEmail()` behind one field (§7.0).
@@ -31,7 +36,53 @@ class ForgotPasswordFragment : Fragment() {
 
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
-        // §7.0 Implementation: forgot password wiring.
+        
+        // Clear previous state
+        viewModel.clearResult()
+        binding.tvEmailError.isVisible = false
+
+        // Apply underlines
+        binding.tvSignUp.paintFlags = binding.tvSignUp.paintFlags or Paint.UNDERLINE_TEXT_FLAG
+
+        binding.btnLogin.setOnClickListener {
+            val email = binding.etEmail.text.toString().trim()
+            
+            if (email.isEmpty()) {
+                binding.tvEmailError.text = "Email is required"
+                binding.tvEmailError.isVisible = true
+            } else {
+                binding.tvEmailError.isVisible = false
+                viewModel.sendPasswordReset(email)
+            }
+        }
+
+        binding.tvSignUp.setOnClickListener {
+            findNavController().popBackStack()
+        }
+
+        // Observe results
+        viewModel.result.observe(viewLifecycleOwner) { result ->
+            when (result) {
+                is ActionResult.Idle -> {
+                    binding.tvEmailError.isVisible = false
+                }
+                is ActionResult.Success -> {
+                    Toast.makeText(context, "Recovery email sent!", Toast.LENGTH_LONG).show()
+                    findNavController().navigate(
+                        ForgotPasswordFragmentDirections.actionForgotPasswordFragmentToSuccessFragment(
+                            message = "Recovery Email Sent",
+                            subtitle = "Don't forget to check for spam!",
+                            buttonText = "Back to Login",
+                            isSignupSuccess = false
+                        )
+                    )
+                }
+                is ActionResult.Failure -> {
+                    binding.tvEmailError.text = result.message
+                    binding.tvEmailError.isVisible = true
+                }
+            }
+        }
     }
 
     override fun onDestroyView() {

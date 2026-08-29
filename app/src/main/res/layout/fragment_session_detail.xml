@@ -260,6 +260,7 @@
                         android:layout_height="wrap_content"
                         android:layout_marginTop="8dp"
                         android:text="- Goal 1\n- Goal 2\n- Goal 3"
+                        android:textColor="@color/graphite"
                         android:maxLines="10"
                         android:lineHeight="24sp"
                         android:ellipsize="end"
@@ -523,7 +524,7 @@
             </LinearLayout>
 
             <!-- ===== Join Session button ===== -->
-            <TextView
+            <com.google.android.material.button.MaterialButton
                 android:id="@+id/btnJoinSession"
                 android:layout_width="0dp"
                 android:layout_height="wrap_content"
@@ -532,7 +533,12 @@
                 android:layout_marginEnd="20dp"
                 android:layout_marginBottom="24dp"
                 android:background="@drawable/bg_yellow_btn"
+                app:backgroundTint="@null"
+                android:insetTop="0dp"
+                android:insetBottom="0dp"
+                android:minHeight="0dp"
                 android:text="Join Session"
+                android:textAllCaps="false"
                 android:textStyle="bold"
                 android:textSize="20sp"
                 android:textColor="@color/graphite"
@@ -541,8 +547,6 @@
                 android:paddingBottom="12dp"
                 android:includeFontPadding="false"
                 android:fontFamily="@font/bricolagegrotesque_bold"
-                android:clickable="true"
-                android:focusable="true"
                 app:layout_constraintTop_toBottomOf="@id/cardAttendees"
                 app:layout_constraintStart_toStartOf="parent"
                 app:layout_constraintEnd_toEndOf="parent"

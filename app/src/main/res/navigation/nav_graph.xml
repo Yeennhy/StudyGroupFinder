@@ -78,13 +78,52 @@
             app:destination="@id/communitySelectionFragment"
             app:popUpTo="@id/loginFragment"
             app:popUpToInclusive="true" />
+        <action
+            android:id="@+id/action_signupFragment_to_successFragment"
+            app:destination="@id/successFragment"
+            app:popUpTo="@id/loginFragment"
+            app:popUpToInclusive="true" />
     </fragment>
 
     <fragment
         android:id="@+id/forgotPasswordFragment"
         android:name="com.studyfinder.app.ui.auth.ForgotPasswordFragment"
         android:label="@string/title_forgot_password"
-        tools:layout="@layout/fragment_forgot_password" />
+        tools:layout="@layout/fragment_forgot_password">
+        <action
+            android:id="@+id/action_forgotPasswordFragment_to_successFragment"
+            app:destination="@id/successFragment" />
+    </fragment>
+
+    <fragment
+        android:id="@+id/successFragment"
+        android:name="com.studyfinder.app.ui.auth.SuccessFragment"
+        android:label="Success"
+        tools:layout="@layout/fragment_success">
+        <argument
+            android:name="message"
+            app:argType="string" />
+        <argument
+            android:name="subtitle"
+            app:argType="string" />
+        <argument
+            android:name="buttonText"
+            app:argType="string" />
+        <argument
+            android:name="isSignupSuccess"
+            android:defaultValue="false"
+            app:argType="boolean" />
+        <action
+            android:id="@+id/action_successFragment_to_communitySelectionFragment"
+            app:destination="@id/communitySelectionFragment"
+            app:popUpTo="@id/nav_graph"
+            app:popUpToInclusive="true" />
+        <action
+            android:id="@+id/action_successFragment_to_loginFragment"
+            app:destination="@id/loginFragment"
+            app:popUpTo="@id/nav_graph"
+            app:popUpToInclusive="true" />
+    </fragment>
 
     <!-- ====================== community selection (§7.1) ==================== -->
 

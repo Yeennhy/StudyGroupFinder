@@ -40,7 +40,7 @@ class MySessionsFragment : Fragment() {
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
         setupNavbar(binding.navBar)
-        setupHeader(binding.appHeader, "My Sessions", showHistory = true)
+        setupHeader(binding.appHeader, "My Sessions", showHistory = true, showBackBtn = false, showAvatar = false)
         // §7.6 Implementation: list/calendar views.
     }
 

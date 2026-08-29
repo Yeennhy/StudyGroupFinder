@@ -22,7 +22,8 @@
         android:foreground="?attr/selectableItemBackground"
         app:layout_constraintBottom_toBottomOf="parent"
         app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toTopOf="parent">
+        app:layout_constraintTop_toTopOf="parent"
+        android:visibility="gone">
 
     <ImageButton
         android:id="@+id/back_btn"
@@ -43,12 +44,11 @@
         android:layout_height="40dp"
         app:cardCornerRadius="9999dp"
         app:cardElevation="0dp"
-        app:strokeWidth="4dp"
+        app:strokeWidth="2.5dp"
         app:strokeColor="@color/graphite"
         android:clickable="true"
         android:focusable="true"
         android:foreground="?attr/selectableItemBackground"
-        android:visibility="gone"
         app:layout_constraintBottom_toBottomOf="parent"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toTopOf="parent">
@@ -59,7 +59,7 @@
             android:layout_height="match_parent"
             android:src="@drawable/ic_profile"
             android:scaleType="fitCenter"
-            android:padding="8dp"
+            android:padding="10dp"
             app:tint="@color/graphite"
             android:clickable="false"
             android:focusable="false"
