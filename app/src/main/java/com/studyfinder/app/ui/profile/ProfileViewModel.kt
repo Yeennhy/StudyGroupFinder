@@ -1,23 +1,53 @@
 package com.studyfinder.app.ui.profile
 
 import android.net.Uri
+import androidx.lifecycle.LiveData
+import androidx.lifecycle.MutableLiveData
 import androidx.lifecycle.ViewModel
+import androidx.lifecycle.asLiveData
+import androidx.lifecycle.viewModelScope
 import com.studyfinder.app.ServiceLocator
 import com.studyfinder.app.model.UserProfile
+import com.studyfinder.app.util.ActionResult
+import com.studyfinder.app.util.UiState
+import kotlinx.coroutines.ExperimentalCoroutinesApi
+import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.flatMapLatest
+import kotlinx.coroutines.launch
 
 /** §7.7. */
+@OptIn(ExperimentalCoroutinesApi::class)
 class ProfileViewModel : ViewModel() {
 
     private val profileRepository = ServiceLocator.profileRepository
     private val authRepository = ServiceLocator.authRepository
 
+    private val uidFlow = MutableStateFlow<String?>(null)
+
+    val profile: LiveData<UiState<UserProfile>> = uidFlow.flatMapLatest { uid ->
+        if (uid == null) {
+            profileRepository.observeCurrentProfile()
+        } else {
+            profileRepository.observeProfile(uid)
+        }
+    }.asLiveData()
+
+    private val _saveResult = MutableLiveData<ActionResult>(ActionResult.Idle)
+    val saveResult: LiveData<ActionResult> = _saveResult
+
     /** null uid = self view. */
     fun start(uid: String?) {
-        TODO("§7.7")
+        uidFlow.value = uid
     }
 
     fun save(profile: UserProfile) {
-        TODO("§7.7")
+        viewModelScope.launch {
+            _saveResult.value = profileRepository.updateProfile(profile)
+        }
+    }
+
+    fun clearSaveResult() {
+        _saveResult.value = ActionResult.Idle
     }
 
     /** Same Storage path for both the camera Intent and the Photo Picker. */

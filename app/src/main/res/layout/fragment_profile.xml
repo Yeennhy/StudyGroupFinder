@@ -78,31 +78,28 @@
 
                     </com.google.android.material.card.MaterialCardView>
 
-                    <com.google.android.material.card.MaterialCardView
+                    <com.google.android.material.button.MaterialButton
                         android:id="@+id/btnEditAvatar"
                         android:layout_width="40dp"
                         android:layout_height="40dp"
                         android:layout_gravity="bottom|end"
-                        app:cardCornerRadius="9999dp"
-                        app:cardElevation="0dp"
-                        app:cardBackgroundColor="@color/ginkgo_yellow"
-                        app:strokeWidth="2.5dp"
-                        app:strokeColor="@color/graphite"
+                        android:background="@drawable/bg_fab_lite"
+                        app:backgroundTint="@null"
+                        android:insetTop="0dp"
+                        android:insetBottom="3dp"
+                        android:insetLeft="7dp"
+                        android:insetRight="0dp"
+                        app:icon="@drawable/ic_edit_pencil"
+                        app:iconSize="18dp"
+                        app:iconTint="@color/graphite"
+                        app:iconGravity="textStart"
+                        android:padding="0dp"
+                        android:minHeight="0dp"
+                        android:minWidth="0dp"
                         android:clickable="true"
                         android:focusable="true"
-                        android:foreground="?attr/selectableItemBackground">
-
-                        <ImageView
-                            android:layout_width="20dp"
-                            android:layout_height="20dp"
-                            android:layout_gravity="center"
-                            android:src="@drawable/ic_edit_pencil"
-                            app:tint="@color/graphite"
-                            android:padding="3dp"
-                            android:contentDescription="Edit profile picture"
-                            tools:ignore="ContentDescription" />
-
-                    </com.google.android.material.card.MaterialCardView>
+                        android:visibility="gone"
+                        tools:visibility="visible" />
 
                 </FrameLayout>
 
@@ -117,11 +114,24 @@
                     android:textColor="@color/graphite"
                     android:fontFamily="@font/bricolagegrotesque_bold" />
 
+                <EditText
+                    android:id="@+id/etProfileName"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="8dp"
+                    android:background="@drawable/bg_input_field"
+                    android:padding="12dp"
+                    android:textSize="18sp"
+                    android:textColor="@color/graphite"
+                    android:fontFamily="@font/bricolagegrotesque_bold"
+                    android:singleLine="true"
+                    android:visibility="gone" />
+
                 <TextView
                     android:id="@+id/tvProfileId"
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
-                    android:layout_marginTop="4dp"
+                    android:layout_marginTop="6dp"
                     android:background="@drawable/bg_pill_dark"
                     android:text="ID: 24125060"
                     android:textStyle="bold"
@@ -156,6 +166,20 @@
                     android:textSize="16sp"
                     android:textColor="@color/graphite"
                     android:fontFamily="@font/pjsans_medium" />
+
+                <EditText
+                    android:id="@+id/etProfileBio"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="12dp"
+                    android:background="@drawable/bg_input_field"
+                    android:padding="12dp"
+                    android:textSize="14sp"
+                    android:textColor="@color/graphite"
+                    android:fontFamily="@font/pjsans_medium"
+                    android:minLines="2"
+                    android:gravity="top"
+                    android:visibility="gone" />
 
             </LinearLayout>
 
@@ -383,6 +407,20 @@
                             android:textColor="@color/graphite"
                             android:fontFamily="@font/bricolagegrotesque_medium" />
 
+                        <EditText
+                            android:id="@+id/etDepartmentValue"
+                            android:layout_width="160dp"
+                            android:layout_height="wrap_content"
+                            android:layout_alignParentEnd="true"
+                            android:layout_centerVertical="true"
+                            android:background="@drawable/bg_input_field"
+                            android:padding="8dp"
+                            android:textSize="13sp"
+                            android:textColor="@color/graphite"
+                            android:fontFamily="@font/bricolagegrotesque_medium"
+                            android:singleLine="true"
+                            android:visibility="gone" />
+
                     </RelativeLayout>
 
                     <!-- Major row -->
@@ -421,6 +459,20 @@
                             android:textColor="@color/graphite"
                             android:fontFamily="@font/bricolagegrotesque_medium" />
 
+                        <EditText
+                            android:id="@+id/etMajorValue"
+                            android:layout_width="160dp"
+                            android:layout_height="wrap_content"
+                            android:layout_alignParentEnd="true"
+                            android:layout_centerVertical="true"
+                            android:background="@drawable/bg_input_field"
+                            android:padding="8dp"
+                            android:textSize="13sp"
+                            android:textColor="@color/graphite"
+                            android:fontFamily="@font/bricolagegrotesque_medium"
+                            android:singleLine="true"
+                            android:visibility="gone" />
+
                     </RelativeLayout>
 
                     <!-- Admission Year row -->
@@ -457,6 +509,21 @@
                             android:textSize="14sp"
                             android:textColor="@color/graphite"
                             android:fontFamily="@font/bricolagegrotesque_medium" />
+
+                        <EditText
+                            android:id="@+id/etAdmissionYearValue"
+                            android:layout_width="100dp"
+                            android:layout_height="wrap_content"
+                            android:layout_alignParentEnd="true"
+                            android:layout_centerVertical="true"
+                            android:background="@drawable/bg_input_field"
+                            android:padding="8dp"
+                            android:textSize="14sp"
+                            android:textColor="@color/graphite"
+                            android:fontFamily="@font/bricolagegrotesque_medium"
+                            android:inputType="number"
+                            android:singleLine="true"
+                            android:visibility="gone" />
 
                     </RelativeLayout>
 
@@ -634,6 +701,7 @@
                 android:paddingBottom="18dp"
                 android:includeFontPadding="false"
                 android:fontFamily="@font/bricolagegrotesque_bold"
+                android:visibility="gone"
                 app:layout_constraintTop_toBottomOf="@id/cardSessionActivity"
                 app:layout_constraintStart_toStartOf="parent"
                 app:layout_constraintEnd_toEndOf="parent"
