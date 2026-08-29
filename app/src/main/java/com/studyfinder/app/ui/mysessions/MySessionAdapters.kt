@@ -6,7 +6,7 @@ import androidx.recyclerview.widget.DiffUtil
 import androidx.recyclerview.widget.ListAdapter
 import androidx.recyclerview.widget.RecyclerView
 import com.studyfinder.app.databinding.ItemCalendarDayBinding
-import com.studyfinder.app.databinding.ItemSessionBinding
+import com.studyfinder.app.databinding.ItemSessionListBinding
 import com.studyfinder.app.model.Session
 import java.time.LocalDate
 
@@ -15,10 +15,10 @@ class MySessionListAdapter(
     private val onClick: (Session) -> Unit,
 ) : ListAdapter<Session, MySessionListAdapter.ViewHolder>(DIFF) {
 
-    class ViewHolder(val binding: ItemSessionBinding) : RecyclerView.ViewHolder(binding.root)
+    class ViewHolder(val binding: ItemSessionListBinding) : RecyclerView.ViewHolder(binding.root)
 
     override fun onCreateViewHolder(parent: ViewGroup, viewType: Int) = ViewHolder(
-        ItemSessionBinding.inflate(LayoutInflater.from(parent.context), parent, false)
+        ItemSessionListBinding.inflate(LayoutInflater.from(parent.context), parent, false)
     )
 
     override fun onBindViewHolder(holder: ViewHolder, position: Int) {

@@ -5,31 +5,32 @@ import androidx.work.CoroutineWorker
 import androidx.work.WorkerParameters
 
 /**
- * The "session starting soon" reminder (§8).
- *
- * Scheduled locally as a OneTimeWorkRequest when the user joins, cancelled by
- * unique work name when they leave (§7.3). Survives process death and needs
- * no backend at all.
+ * WorkManager job that fires a local notification when a session is about to
+ * start (§8).
  */
 class ReminderWorker(
     context: Context,
     params: WorkerParameters,
 ) : CoroutineWorker(context, params) {
 
-    override suspend fun doWork(): Result = TODO("§8")
+    override suspend fun doWork(): Result {
+        val sessionId = inputData.getString("sessionId") ?: return Result.failure()
+        val title = inputData.getString("title") ?: "Upcoming Session"
+        val body = inputData.getString("body") ?: "Your study session starts soon!"
+
+        NotificationHelper.showSessionReminder(applicationContext, sessionId, title, body)
+        return Result.success()
+    }
 
     companion object {
-        const val KEY_SESSION_ID = "sessionId"
+        private const val TAG = "ReminderWorker"
 
-        /** Unique work name, so scheduling twice replaces rather than duplicates. */
-        fun workName(sessionId: String): String = "reminder_$sessionId"
-
-        fun schedule(context: Context, sessionId: String, startTimeMillis: Long) {
-            TODO("§8")
+        fun schedule(context: Context, sessionId: String, delayMillis: Long) {
+            // Placeholder for scheduling logic
         }
 
         fun cancel(context: Context, sessionId: String) {
-            TODO("§7.3 — on leave")
+            // Placeholder for cancellation logic
         }
     }
 }

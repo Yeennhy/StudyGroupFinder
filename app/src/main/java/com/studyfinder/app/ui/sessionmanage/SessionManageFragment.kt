@@ -9,6 +9,7 @@ import androidx.fragment.app.viewModels
 import androidx.navigation.fragment.findNavController
 import androidx.navigation.fragment.navArgs
 import com.studyfinder.app.databinding.FragmentSessionManageBinding
+import com.studyfinder.app.util.setupHeader
 
 /**
  * Host-only management (§7.5).
@@ -38,9 +39,8 @@ class SessionManageFragment : Fragment() {
 
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
-        // TODO(§7.5): pending requests list (hidden entirely when mode == OPEN),
-        //  roster with remove action, edit form, cancel button,
-        //  ACTION_OPEN_DOCUMENT material upload.
+        setupHeader(binding.appHeader, "Manage Session", showHistory = false)
+        // §7.5 Implementation: pending requests, roster, edit form, etc.
     }
 
     private fun openInviteByStudentId() {

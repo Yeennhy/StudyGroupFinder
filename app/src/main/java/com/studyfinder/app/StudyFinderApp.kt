@@ -1,6 +1,7 @@
 package com.studyfinder.app
 
 import android.app.Application
+import com.google.firebase.FirebaseApp
 import com.studyfinder.app.notification.NotificationHelper
 
 /**
@@ -11,6 +12,7 @@ class StudyFinderApp : Application() {
 
     override fun onCreate() {
         super.onCreate()
+        FirebaseApp.initializeApp(this)
         ServiceLocator.init(this)
         NotificationHelper.createChannel(this)
     }

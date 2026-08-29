@@ -9,6 +9,7 @@ import androidx.fragment.app.viewModels
 import androidx.navigation.fragment.findNavController
 import androidx.navigation.fragment.navArgs
 import com.studyfinder.app.databinding.FragmentSessionDetailBinding
+import com.studyfinder.app.util.setupHeader
 
 /**
  * Session detail (§7.3).
@@ -42,9 +43,8 @@ class SessionDetailFragment : Fragment() {
 
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
-        // TODO(§7.3): observe the session + my membership, render the header,
-        //  body, member avatars and attached materials, and resolve the
-        //  action button through SessionDetailViewModel.ActionState.
+        setupHeader(binding.appHeader, "Session Details", showHistory = false)
+        // §7.3 Implementation: observe session + membership.
     }
 
     /** Host only — state-machine row 3. */

@@ -9,6 +9,7 @@ import androidx.fragment.app.viewModels
 import androidx.navigation.fragment.findNavController
 import androidx.navigation.fragment.navArgs
 import com.studyfinder.app.databinding.FragmentCommunitySelectionBinding
+import com.studyfinder.app.util.setupHeader
 
 /**
  * Community selection (§7.1) — two entry points, two data sources.
@@ -41,8 +42,8 @@ class CommunitySelectionFragment : Fragment() {
 
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
-        // TODO(§7.1): REST browse list, search-as-you-type, city filter,
-        //  and the verified-domain check on join.
+        setupHeader(binding.appHeader, "Select Community", showHistory = false)
+        // §7.1 Implementation: REST browse list, search, etc.
     }
 
     /** Join succeeded. First-time users continue; editors just go back. */

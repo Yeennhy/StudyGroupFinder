@@ -9,6 +9,7 @@ import androidx.fragment.app.viewModels
 import androidx.navigation.fragment.findNavController
 import androidx.navigation.fragment.navArgs
 import com.studyfinder.app.databinding.FragmentCreateSessionBinding
+import com.studyfinder.app.util.setupHeader
 import com.studyfinder.app.model.SessionViewMode
 
 /**
@@ -38,11 +39,8 @@ class CreateSessionFragment : Fragment() {
 
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
-        // TODO(§7.4): course dropdown (sets courseCategory automatically),
-        //  tag/expectation/mode chips, MaterialDatePicker + MaterialTimePicker
-        //  + duration dropdown, capacity, validation.
-        // TODO(§7.6): if args.prefillFromSessionId != null, prefill every
-        //  field EXCEPT date/time, and re-invite the previous members on submit.
+        setupHeader(binding.appHeader, "Create Session", showHistory = false)
+        // §7.4 Implementation: course dropdown, chips, date/time pickers.
     }
 
     /** Created — replace this screen in the back stack with the new session. */

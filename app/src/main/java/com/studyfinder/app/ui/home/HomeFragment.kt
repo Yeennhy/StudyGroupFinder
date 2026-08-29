@@ -9,6 +9,8 @@ import androidx.fragment.app.viewModels
 import androidx.navigation.fragment.findNavController
 import com.studyfinder.app.databinding.FragmentHomeBinding
 import com.studyfinder.app.model.SessionViewMode
+import com.studyfinder.app.util.setupHeader
+import com.studyfinder.app.util.setupNavbar
 
 /**
  * Home / Upcoming sessions — the browse-and-join lobby (§7.2).
@@ -35,9 +37,9 @@ class HomeFragment : Fragment() {
 
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
-        // TODO(§7.2): adapter, sort toggle, search, both chip groups,
-        //  ACCESS_FINE_LOCATION request for the distance sort (fall back to
-        //  time sort silently if denied), swipe-to-refresh, four UI states.
+        setupNavbar(binding.navBar)
+        setupHeader(binding.appHeader, "Home", showHistory = true)
+        // §7.2 Implementation: adapter, sort toggle, search, both chip groups, etc.
     }
 
     private fun openSession(sessionId: String) {

@@ -25,3 +25,9 @@ sealed interface ActionResult {
     data object Success : ActionResult
     data class Failure(val message: String, val cause: Throwable? = null) : ActionResult
 }
+
+/** Result of an action that returns data. */
+sealed interface Result<out T> {
+    data class Success<T>(val data: T) : Result<T>
+    data class Error(val message: String, val cause: Throwable? = null) : Result<Nothing>
+}

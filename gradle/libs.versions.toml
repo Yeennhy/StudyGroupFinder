@@ -4,7 +4,7 @@ kotlin = "2.0.21"
 # KSP's version must track the Kotlin version exactly (kotlin-ksp).
 ksp = "2.0.21-1.0.28"
 # Reads app/google-services.json. Declared here but NOT applied yet — see README §1.
-googleServices = "4.4.2"
+googleServices = "4.5.0"
 
 # These are pinned to the newest releases that AGP 8.10 / compileSdk 35 accept.
 # The versions Android Studio scaffolded (core-ktx 1.19.0, lifecycle 2.11.0)

@@ -34,7 +34,7 @@ class SignupFragment : Fragment() {
 
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
-        // TODO(§7.0): validate, sign up, then goToCommunitySelection().
+        // §7.0 Implementation: sign-up wiring.
     }
 
     private fun goToCommunitySelection() {

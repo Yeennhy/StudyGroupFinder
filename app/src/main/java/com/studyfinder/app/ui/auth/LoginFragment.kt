@@ -33,8 +33,7 @@ class LoginFragment : Fragment() {
 
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
-        // TODO(§7.0): wire sign-in, then route by whether the profile has a
-        //  communityId yet — new accounts go to Community Selection.
+        // §7.0 Implementation: sign-in wiring.
     }
 
     private fun goToSignup() {

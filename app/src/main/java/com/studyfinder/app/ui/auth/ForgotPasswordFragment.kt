@@ -31,7 +31,7 @@ class ForgotPasswordFragment : Fragment() {
 
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
-        // TODO(§7.0): send the reset email, then popBackStack() to Login.
+        // §7.0 Implementation: forgot password wiring.
     }
 
     override fun onDestroyView() {

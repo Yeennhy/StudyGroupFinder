@@ -31,6 +31,8 @@ enum class CourseCategory(override val wire: String) : WireEnum {
     DSA("dsa"),
     PROGRAMMING("programming"),
     ENGLISH("english"),
+    ARTS("arts"),
+    SOCIAL("social"),
     OTHER("other");
 
     companion object {
@@ -41,6 +43,7 @@ enum class CourseCategory(override val wire: String) : WireEnum {
 /** `sessions.expectationLevel` — an enum, not free text, because Home sorts by it (§3.1). */
 enum class ExpectationLevel(override val wire: String) : WireEnum {
     PASS("pass"),
+    CASUAL("casual"),
     OVERACHIEVING("overachieving");
 
     companion object {

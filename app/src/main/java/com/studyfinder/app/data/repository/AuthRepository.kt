@@ -1,6 +1,12 @@
 package com.studyfinder.app.data.repository
 
+import com.google.firebase.auth.FirebaseAuth
+import com.studyfinder.app.ServiceLocator
+import com.studyfinder.app.data.remote.firestore.FirestoreMappers
+import com.studyfinder.app.data.remote.firestore.FirestoreRefs
+import com.studyfinder.app.model.UserProfile
 import com.studyfinder.app.util.ActionResult
+import kotlinx.coroutines.tasks.await
 
 /**
  * Firebase Auth, email/password provider (§7.0).
@@ -10,14 +16,23 @@ import com.studyfinder.app.util.ActionResult
  */
 class AuthRepository {
 
-    val currentUid: String? get() = TODO("§7.0")
+    private val auth: FirebaseAuth get() = FirebaseAuth.getInstance()
 
-    val currentEmail: String? get() = TODO("§7.0")
+    val currentUid: String? get() = auth.currentUser?.uid
+
+    val currentEmail: String? get() = auth.currentUser?.email
 
     /** Gates joining a *verified* community — see §7.1. */
-    val isEmailVerified: Boolean get() = TODO("§7.0")
+    val isEmailVerified: Boolean get() = auth.currentUser?.isEmailVerified == true
 
-    suspend fun signIn(email: String, password: String): ActionResult = TODO("§7.0")
+    suspend fun signIn(email: String, password: String): ActionResult {
+        return try {
+            auth.signInWithEmailAndPassword(email, password).await()
+            ActionResult.Success
+        } catch (e: Exception) {
+            ActionResult.Failure(e.message ?: "Authentication failed", e)
+        }
+    }
 
     /**
      * Creates the Auth account, writes `users/{uid}`, then sends the
@@ -29,14 +44,56 @@ class AuthRepository {
         password: String,
         name: String,
         studentId: String,
-    ): ActionResult = TODO("§7.0")
+    ): ActionResult {
+        return try {
+            val result = auth.createUserWithEmailAndPassword(email, password).await()
+            val uid = result.user?.uid ?: return ActionResult.Failure("Account creation failed")
 
-    suspend fun sendPasswordReset(email: String): ActionResult = TODO("§7.0")
+            // Write user doc immediately
+            val profile = UserProfile(
+                uid = uid,
+                name = name,
+                studentId = studentId,
+                createdAtMillis = System.currentTimeMillis()
+            )
+            FirestoreRefs.user(uid).set(FirestoreMappers.profilePayload(profile)).await()
 
-    suspend fun resendVerificationEmail(): ActionResult = TODO("§7.0")
+            // Send verification email
+            auth.currentUser?.sendEmailVerification()?.await()
+
+            ActionResult.Success
+        } catch (e: Exception) {
+            ActionResult.Failure(e.message ?: "Registration failed", e)
+        }
+    }
+
+    suspend fun sendPasswordReset(email: String): ActionResult {
+        return try {
+            auth.sendPasswordResetEmail(email).await()
+            ActionResult.Success
+        } catch (e: Exception) {
+            ActionResult.Failure(e.message ?: "Failed to send reset email", e)
+        }
+    }
+
+    suspend fun resendVerificationEmail(): ActionResult {
+        return try {
+            auth.currentUser?.sendEmailVerification()?.await()
+            ActionResult.Success
+        } catch (e: Exception) {
+            ActionResult.Failure(e.message ?: "Failed to resend verification email", e)
+        }
+    }
 
     /** Clears Auth, the Room cache and SharedPreferences flags (§7.0). */
     suspend fun signOut() {
-        TODO("§7.0")
+        auth.signOut()
+        
+        // Wipe local database
+        val db = ServiceLocator.database
+        db.sessionDao().clear()
+        db.communityDao().clear()
+        db.mySessionDao().clear()
+        db.profileDao().clear()
     }
 }

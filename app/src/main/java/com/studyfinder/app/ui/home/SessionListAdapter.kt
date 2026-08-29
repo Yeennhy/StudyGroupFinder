@@ -5,7 +5,7 @@ import android.view.ViewGroup
 import androidx.recyclerview.widget.DiffUtil
 import androidx.recyclerview.widget.ListAdapter
 import androidx.recyclerview.widget.RecyclerView
-import com.studyfinder.app.databinding.ItemSessionBinding
+import com.studyfinder.app.databinding.ItemHomeSessionBinding
 import com.studyfinder.app.model.Session
 
 /**
@@ -28,10 +28,10 @@ class SessionListAdapter(
         val containsBlockedUser: Boolean = false,
     )
 
-    class ViewHolder(val binding: ItemSessionBinding) : RecyclerView.ViewHolder(binding.root)
+    class ViewHolder(val binding: ItemHomeSessionBinding) : RecyclerView.ViewHolder(binding.root)
 
     override fun onCreateViewHolder(parent: ViewGroup, viewType: Int) = ViewHolder(
-        ItemSessionBinding.inflate(LayoutInflater.from(parent.context), parent, false)
+        ItemHomeSessionBinding.inflate(LayoutInflater.from(parent.context), parent, false)
     )
 
     override fun onBindViewHolder(holder: ViewHolder, position: Int) {

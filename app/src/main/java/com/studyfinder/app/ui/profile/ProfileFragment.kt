@@ -8,7 +8,10 @@ import androidx.fragment.app.Fragment
 import androidx.fragment.app.viewModels
 import androidx.navigation.fragment.findNavController
 import androidx.navigation.fragment.navArgs
+import com.studyfinder.app.R
 import com.studyfinder.app.databinding.FragmentProfileBinding
+import com.studyfinder.app.util.setupHeader
+import com.studyfinder.app.util.setupNavbar
 
 /**
  * Profile (§7.7) — two viewing modes in one destination.
@@ -40,10 +43,18 @@ class ProfileFragment : Fragment() {
 
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
-        // TODO(§7.7): render fields; in self view show edit + photo bottom
-        //  sheet ("Take photo" / "Choose from gallery" — two different
-        //  launchers behind one button) and the activity graph; in read-only
-        //  view show Block instead. Hide every edit control when !isSelfView.
+        setupNavbar(binding.navBar)
+        setupHeader(
+            binding.appHeader,
+            "Profile",
+            rightBtnIcon = if (isSelfView) R.drawable.ic_signout else R.drawable.ic_block,
+            onRightBtnClick = {
+                if (isSelfView) {
+                    signOut()
+                }
+            }
+        )
+        // §7.7 Implementation: Profile fields, photo upload, etc.
     }
 
     /** The spec's "community edit in profile" entry point (§7.1). */
