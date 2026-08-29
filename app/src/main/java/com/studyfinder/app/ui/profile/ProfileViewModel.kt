@@ -52,7 +52,9 @@ class ProfileViewModel : ViewModel() {
 
     /** Same Storage path for both the camera Intent and the Photo Picker. */
     fun uploadPhoto(uri: Uri) {
-        TODO("§7.7")
+        viewModelScope.launch {
+            _saveResult.value = profileRepository.uploadProfilePhoto(uri)
+        }
     }
 
     /**

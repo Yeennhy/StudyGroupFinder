@@ -31,6 +31,7 @@ moshi = "1.15.1"
 workManager = "2.9.1"
 playServicesLocation = "21.3.0"
 glide = "4.16.0"
+cloudinary = "3.1.2"
 
 [libraries]
 androidx-core-ktx = { group = "androidx.core", name = "core-ktx", version.ref = "coreKtx" }
@@ -84,6 +85,7 @@ play-services-location = { group = "com.google.android.gms", name = "play-servic
 
 # Glide — avatars / profile photos
 glide = { group = "com.github.bumptech.glide", name = "glide", version.ref = "glide" }
+cloudinary-android = { group = "com.cloudinary", name = "cloudinary-android", version.ref = "cloudinary" }
 
 [plugins]
 android-application = { id = "com.android.application", version.ref = "agp" }

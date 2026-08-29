@@ -97,6 +97,7 @@ dependencies {
 
     // Avatars / profile photos
     implementation(libs.glide)
+    implementation(libs.cloudinary.android)
 
     testImplementation(libs.junit)
     androidTestImplementation(libs.androidx.junit)

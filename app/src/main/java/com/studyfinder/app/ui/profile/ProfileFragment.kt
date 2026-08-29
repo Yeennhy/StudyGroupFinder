@@ -46,6 +46,7 @@ class ProfileFragment : Fragment() {
     private var isEditing: Boolean = false
 
     private var tempCameraUri: Uri? = null
+    private var pendingAvatarUri: Uri? = null
 
     private val pickMedia = registerForActivityResult(ActivityResultContracts.PickVisualMedia()) { uri ->
         if (uri != null) {
@@ -182,12 +183,11 @@ class ProfileFragment : Fragment() {
     }
 
     private fun updateAvatarUi(uri: Uri) {
+        pendingAvatarUri = uri
         Glide.with(this)
             .load(uri)
             .circleCrop()
             .into(binding.ivAvatar)
-        
-        // TODO: Upload to Firebase Storage and update profile
     }
 
     private fun toggleEditMode() {
@@ -228,6 +228,10 @@ class ProfileFragment : Fragment() {
 
     private fun saveChanges() {
         val currentProfile = (viewModel.profile.value as? UiState.Success)?.data ?: return
+        
+        pendingAvatarUri?.let {
+            viewModel.uploadPhoto(it)
+        }
         
         val updatedProfile = currentProfile.copy(
             name = binding.etProfileName.text.toString(),

@@ -1,6 +1,9 @@
 package com.studyfinder.app.data.repository
 
 import android.net.Uri
+import com.cloudinary.android.MediaManager
+import com.cloudinary.android.callback.ErrorInfo
+import com.cloudinary.android.callback.UploadCallback
 import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.firestore.FirebaseFirestore
 import com.google.firebase.storage.FirebaseStorage
@@ -21,6 +24,8 @@ import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.onStart
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.tasks.await
+import kotlinx.coroutines.suspendCancellableCoroutine
+import kotlin.coroutines.resume
 import java.time.Instant
 import java.time.LocalDate
 import java.time.ZoneId
@@ -93,15 +98,36 @@ class ProfileRepository {
     }
 
     suspend fun uploadProfilePhoto(localUri: Uri): ActionResult {
+        val uid = auth.currentUser?.uid ?: return ActionResult.Failure("Not signed in")
+
         return try {
-            val uid = auth.currentUser?.uid ?: throw Exception("Not signed in")
-            val ref = storage.reference.child("users/$uid/profile/avatar.jpg")
-            
-            ref.putFile(localUri).await()
-            val downloadUrl = ref.downloadUrl.await().toString()
-            
-            FirestoreRefs.user(uid).update(Field.PHOTO_URL, downloadUrl).await()
-            ActionResult.Success
+            val secureUrl = suspendCancellableCoroutine<String?> { continuation ->
+                MediaManager.get().upload(localUri)
+                    .option("public_id", uid)
+                    .option("folder", "users/profile_pics")
+                    .option("overwrite", true)
+                    .callback(object : UploadCallback {
+                        override fun onStart(requestId: String?) {}
+                        override fun onProgress(requestId: String?, bytes: Long, totalBytes: Long) {}
+                        override fun onSuccess(requestId: String?, resultData: Map<*, *>) {
+                            continuation.resume(resultData["secure_url"] as? String)
+                        }
+                        override fun onError(requestId: String?, error: ErrorInfo?) {
+                            continuation.resume(null)
+                        }
+                        override fun onReschedule(requestId: String?, error: ErrorInfo?) {
+                            continuation.resume(null)
+                        }
+                    })
+                    .dispatch()
+            }
+
+            if (secureUrl != null) {
+                FirestoreRefs.user(uid).update(Field.PHOTO_URL, secureUrl).await()
+                ActionResult.Success
+            } else {
+                ActionResult.Failure("Upload to Cloudinary failed")
+            }
         } catch (e: Exception) {
             ActionResult.Failure(e.message ?: "Upload failed", e)
         }

@@ -32,7 +32,8 @@
 |---|---|---|
 | Auth | Firebase Authentication — email/password provider | Simplest provider to implement; Google Sign-In can be added later as a one-line addition if time allows, not required |
 | Database | Cloud Firestore | Document model maps naturally onto Community/Session/Membership entities; realtime listeners give you "live updates while a screen is open" for free |
-| File storage | Firebase Storage | Profile pictures; study material attachments (§7.5) |
+| File storage (Avatar) | **Cloudinary** | Used specifically for profile pictures to ensure unique, overwritable storage via User UID as `public_id` |
+| File storage (Materials) | Firebase Storage | Study material attachments (§7.5) |
 | Local cache | Room | Caches last-fetched sessions/communities/profile so screens aren't blank when offline. Already known from the midterm project. **Read §2.2 before writing repository code** — Room and the Firestore SDK both cache, and the division of labour has to be deliberate |
 | Local flags | SharedPreferences | Last selected community ID, sort/filter preference, "seen onboarding" flag — anything small that doesn't need query capability |
 | Networking (REST) | Retrofit + Moshi (or Gson) | Used specifically for the Firestore REST endpoint call in §7.1. Not used elsewhere — everywhere else uses the Firebase SDK directly |
