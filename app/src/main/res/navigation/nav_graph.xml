@@ -219,6 +219,11 @@
             app:destination="@id/sessionDetailFragment"
             app:popUpTo="@id/createSessionFragment"
             app:popUpToInclusive="true" />
+        <action
+            android:id="@+id/action_createSessionFragment_to_successFragment"
+            app:destination="@id/successFragment"
+            app:popUpTo="@id/createSessionFragment"
+            app:popUpToInclusive="true" />
     </fragment>
 
     <!-- ======================= session management (§7.5) =================== -->
@@ -258,7 +263,7 @@
         android:id="@+id/mySessionsFragment"
         android:name="com.studyfinder.app.ui.mysessions.MySessionsFragment"
         android:label="@string/title_my_sessions"
-        tools:layout="@layout/fragment_my_sessions_list">
+        tools:layout="@layout/fragment_my_sessions">
 
         <action
             android:id="@+id/action_mySessionsFragment_to_sessionDetailFragment"

@@ -4,29 +4,38 @@ import android.os.Bundle
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
+import android.widget.ArrayAdapter
+import android.widget.SeekBar
+import android.widget.Toast
 import androidx.fragment.app.Fragment
 import androidx.fragment.app.viewModels
+import androidx.lifecycle.lifecycleScope
 import androidx.navigation.fragment.findNavController
-import androidx.navigation.fragment.navArgs
+import com.google.android.material.datepicker.MaterialDatePicker
+import com.google.android.material.timepicker.MaterialTimePicker
+import com.google.android.material.timepicker.TimeFormat
+import com.studyfinder.app.R
 import com.studyfinder.app.databinding.FragmentCreateSessionBinding
+import com.studyfinder.app.model.ExpectationLevel
+import com.studyfinder.app.model.TagType
+import com.studyfinder.app.util.ActionResult
 import com.studyfinder.app.util.setupHeader
-import com.studyfinder.app.model.SessionViewMode
+import kotlinx.coroutines.launch
+import java.text.SimpleDateFormat
+import java.util.Calendar
+import java.util.Locale
 
-/**
- * Create session (§7.4). Reached from Home's `+` FAB, or from a past session
- * via "continue from last time" (§7.6), in which case
- * [CreateSessionFragmentArgs.prefillFromSessionId] is non-null.
- *
- * Time input is a start plus a **duration**, not two independent date-times —
- * the form stores the computed `endTime`, which the overlap check (§7.2) and
- * the past/upcoming split (§7.6) both depend on.
- */
+/** §7.4. */
 class CreateSessionFragment : Fragment() {
 
     private var _binding: FragmentCreateSessionBinding? = null
     private val binding get() = _binding!!
-    private val args: CreateSessionFragmentArgs by navArgs()
     private val viewModel: CreateSessionViewModel by viewModels()
+
+    private var selectedDate = Calendar.getInstance()
+    private var durationMinutes = 90
+    private var capacity = 4
+    private var isGated = false
 
     override fun onCreateView(
         inflater: LayoutInflater,
@@ -39,19 +48,177 @@ class CreateSessionFragment : Fragment() {
 
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
-        setupHeader(binding.appHeader, "Create Session", showHistory = false, showBackBtn = true, showAvatar = false)
-        // §7.4 Implementation: course dropdown, chips, date/time pickers.
+        setupHeader(binding.appHeader, "Create Session", showBackBtn = true)
+
+        setupSpinners()
+        setupToggles()
+        setupSchedule()
+        setupCapacity()
+        setupSubmit()
+
+        observeViewModel()
     }
 
-    /** Created — replace this screen in the back stack with the new session. */
-    private fun onCreated(sessionId: String) {
-        findNavController().navigate(
-            CreateSessionFragmentDirections
-                .actionCreateSessionFragmentToSessionDetailFragment(
-                    sessionId = sessionId,
-                    viewMode = SessionViewMode.LIVE,
-                )
-        )
+    private fun setupSpinners() {
+        // Preparing for (TagType)
+        val preppingFor = TagType.entries.map { it.wire.replaceFirstChar { c -> c.uppercase() } }
+        binding.spinnerPreparingFor.adapter = ArrayAdapter(requireContext(), android.R.layout.simple_spinner_dropdown_item, preppingFor)
+
+        // Expectation Level
+        val expectations = ExpectationLevel.entries.map { it.wire.replaceFirstChar { c -> c.uppercase() } }
+        binding.spinnerExpectation.adapter = ArrayAdapter(requireContext(), android.R.layout.simple_spinner_dropdown_item, expectations)
+
+        // Courses from ViewModel
+        viewLifecycleOwner.lifecycleScope.launch {
+            viewModel.courses.collect { courses ->
+                val adapter = ArrayAdapter(requireContext(), android.R.layout.simple_spinner_dropdown_item, courses.map { it.name })
+                binding.spinnerCourse.adapter = adapter
+            }
+        }
+
+        // Locations from ViewModel
+        viewLifecycleOwner.lifecycleScope.launch {
+            viewModel.locations.collect { locations ->
+                val adapter = ArrayAdapter(requireContext(), android.R.layout.simple_spinner_dropdown_item, locations.map { it.name })
+                binding.spinnerCampus.adapter = adapter
+            }
+        }
+    }
+
+    private fun setupToggles() {
+        binding.toggleOpenToAll.setOnClickListener {
+            isGated = false
+            updateToggleUI()
+        }
+        binding.toggleOnlyRequests.setOnClickListener {
+            isGated = true
+            updateToggleUI()
+        }
+    }
+
+    private fun updateToggleUI() {
+        binding.toggleOpenToAll.setBackgroundResource(if (!isGated) R.drawable.bg_segment_selected else android.R.color.white)
+        binding.toggleOnlyRequests.setBackgroundResource(if (isGated) R.drawable.bg_segment_selected else android.R.color.white)
+    }
+
+    private fun setupSchedule() {
+        updateDateText()
+        updateTimeText()
+
+        binding.etDate.setOnClickListener {
+            val picker = MaterialDatePicker.Builder.datePicker()
+                .setSelection(selectedDate.timeInMillis)
+                .build()
+            picker.addOnPositiveButtonClickListener { selection ->
+                if (selection != null) {
+                    selectedDate.timeInMillis = selection
+                    updateDateText()
+                }
+            }
+            picker.show(parentFragmentManager, "DATE_PICKER")
+        }
+
+        binding.etTime.setOnClickListener {
+            val picker = MaterialTimePicker.Builder()
+                .setTimeFormat(TimeFormat.CLOCK_12H)
+                .setHour(selectedDate.get(Calendar.HOUR_OF_DAY))
+                .setMinute(selectedDate.get(Calendar.MINUTE))
+                .build()
+            picker.addOnPositiveButtonClickListener {
+                selectedDate.set(Calendar.HOUR_OF_DAY, picker.hour)
+                selectedDate.set(Calendar.MINUTE, picker.minute)
+                updateTimeText()
+            }
+            picker.show(parentFragmentManager, "TIME_PICKER")
+        }
+
+        binding.seekDuration.setOnSeekBarChangeListener(object : SeekBar.OnSeekBarChangeListener {
+            override fun onProgressChanged(seekBar: SeekBar?, progress: Int, fromUser: Boolean) {
+                durationMinutes = (progress + 1) * 30
+                val hours = durationMinutes / 60
+                val mins = durationMinutes % 60
+                binding.tvDurationValue.text = if (hours > 0) "${hours}h ${mins}m" else "${mins}m"
+            }
+            override fun onStartTrackingTouch(p0: SeekBar?) {}
+            override fun onStopTrackingTouch(p0: SeekBar?) {}
+        })
+    }
+
+    private fun updateDateText() {
+        binding.etDate.setText(SimpleDateFormat("dd/MM/yyyy", Locale.getDefault()).format(selectedDate.time))
+    }
+
+    private fun updateTimeText() {
+        binding.etTime.setText(SimpleDateFormat("hh:mm a", Locale.getDefault()).format(selectedDate.time))
+    }
+
+    private fun setupCapacity() {
+        binding.tvCapacity.text = capacity.toString()
+        binding.btnCapacityPlus.setOnClickListener {
+            capacity++
+            binding.tvCapacity.text = capacity.toString()
+        }
+        binding.btnCapacityMinus.setOnClickListener {
+            if (capacity > 2) {
+                capacity--
+                binding.tvCapacity.text = capacity.toString()
+            }
+        }
+    }
+
+    private fun setupSubmit() {
+        binding.btnCreateSession.setOnClickListener {
+            val title = binding.etTitle.text.toString()
+            if (title.isBlank()) {
+                Toast.makeText(context, "Please enter a title", Toast.LENGTH_SHORT).show()
+                return@setOnClickListener
+            }
+
+            val course = viewModel.courses.value.getOrNull(binding.spinnerCourse.selectedItemPosition)
+            val location = viewModel.locations.value.getOrNull(binding.spinnerCampus.selectedItemPosition)
+            val tagType = TagType.entries.getOrNull(binding.spinnerPreparingFor.selectedItemPosition) ?: TagType.NORMAL
+            val expectation = ExpectationLevel.entries.getOrNull(binding.spinnerExpectation.selectedItemPosition) ?: ExpectationLevel.PASS
+
+            if (course == null || location == null) {
+                Toast.makeText(context, "Please select course and location", Toast.LENGTH_SHORT).show()
+                return@setOnClickListener
+            }
+
+            viewModel.submit(
+                title = title,
+                description = binding.etDescription.text.toString(),
+                goals = binding.etGoals.text.toString(),
+                course = course,
+                location = location,
+                tagType = tagType,
+                expectation = expectation,
+                startTimeMillis = selectedDate.timeInMillis,
+                durationMinutes = durationMinutes,
+                capacity = capacity,
+                isGated = isGated
+            )
+        }
+    }
+
+    private fun observeViewModel() {
+        viewLifecycleOwner.lifecycleScope.launch {
+            viewModel.createResult.collect { result ->
+                if (result is ActionResult.Success) {
+                    viewModel.resetResult()
+                    // Navigate to Success Screen
+                    findNavController().navigate(
+                        CreateSessionFragmentDirections.actionCreateSessionFragmentToSuccessFragment(
+                            message = "Session Created!",
+                            subtitle = "Your study group is now live.",
+                            buttonText = "View Session",
+                            isSignupSuccess = false
+                        )
+                    )
+                } else if (result is ActionResult.Failure) {
+                    Toast.makeText(context, "Error: ${result.message}", Toast.LENGTH_LONG).show()
+                }
+            }
+        }
     }
 
     override fun onDestroyView() {
