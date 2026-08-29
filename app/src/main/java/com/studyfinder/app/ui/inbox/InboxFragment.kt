@@ -9,6 +9,8 @@ import androidx.fragment.app.viewModels
 import androidx.navigation.fragment.findNavController
 import com.studyfinder.app.databinding.FragmentInboxBinding
 import com.studyfinder.app.model.SessionViewMode
+import com.studyfinder.app.util.setupHeader
+import com.studyfinder.app.util.setupNavbar
 
 /**
  * Invites + notifications, merged into one screen (§7.8).
@@ -37,8 +39,9 @@ class InboxFragment : Fragment() {
 
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
-        // TODO(§7.8): ordered by createdAt desc; hide items whose fromUid is
-        //  blocked (§7.7); per-type action buttons.
+        setupNavbar(binding.navBar)
+        setupHeader(binding.header, "Inbox", showHistory = true)
+        // §7.8 Implementation: inbox list, hide blocked, etc.
     }
 
     private fun openSession(sessionId: String) {

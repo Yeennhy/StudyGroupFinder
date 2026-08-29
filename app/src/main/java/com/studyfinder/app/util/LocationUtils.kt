@@ -1,21 +1,29 @@
 package com.studyfinder.app.util
 
+import kotlin.math.*
+
 /**
- * Haversine distance for Home's proximity sort (§7.2).
- *
- * Client-side maths on lat/lng that already came back with the session query —
- * no geocoding, no extra request, no continuous location subscription.
+ * Proximity sorting logic (§7.2).
  */
 object LocationUtils {
 
-    /** Great-circle distance in kilometres. */
-    fun distanceKm(
-        fromLat: Double,
-        fromLng: Double,
-        toLat: Double,
-        toLng: Double,
-    ): Double = TODO("Haversine formula — §7.2")
+    /** Haversine formula to compute distance between two points in KM. */
+    fun distanceKm(lat1: Double, lng1: Double, lat2: Double, lng2: Double): Double {
+        val r = 6371.0 // Earth radius in KM
+        val dLat = Math.toRadians(lat2 - lat1)
+        val dLng = Math.toRadians(lng2 - lng1)
+        val a = sin(dLat / 2).pow(2) +
+                cos(Math.toRadians(lat1)) * cos(Math.toRadians(lat2)) *
+                sin(dLng / 2).pow(2)
+        val c = 2 * atan2(sqrt(a), sqrt(1 - a))
+        return r * c
+    }
 
-    /** "0.3 km away" / "1.2 km away", the delivery-app style label in the spec. */
-    fun formatDistance(km: Double): String = TODO("§7.2")
+    fun formatDistance(km: Double): String {
+        return if (km < 1.0) {
+            "${(km * 1000).toInt()}m away"
+        } else {
+            "%.1fkm away".format(km)
+        }
+    }
 }

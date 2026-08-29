@@ -5,8 +5,13 @@ import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
 import androidx.fragment.app.Fragment
+import androidx.lifecycle.lifecycleScope
 import androidx.navigation.fragment.findNavController
+import com.studyfinder.app.ServiceLocator
 import com.studyfinder.app.databinding.FragmentSplashBinding
+import com.studyfinder.app.util.UiState
+import kotlinx.coroutines.flow.first
+import kotlinx.coroutines.launch
 
 /**
  * Decides where the app actually starts (§7.0).
@@ -35,8 +40,35 @@ class SplashFragment : Fragment() {
 
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
-        // TODO(§7.0): read AuthRepository.currentUid + the cached profile's
-        //  communityId, then call exactly one of the three routes below.
+        
+        val authRepository = ServiceLocator.authRepository
+        val profileRepository = ServiceLocator.profileRepository
+
+        lifecycleScope.launch {
+            val uid = authRepository.currentUid
+            if (uid == null) {
+                goToLogin()
+            } else {
+                // Check communityId in profile
+                profileRepository.observeCurrentProfile().first { state ->
+                    state !is UiState.Loading
+                }.let { state ->
+                    when (state) {
+                        is UiState.Success -> {
+                            if (state.data.hasCommunity) {
+                                goToHome()
+                            } else {
+                                goToCommunitySelection()
+                            }
+                        }
+                        else -> {
+                            // If profile fetch fails or is empty, assume no community yet
+                            goToCommunitySelection()
+                        }
+                    }
+                }
+            }
+        }
     }
 
     private fun goToLogin() {

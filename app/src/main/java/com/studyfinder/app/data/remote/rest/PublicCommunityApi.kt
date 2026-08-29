@@ -14,8 +14,7 @@ import retrofit2.http.Query
  * goes through the Firebase SDK instead.
  */
 interface PublicCommunityApi {
-
-    @GET("v1/projects/{PROJECT_ID}/databases/(default)/documents/communities")
+    @GET("v1/projects/studygroupfinder-42da7/databases/(default)/documents/communities")
     suspend fun listCommunities(
         @Query("pageSize") pageSize: Int = 100,
         @Query("pageToken") pageToken: String? = null,
@@ -27,5 +26,18 @@ interface PublicCommunityApi {
  * boundary, so no other layer ever sees a `stringValue` wrapper (§7.1).
  */
 object CommunityRestMapper {
-    fun toCommunities(response: CommunityListResponse): List<Community> = TODO("§7.1")
+    fun toCommunities(response: CommunityListResponse): List<Community> {
+        return response.documents?.mapNotNull { doc ->
+            val fields = doc.fields ?: return@mapNotNull null
+            Community(
+                id = doc.name?.substringAfterLast('/').orEmpty(),
+                name = fields.communityName?.stringValue.orEmpty(),
+                city = fields.city?.stringValue.orEmpty(),
+                verified = fields.verified?.booleanValue ?: false,
+                domainWhitelist = fields.domainWhitelist?.arrayValue?.values?.mapNotNull { it.stringValue } ?: emptyList(),
+                // REST timestamps are ISO 8601 strings, we'll keep 0 for now as it's not critical for selection
+                createdAtMillis = 0L 
+            )
+        } ?: emptyList()
+    }
 }

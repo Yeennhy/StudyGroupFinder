@@ -12,12 +12,22 @@
         android:layout_height="0dp"
         android:clipToPadding="false"
         android:paddingTop="110dp"
-        android:paddingBottom="80dp"
+        android:paddingBottom="20dp"
         android:paddingHorizontal="16dp"
         android:scrollbars="none"
         tools:listitem="@layout/item_notification"
         tools:itemCount="4"
         app:layout_constraintTop_toTopOf="parent"
+        app:layout_constraintBottom_toTopOf="@id/navBar"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintEnd_toEndOf="parent" />
+
+    <!-- Bottom navigation bar -->
+    <include
+        android:id="@+id/navBar"
+        layout="@layout/fragment_navbar"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
         app:layout_constraintBottom_toBottomOf="parent"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintEnd_toEndOf="parent" />

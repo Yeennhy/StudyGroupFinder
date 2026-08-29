@@ -13,6 +13,8 @@
 .externalNativeBuild
 .cxx
 local.properties
+.artifacts/
+.idea/
 
 # Emulator log produced by scripts/start-android.sh
 emulator_log.txt

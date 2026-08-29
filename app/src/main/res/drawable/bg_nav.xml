@@ -1,0 +1,15 @@
+<?xml version="1.0" encoding="utf-8"?>
+<layer-list xmlns:android="http://schemas.android.com/apk/res/android">
+    <!-- Border color layer (the stroke) -->
+    <item>
+        <shape android:shape="rectangle">
+            <solid android:color="@color/light_graphite" />
+        </shape>
+    </item>
+    <!-- Foreground color layer, shifted down by 1dp to show the top border -->
+    <item android:top="1dp">
+        <shape android:shape="rectangle">
+            <solid android:color="@color/theme_cream" />
+        </shape>
+    </item>
+</layer-list>

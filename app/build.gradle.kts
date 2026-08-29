@@ -9,7 +9,7 @@ plugins {
     // until the Firebase project is created (§10 Phase 1). The Firebase
     // dependencies below still compile without it — only runtime
     // initialisation needs the JSON.
-    // alias(libs.plugins.google.services)
+    alias(libs.plugins.google.services)
 }
 
 android {

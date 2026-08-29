@@ -6,6 +6,7 @@ import androidx.navigation.NavController
 import androidx.navigation.fragment.NavHostFragment
 import androidx.navigation.ui.setupWithNavController
 import com.studyfinder.app.databinding.ActivityMainBinding
+import com.studyfinder.app.util.DataSeeder
 
 /**
  * The single Activity for the whole app (§2 of the dev plan).
@@ -24,20 +25,11 @@ class MainActivity : AppCompatActivity() {
         binding = ActivityMainBinding.inflate(layoutInflater)
         setContentView(binding.root)
 
+        //DataSeeder.seedAll(this)
+
         val navHostFragment = supportFragmentManager
             .findFragmentById(R.id.nav_host_fragment) as NavHostFragment
         navController = navHostFragment.navController
-
-        // Menu item IDs match destination IDs, so this is the whole wiring.
-        binding.bottomNav.setupWithNavController(navController)
-
-        navController.addOnDestinationChangedListener { _, destination, _ ->
-            binding.bottomNav.visibility = if (destination.id in TOP_LEVEL_DESTINATIONS) {
-                android.view.View.VISIBLE
-            } else {
-                android.view.View.GONE
-            }
-        }
     }
 
     private companion object {

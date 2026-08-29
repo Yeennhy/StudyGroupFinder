@@ -188,7 +188,7 @@
         android:paddingStart="20dp"
         android:paddingEnd="20dp"
         android:paddingBottom="20dp"
-        app:layout_constraintBottom_toBottomOf="parent"
+        app:layout_constraintBottom_toTopOf="@id/navBar"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintHorizontal_bias="0.0"
         app:layout_constraintStart_toStartOf="parent"
@@ -208,7 +208,7 @@
         android:focusable="true"
         android:paddingEnd="3dp"
         android:paddingBottom="4dp"
-        app:layout_constraintBottom_toBottomOf="parent"
+        app:layout_constraintBottom_toTopOf="@id/navBar"
         app:layout_constraintEnd_toEndOf="parent">
 
         <TextView
@@ -222,6 +222,16 @@
             android:includeFontPadding="false" />
 
     </FrameLayout>
+
+    <!-- Bottom navigation bar -->
+    <include
+        android:id="@+id/navBar"
+        layout="@layout/fragment_navbar"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        app:layout_constraintBottom_toBottomOf="parent"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintEnd_toEndOf="parent" />
 
     <!-- Reused header include (yellow bar, title, hourglass icon) —
          drawn last so it renders above the search bar / filters / list,

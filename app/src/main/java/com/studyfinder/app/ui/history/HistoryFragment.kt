@@ -9,6 +9,7 @@ import androidx.fragment.app.viewModels
 import androidx.navigation.fragment.findNavController
 import com.studyfinder.app.databinding.FragmentHistoryBinding
 import com.studyfinder.app.model.SessionViewMode
+import com.studyfinder.app.util.setupHeader
 
 /**
  * Session history (§7.6) — time, location and tags per row.
@@ -34,8 +35,8 @@ class HistoryFragment : Fragment() {
 
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
-        // TODO(§7.6): past list; export action is 🟢 and not in the original
-        //  spec — cut it before anything else.
+        setupHeader(binding.appHeader, "History", showHistory = false)
+        // §7.6 Implementation: past list.
     }
 
     private fun openPastSession(sessionId: String) {

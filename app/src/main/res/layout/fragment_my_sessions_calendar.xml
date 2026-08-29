@@ -190,7 +190,7 @@
         app:layout_constraintTop_toBottomOf="@id/rowSelectedDate"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintEnd_toEndOf="parent"
-        app:layout_constraintBottom_toBottomOf="parent">
+        app:layout_constraintBottom_toTopOf="@id/navBar">
 
         <androidx.recyclerview.widget.RecyclerView
             android:id="@+id/rvSelectedDateSessions"
@@ -223,5 +223,13 @@
         app:layout_constraintEnd_toEndOf="parent"/>
 
     <!-- ===== Bottom navigation bar ===== -->
+    <include
+        android:id="@+id/navBar"
+        layout="@layout/fragment_navbar"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        app:layout_constraintBottom_toBottomOf="parent"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintEnd_toEndOf="parent" />
 
 </androidx.constraintlayout.widget.ConstraintLayout>

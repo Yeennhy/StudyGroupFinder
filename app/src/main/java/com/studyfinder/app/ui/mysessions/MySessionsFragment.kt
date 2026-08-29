@@ -7,8 +7,10 @@ import android.view.ViewGroup
 import androidx.fragment.app.Fragment
 import androidx.fragment.app.viewModels
 import androidx.navigation.fragment.findNavController
-import com.studyfinder.app.databinding.FragmentMySessionsBinding
+import com.studyfinder.app.databinding.FragmentMySessionsListBinding
 import com.studyfinder.app.model.SessionViewMode
+import com.studyfinder.app.util.setupHeader
+import com.studyfinder.app.util.setupNavbar
 
 /**
  * My sessions (§7.6) — the spec asks for **both** a list view and a calendar
@@ -22,7 +24,7 @@ import com.studyfinder.app.model.SessionViewMode
  */
 class MySessionsFragment : Fragment() {
 
-    private var _binding: FragmentMySessionsBinding? = null
+    private var _binding: FragmentMySessionsListBinding? = null
     private val binding get() = _binding!!
     private val viewModel: MySessionsViewModel by viewModels()
 
@@ -31,13 +33,15 @@ class MySessionsFragment : Fragment() {
         container: ViewGroup?,
         savedInstanceState: Bundle?,
     ): View {
-        _binding = FragmentMySessionsBinding.inflate(inflater, container, false)
+        _binding = FragmentMySessionsListBinding.inflate(inflater, container, false)
         return binding.root
     }
 
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
-        // TODO(§7.6): list adapter first (🔴), then the calendar toggle (🟡).
+        setupNavbar(binding.navBar)
+        setupHeader(binding.appHeader, "My Sessions", showHistory = true)
+        // §7.6 Implementation: list/calendar views.
     }
 
     private fun openSession(sessionId: String) {
