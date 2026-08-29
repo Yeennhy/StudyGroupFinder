@@ -50,6 +50,14 @@ class CommunitySelectionFragment : Fragment() {
             showAvatar = false
         )
         // §7.1 Implementation: REST browse list, search, etc.
+
+        // Test navigation to Profile
+        binding.tvSubtitle.setOnLongClickListener {
+            findNavController().navigate(
+                CommunitySelectionFragmentDirections.actionCommunitySelectionFragmentToProfileFragment()
+            )
+            true
+        }
     }
 
     /** Join succeeded. First-time users continue; editors just go back. */

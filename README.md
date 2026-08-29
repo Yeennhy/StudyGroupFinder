@@ -18,12 +18,13 @@ Repo hiện có đầy đủ **cấu trúc** — package, model, DAO, repository
 | # | Việc | Vì sao bắt buộc |
 |---|---|---|
 | 1 | Tạo Firebase project, bật **Authentication (Email/Password)**, **Firestore**, **Storage** | Không có thì mọi call Firebase fail runtime |
-| 2 | Tải `google-services.json` vào `app/` | Thiếu file này thì plugin ở bước 3 làm **fail build** |
-| 3 | Bỏ comment `alias(libs.plugins.google.services)` trong [`app/build.gradle.kts`](app/build.gradle.kts), thêm plugin vào `libs.versions.toml` + root `build.gradle.kts` | Không có plugin thì `google-services.json` không bao giờ được đọc → `Default FirebaseApp is not initialized` |
-| 4 | Dán **Firestore rules** (§4) và **Storage rules** (§4.1) vào Console | Storage mặc định khoá; Firestore rules mặc định chặn hết |
-| 5 | Test 10 case rules trong **Rules Playground** (§4) | 3 luồng chính sẽ gãy im lặng nếu rules sai — xem mục 8 |
-| 6 | Thay `{PROJECT_ID}` trong [`PublicCommunityApi.kt`](app/src/main/java/com/studyfinder/app/data/remote/rest/PublicCommunityApi.kt) bằng project ID thật | REST call §7.1 |
-| 7 | Seed document mẫu: `communities`, `sessions` (có sẵn `memberUids`, `endTime`, `courseCategory`), `users` | Không có data thì không phân biệt được empty state với bug |
+| 2 | Tạo account Cloudinary, lấy `cloud_name`, `api_key`, `api_secret` | Lưu trữ ảnh profile (§1.0) |
+| 3 | Tải `google-services.json` vào `app/` | Thiếu file này thì plugin ở bước 4 làm **fail build** |
+| 4 | Bỏ comment `alias(libs.plugins.google.services)` trong [`app/build.gradle.kts`](app/build.gradle.kts), thêm plugin vào `libs.versions.toml` + root `build.gradle.kts` | Không có plugin thì `google-services.json` không bao giờ được đọc → `Default FirebaseApp is not initialized` |
+| 5 | Dán **Firestore rules** (§4) và **Storage rules** (§4.1) vào Console | Storage mặc định khoá; Firestore rules mặc định chặn hết |
+| 6 | Điền thông tin Cloudinary vào [`CloudinaryConfig.kt`](app/src/main/java/com/studyfinder/app/util/CloudinaryConfig.kt) | Ảnh profile sẽ không upload được nếu thiếu |
+| 7 | Thay `{PROJECT_ID}` trong [`PublicCommunityApi.kt`](app/src/main/java/com/studyfinder/app/data/remote/rest/PublicCommunityApi.kt) bằng project ID thật | REST call §7.1 |
+| 8 | Seed document mẫu: `communities`, `sessions` (có sẵn `memberUids`, `endTime`, `courseCategory`), `users` | Không có data thì không phân biệt được empty state với bug |
 
 ### Chạy app
 
