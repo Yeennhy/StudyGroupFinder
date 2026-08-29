@@ -1,13 +1,17 @@
 package com.studyfinder.app.ui.auth
 
+import android.graphics.Paint
 import android.os.Bundle
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
+import androidx.core.view.isVisible
 import androidx.fragment.app.Fragment
 import androidx.fragment.app.viewModels
 import androidx.navigation.fragment.findNavController
+import com.studyfinder.app.R
 import com.studyfinder.app.databinding.FragmentLoginBinding
+import com.studyfinder.app.util.ActionResult
 
 /**
  * Email/password sign-in (§7.0).
@@ -33,7 +37,70 @@ class LoginFragment : Fragment() {
 
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
-        // §7.0 Implementation: sign-in wiring.
+        
+        // Clear previous state
+        viewModel.clearResult()
+        binding.tvEmailError.isVisible = false
+        binding.tvPasswordError.isVisible = false
+
+        // Apply underlines to links
+        binding.tvForgotPassword.paintFlags = binding.tvForgotPassword.paintFlags or Paint.UNDERLINE_TEXT_FLAG
+        binding.tvSignUp.paintFlags = binding.tvSignUp.paintFlags or Paint.UNDERLINE_TEXT_FLAG
+
+        // Click listeners
+        binding.btnLogin.setOnClickListener {
+            val email = binding.etEmail.text.toString().trim()
+            val password = binding.etPassword.text.toString().trim()
+            
+            // Reset errors
+            binding.tvEmailError.isVisible = false
+            binding.tvPasswordError.isVisible = false
+
+            if (email.isEmpty() || password.isEmpty()) {
+                binding.tvPasswordError.text = "All fields are required"
+                binding.tvPasswordError.isVisible = true
+            } else {
+                viewModel.signIn(email, password)
+            }
+        }
+
+        binding.tvForgotPassword.setOnClickListener { goToForgotPassword() }
+        binding.tvSignUp.setOnClickListener { goToSignup() }
+
+        // Observe results
+        viewModel.result.observe(viewLifecycleOwner) { result ->
+            when (result) {
+                is ActionResult.Idle -> {
+                    binding.tvEmailError.isVisible = false
+                    binding.tvPasswordError.isVisible = false
+                }
+                is ActionResult.Success -> {
+                    // Navigate to Home (Repository handles checking if community is set, 
+                    // but for now we follow the resolved route logic or just Home)
+                    goToHome()
+                }
+                is ActionResult.Failure -> {
+                    handleAuthError(result.message)
+                }
+            }
+        }
+    }
+
+    private fun handleAuthError(message: String) {
+        // Simple heuristic to show error in the right field
+        val lowerMessage = message.lowercase()
+        when {
+            lowerMessage.contains("password") -> {
+                binding.tvPasswordError.text = message
+                binding.tvPasswordError.isVisible = true
+                binding.tvEmailError.isVisible = false
+            }
+            else -> {
+                binding.tvEmailError.text = message
+                binding.tvEmailError.isVisible = true
+                binding.tvPasswordError.isVisible = false
+            }
+        }
     }
 
     private fun goToSignup() {

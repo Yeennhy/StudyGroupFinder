@@ -55,20 +55,74 @@
             android:id="@+id/dividerTop"
             android:layout_width="0dp"
             android:layout_height="1dp"
-            android:layout_marginTop="32dp"
+            android:layout_marginTop="24dp"
             android:background="@color/graphite"
             app:layout_constraintTop_toBottomOf="@id/tvTagline"
             app:layout_constraintStart_toStartOf="parent"
             app:layout_constraintEnd_toEndOf="parent" />
 
-        <!-- Email field -->
+        <EditText
+            android:id="@+id/etID"
+            android:layout_width="0dp"
+            android:layout_height="52dp"
+            android:layout_marginTop="24dp"
+            android:background="@drawable/bg_input_field"
+            android:hint="Full Name"
+            android:textColor="@color/graphite"
+            android:drawableStart="@drawable/ic_profile"
+            android:drawableTint="@color/graphite"
+            android:drawablePadding="12dp"
+            android:paddingStart="16dp"
+            android:paddingEnd="16dp"
+            android:gravity="center_vertical"
+            android:textSize="16sp"
+            android:singleLine="true"
+            android:fontFamily="@font/bricolagegrotesque_regular"
+            app:layout_constraintTop_toBottomOf="@id/dividerTop"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintEnd_toEndOf="parent" />
+
+        <EditText
+            android:id="@+id/etName"
+            android:layout_width="0dp"
+            android:layout_height="52dp"
+            android:layout_marginTop="16dp"
+            android:background="@drawable/bg_input_field"
+            android:drawableStart="@drawable/ic_profile"
+            android:drawableTint="@color/graphite"
+            android:drawablePadding="12dp"
+            android:fontFamily="@font/bricolagegrotesque_regular"
+            android:gravity="center_vertical"
+            android:hint="Student ID"
+            android:textColor="@color/graphite"
+            android:paddingStart="16dp"
+            android:paddingEnd="16dp"
+            android:singleLine="true"
+            android:textSize="16sp"
+            app:layout_constraintEnd_toEndOf="parent"
+            app:layout_constraintHorizontal_bias="0.0"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintTop_toBottomOf="@id/etID" />
+
+        <!-- Divider -->
+        <View
+            android:id="@+id/dividerMid"
+            android:layout_width="0dp"
+            android:layout_height="1dp"
+            android:layout_marginTop="24dp"
+            android:background="@color/graphite"
+            app:layout_constraintTop_toBottomOf="@id/etName"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintEnd_toEndOf="parent" />
+
         <EditText
             android:id="@+id/etEmail"
             android:layout_width="0dp"
             android:layout_height="52dp"
-            android:layout_marginTop="32dp"
+            android:layout_marginTop="24dp"
             android:background="@drawable/bg_input_field"
             android:hint="Email Address"
+            android:textColor="@color/graphite"
             android:inputType="textEmailAddress"
             android:drawableStart="@drawable/ic_mail"
             android:drawablePadding="12dp"
@@ -78,7 +132,7 @@
             android:textSize="16sp"
             android:singleLine="true"
             android:fontFamily="@font/bricolagegrotesque_regular"
-            app:layout_constraintTop_toBottomOf="@id/dividerTop"
+            app:layout_constraintTop_toBottomOf="@id/dividerMid"
             app:layout_constraintStart_toStartOf="parent"
             app:layout_constraintEnd_toEndOf="parent" />
 
@@ -97,6 +151,7 @@
             android:drawablePadding="8dp"
             android:drawableTint="@color/theme_clay"
             android:gravity="center_vertical"
+            android:visibility="gone"
             app:layout_constraintTop_toBottomOf="@id/etEmail"
             app:layout_constraintStart_toStartOf="parent" />
 
@@ -108,6 +163,7 @@
             android:layout_marginTop="14dp"
             android:background="@drawable/bg_input_field"
             android:hint="Password"
+            android:textColor="@color/graphite"
             android:inputType="textPassword"
             android:drawableStart="@drawable/ic_lock"
             android:drawablePadding="12dp"
@@ -130,6 +186,7 @@
             android:layout_marginTop="16dp"
             android:background="@drawable/bg_input_field"
             android:hint="Confirm Password"
+            android:textColor="@color/graphite"
             android:inputType="textPassword"
             android:drawableStart="@drawable/ic_lock"
             android:drawablePadding="12dp"
@@ -157,6 +214,7 @@
             android:drawablePadding="8dp"
             android:drawableTint="@color/theme_clay"
             android:gravity="center_vertical"
+            android:visibility="gone"
             app:layout_constraintTop_toBottomOf="@id/etCfPassword"
             app:layout_constraintStart_toStartOf="parent" />
         <!-- Log in button -->
@@ -212,6 +270,7 @@
             android:text="Sign in"
             android:textStyle="bold"
             android:textColor="@color/graphite"
+            android:textColorHighlight="@color/theme_clay"
             android:textSize="14sp"
             app:layout_constraintTop_toTopOf="@id/tvSignUpPrompt"
             app:layout_constraintStart_toEndOf="@id/tvSignUpPrompt"

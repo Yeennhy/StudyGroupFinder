@@ -42,7 +42,13 @@ class CommunitySelectionFragment : Fragment() {
 
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
-        setupHeader(binding.appHeader, "Select Community", showHistory = false)
+        setupHeader(
+            binding.appHeader,
+            "Select Community",
+            showHistory = false,
+            showBackBtn = args.isEditMode,
+            showAvatar = false
+        )
         // §7.1 Implementation: REST browse list, search, etc.
     }
 

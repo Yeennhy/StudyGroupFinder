@@ -39,7 +39,7 @@ class SessionManageFragment : Fragment() {
 
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
-        setupHeader(binding.appHeader, "Manage Session", showHistory = false)
+        setupHeader(binding.appHeader, "Manage Session", showHistory = false, showBackBtn = true, showAvatar = false)
         // §7.5 Implementation: pending requests, roster, edit form, etc.
     }
 

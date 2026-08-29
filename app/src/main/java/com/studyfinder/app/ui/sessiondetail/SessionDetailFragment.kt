@@ -43,7 +43,7 @@ class SessionDetailFragment : Fragment() {
 
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
-        setupHeader(binding.appHeader, "Session Details", showHistory = false)
+        setupHeader(binding.appHeader, "Session Details", showHistory = false, showBackBtn = true, showAvatar = false)
         // §7.3 Implementation: observe session + membership.
     }
 

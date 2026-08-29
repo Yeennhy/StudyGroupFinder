@@ -47,6 +47,8 @@ class ProfileFragment : Fragment() {
         setupHeader(
             binding.appHeader,
             "Profile",
+            showBackBtn = !isSelfView,
+            showAvatar = false,
             rightBtnIcon = if (isSelfView) R.drawable.ic_signout else R.drawable.ic_block,
             onRightBtnClick = {
                 if (isSelfView) {

@@ -39,7 +39,7 @@ class CreateSessionFragment : Fragment() {
 
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
-        setupHeader(binding.appHeader, "Create Session", showHistory = false)
+        setupHeader(binding.appHeader, "Create Session", showHistory = false, showBackBtn = true, showAvatar = false)
         // §7.4 Implementation: course dropdown, chips, date/time pickers.
     }
 

@@ -152,13 +152,13 @@
             android:paddingStart="8dp"
             android:paddingEnd="8dp">
 
-            <TextView style="@style/CalendarWeekdayLabel" android:text="M" />
-            <TextView style="@style/CalendarWeekdayLabel" android:text="T" />
-            <TextView style="@style/CalendarWeekdayLabel" android:text="W" />
-            <TextView style="@style/CalendarWeekdayLabel" android:text="T" />
-            <TextView style="@style/CalendarWeekdayLabel" android:text="F" />
-            <TextView style="@style/CalendarWeekdayLabel" android:text="S" />
-            <TextView style="@style/CalendarWeekdayLabel" android:text="S" />
+            <TextView style="@style/CalendarWeekdayLabel" android:textColor="@color/graphite" android:text="M" />
+            <TextView style="@style/CalendarWeekdayLabel" android:textColor="@color/graphite" android:text="T" />
+            <TextView style="@style/CalendarWeekdayLabel" android:textColor="@color/graphite" android:text="W" />
+            <TextView style="@style/CalendarWeekdayLabel" android:textColor="@color/graphite" android:text="T" />
+            <TextView style="@style/CalendarWeekdayLabel" android:textColor="@color/graphite" android:text="F" />
+            <TextView style="@style/CalendarWeekdayLabel" android:textColor="@color/graphite" android:text="S" />
+            <TextView style="@style/CalendarWeekdayLabel" android:textColor="@color/graphite" android:text="S" />
 
         </LinearLayout>
 
