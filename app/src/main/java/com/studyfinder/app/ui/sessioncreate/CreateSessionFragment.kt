@@ -68,19 +68,13 @@ class CreateSessionFragment : Fragment() {
         val expectations = ExpectationLevel.entries.map { it.wire.replaceFirstChar { c -> c.uppercase() } }
         binding.spinnerExpectation.adapter = ArrayAdapter(requireContext(), android.R.layout.simple_spinner_dropdown_item, expectations)
 
-        // Courses from ViewModel
-        viewLifecycleOwner.lifecycleScope.launch {
-            viewModel.courses.collect { courses ->
-                val adapter = ArrayAdapter(requireContext(), android.R.layout.simple_spinner_dropdown_item, courses.map { it.name })
-                binding.spinnerCourse.adapter = adapter
-            }
-        }
-
         // Locations from ViewModel
         viewLifecycleOwner.lifecycleScope.launch {
             viewModel.locations.collect { locations ->
-                val adapter = ArrayAdapter(requireContext(), android.R.layout.simple_spinner_dropdown_item, locations.map { it.name })
-                binding.spinnerCampus.adapter = adapter
+                if (locations.isNotEmpty()) {
+                    val adapter = ArrayAdapter(requireContext(), android.R.layout.simple_spinner_dropdown_item, locations.map { it.name })
+                    binding.spinnerCampus.adapter = adapter
+                }
             }
         }
     }
@@ -94,11 +88,12 @@ class CreateSessionFragment : Fragment() {
             isGated = true
             updateToggleUI()
         }
+        updateToggleUI()
     }
 
     private fun updateToggleUI() {
-        binding.toggleOpenToAll.setBackgroundResource(if (!isGated) R.drawable.bg_segment_selected else android.R.color.white)
-        binding.toggleOnlyRequests.setBackgroundResource(if (isGated) R.drawable.bg_segment_selected else android.R.color.white)
+        binding.toggleOpenToAll.setBackgroundResource(if (!isGated) R.drawable.bg_segment_selected else android.R.color.transparent)
+        binding.toggleOnlyRequests.setBackgroundResource(if (isGated) R.drawable.bg_segment_selected else android.R.color.transparent)
     }
 
     private fun setupSchedule() {
@@ -134,14 +129,19 @@ class CreateSessionFragment : Fragment() {
 
         binding.seekDuration.setOnSeekBarChangeListener(object : SeekBar.OnSeekBarChangeListener {
             override fun onProgressChanged(seekBar: SeekBar?, progress: Int, fromUser: Boolean) {
+                // Map 0-6 to 30m, 1h, 1h30m, 2h, 2h30m, 3h, 3h30m
                 durationMinutes = (progress + 1) * 30
                 val hours = durationMinutes / 60
                 val mins = durationMinutes % 60
-                binding.tvDurationValue.text = if (hours > 0) "${hours}h ${mins}m" else "${mins}m"
+                binding.tvDurationValue.text = if (hours > 0) {
+                    if (mins > 0) "${hours}h ${mins}m" else "${hours}h"
+                } else "${mins}m"
             }
             override fun onStartTrackingTouch(p0: SeekBar?) {}
             override fun onStopTrackingTouch(p0: SeekBar?) {}
         })
+        // Set initial text
+        binding.seekDuration.progress = 2 // 1h 30m
     }
 
     private fun updateDateText() {
@@ -167,6 +167,8 @@ class CreateSessionFragment : Fragment() {
     }
 
     private fun setupSubmit() {
+        // TODO: Tag logic we will do later
+
         binding.btnCreateSession.setOnClickListener {
             val title = binding.etTitle.text.toString()
             if (title.isBlank()) {
@@ -174,13 +176,12 @@ class CreateSessionFragment : Fragment() {
                 return@setOnClickListener
             }
 
-            val course = viewModel.courses.value.getOrNull(binding.spinnerCourse.selectedItemPosition)
             val location = viewModel.locations.value.getOrNull(binding.spinnerCampus.selectedItemPosition)
             val tagType = TagType.entries.getOrNull(binding.spinnerPreparingFor.selectedItemPosition) ?: TagType.NORMAL
             val expectation = ExpectationLevel.entries.getOrNull(binding.spinnerExpectation.selectedItemPosition) ?: ExpectationLevel.PASS
 
-            if (course == null || location == null) {
-                Toast.makeText(context, "Please select course and location", Toast.LENGTH_SHORT).show()
+            if (location == null) {
+                Toast.makeText(context, "Please wait for data to load", Toast.LENGTH_SHORT).show()
                 return@setOnClickListener
             }
 
@@ -188,7 +189,6 @@ class CreateSessionFragment : Fragment() {
                 title = title,
                 description = binding.etDescription.text.toString(),
                 goals = binding.etGoals.text.toString(),
-                course = course,
                 location = location,
                 tagType = tagType,
                 expectation = expectation,
@@ -205,12 +205,11 @@ class CreateSessionFragment : Fragment() {
             viewModel.createResult.collect { result ->
                 if (result is ActionResult.Success) {
                     viewModel.resetResult()
-                    // Navigate to Success Screen
                     findNavController().navigate(
                         CreateSessionFragmentDirections.actionCreateSessionFragmentToSuccessFragment(
                             message = "Session Created!",
                             subtitle = "Your study group is now live.",
-                            buttonText = "View Session",
+                            buttonText = "View My Sessions",
                             isSignupSuccess = false
                         )
                     )

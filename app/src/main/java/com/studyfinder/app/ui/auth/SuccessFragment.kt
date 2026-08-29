@@ -36,6 +36,10 @@ class SuccessFragment : Fragment() {
                 findNavController().navigate(
                     SuccessFragmentDirections.actionSuccessFragmentToCommunitySelectionFragment()
                 )
+            } else if (args.message == "Session Created!") {
+                findNavController().navigate(
+                    SuccessFragmentDirections.actionSuccessFragmentToHomeFragment()
+                )
             } else {
                 findNavController().navigate(
                     SuccessFragmentDirections.actionSuccessFragmentToLoginFragment()

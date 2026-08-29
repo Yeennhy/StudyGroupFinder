@@ -158,6 +158,14 @@ class CalendarDayAdapter(
                 if (isSelected) R.drawable.bg_calendar_selected else 0
             )
             tvDayNumber.setTextColor(root.context.getColor(R.color.graphite))
+            
+            // Bold if in current month
+            val typeFace = if (day.inCurrentMonth) {
+                androidx.core.content.res.ResourcesCompat.getFont(root.context, R.font.pjsans_bold)
+            } else {
+                androidx.core.content.res.ResourcesCompat.getFont(root.context, R.font.pjsans_regular)
+            }
+            tvDayNumber.typeface = typeFace
 
             // Busy highlight
             if (day.sessionCount > 0 && !isSelected) {
