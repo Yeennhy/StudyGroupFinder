@@ -145,13 +145,15 @@ class HomeFragment : Fragment() {
         binding.tvSort.setOnClickListener { anchor ->
             PopupMenu(requireContext(), anchor).apply {
                 menu.add(0, 1, 0, R.string.home_sort_time)
-                menu.add(0, 2, 1, R.string.home_sort_expectation)
-                menu.add(0, 3, 2, R.string.home_sort_distance)
+                menu.add(0, 2, 1, R.string.home_sort_name_asc)
+                menu.add(0, 3, 2, R.string.home_sort_name_desc)
+                menu.add(0, 4, 3, R.string.home_sort_distance)
                 setOnMenuItemClickListener { item ->
                     when (item.itemId) {
                         1 -> viewModel.setSort(SessionSort.TIME)
-                        2 -> viewModel.setSort(SessionSort.EXPECTATION_LEVEL)
-                        3 -> requestDistanceSort()
+                        2 -> viewModel.setSort(SessionSort.NAME_ASC)
+                        3 -> viewModel.setSort(SessionSort.NAME_DESC)
+                        4 -> requestDistanceSort()
                     }
                     (anchor as TextView).text = item.title
                     true

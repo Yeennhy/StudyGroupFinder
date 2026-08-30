@@ -73,6 +73,7 @@ class SignupFragment : Fragment() {
                     binding.tvPasswordError.isVisible = true
                 }
                 else -> {
+                    binding.stateLoading.root.isVisible = true
                     viewModel.signUp(email, password, name, studentId)
                 }
             }
@@ -90,6 +91,7 @@ class SignupFragment : Fragment() {
 
         // Observe results
         viewModel.result.observe(viewLifecycleOwner) { result ->
+            if (result !is ActionResult.Idle) binding.stateLoading.root.isVisible = false
             when (result) {
                 is ActionResult.Idle -> {
                     binding.tvEmailError.isVisible = false

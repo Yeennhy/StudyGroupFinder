@@ -121,8 +121,10 @@ class HomeViewModel : ViewModel() {
 
         rows = when (f.sort) {
             SessionSort.TIME -> rows.sortedBy { it.session.startTimeMillis }
-            SessionSort.EXPECTATION_LEVEL ->
-                rows.sortedByDescending { it.session.expectationLevel.ordinal }
+            SessionSort.NAME_ASC ->
+                rows.sortedBy { it.session.title.lowercase() }
+            SessionSort.NAME_DESC ->
+                rows.sortedByDescending { it.session.title.lowercase() }
             SessionSort.DISTANCE ->
                 rows.sortedBy { it.distanceKm ?: Double.MAX_VALUE }
         }
@@ -142,6 +144,7 @@ class HomeViewModel : ViewModel() {
 
     fun setSort(sort: SessionSort) {
         if (sort == SessionSort.DISTANCE) return // needs a location — use sortByDistance()
+        _myLocation.value = null
         _filters.value = _filters.value.copy(sort = sort)
     }
 

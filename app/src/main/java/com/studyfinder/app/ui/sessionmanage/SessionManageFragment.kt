@@ -63,9 +63,20 @@ class SessionManageFragment : Fragment() {
         setupRecyclerViews()
         viewModel.start(args.sessionId)
 
+        binding.stateEmpty.tvStateEmptyMessage.setText(R.string.empty_session_detail)
+        binding.stateError.btnStateRetry.setOnClickListener { viewModel.start(args.sessionId) }
+
         viewLifecycleOwner.lifecycleScope.launch {
             launch {
                 viewModel.session.collectLatest { state ->
+                    com.studyfinder.app.ui.common.StateRenderer.render(
+                        state = state,
+                        loadingView = binding.stateLoading.root,
+                        emptyView = binding.stateEmpty.root,
+                        errorView = binding.stateError.root,
+                        offlineView = binding.stateOfflineBanner.root,
+                        contentView = null,
+                    )
                     if (state is UiState.Success && viewModel.pendingSession.value == null) {
                         bindSession(state.data)
                     }

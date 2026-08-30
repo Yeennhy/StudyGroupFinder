@@ -105,10 +105,15 @@ enum class InboxType(override val wire: String) : WireEnum {
     }
 }
 
-/** Home's sort toggle (§7.2). [DISTANCE] requires the location permission. */
+/** Home's sort options (§7.2). [DISTANCE] requires the location permission. */
 enum class SessionSort {
+    /** Soonest start time first. */
     TIME,
-    EXPECTATION_LEVEL,
+    /** Session title A → Z. */
+    NAME_ASC,
+    /** Session title Z → A. */
+    NAME_DESC,
+    /** Closest campus location first (Haversine on lat/lng). */
     DISTANCE,
 }
 

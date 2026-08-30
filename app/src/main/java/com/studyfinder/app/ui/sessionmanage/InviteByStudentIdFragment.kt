@@ -55,6 +55,7 @@ class InviteByStudentIdFragment : Fragment() {
 
         binding.rvStudents.layoutManager = LinearLayoutManager(context)
         binding.rvStudents.adapter = adapter
+        binding.stateEmpty.tvStateEmptyMessage.setText(R.string.empty_student_search)
 
         viewModel.start(args.sessionId)
 
@@ -64,8 +65,11 @@ class InviteByStudentIdFragment : Fragment() {
 
         viewLifecycleOwner.lifecycleScope.launch {
             launch {
-                viewModel.searchResults.collectLatest {
-                    adapter.submitList(it)
+                viewModel.searchResults.collectLatest { results ->
+                    adapter.submitList(results)
+                    val hasQuery = binding.etSearch.text?.isNotBlank() == true
+                    binding.stateEmpty.root.visibility =
+                        if (results.isEmpty() && hasQuery) View.VISIBLE else View.GONE
                 }
             }
             launch {
