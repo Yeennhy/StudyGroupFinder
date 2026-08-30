@@ -15,12 +15,82 @@
         android:paddingBottom="20dp"
         android:paddingHorizontal="16dp"
         android:scrollbars="none"
-        tools:listitem="@layout/item_notification"
+        tools:listitem="@layout/item_inbox"
         tools:itemCount="4"
         app:layout_constraintTop_toTopOf="parent"
         app:layout_constraintBottom_toTopOf="@id/navBar"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintEnd_toEndOf="parent" />
+
+    <ProgressBar
+        android:id="@+id/progressInbox"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:visibility="gone"
+        app:layout_constraintTop_toTopOf="@id/rv_inbox"
+        app:layout_constraintBottom_toBottomOf="@id/rv_inbox"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintEnd_toEndOf="parent"
+        tools:visibility="gone" />
+
+    <TextView
+        android:id="@+id/tvEmptyInbox"
+        android:layout_width="0dp"
+        android:layout_height="wrap_content"
+        android:layout_marginStart="40dp"
+        android:layout_marginEnd="40dp"
+        android:gravity="center"
+        android:text="@string/inbox_empty"
+        android:textColor="@color/graphite"
+        android:textSize="15sp"
+        android:fontFamily="@font/pjsans_regular"
+        android:visibility="gone"
+        app:layout_constraintTop_toTopOf="@id/rv_inbox"
+        app:layout_constraintBottom_toBottomOf="@id/rv_inbox"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintEnd_toEndOf="parent"
+        tools:visibility="gone" />
+
+    <LinearLayout
+        android:id="@+id/layoutErrorInbox"
+        android:layout_width="0dp"
+        android:layout_height="wrap_content"
+        android:layout_marginStart="40dp"
+        android:layout_marginEnd="40dp"
+        android:gravity="center"
+        android:orientation="vertical"
+        android:visibility="gone"
+        app:layout_constraintTop_toTopOf="@id/rv_inbox"
+        app:layout_constraintBottom_toBottomOf="@id/rv_inbox"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintEnd_toEndOf="parent"
+        tools:visibility="gone">
+
+        <TextView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:gravity="center"
+            android:text="@string/inbox_error"
+            android:textColor="@color/graphite"
+            android:textSize="15sp"
+            android:fontFamily="@font/pjsans_regular" />
+
+        <TextView
+            android:id="@+id/btnRetryInbox"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="12dp"
+            android:background="@drawable/bg_yellow_btn_lite"
+            android:text="@string/state_retry"
+            android:textColor="@color/graphite"
+            android:textStyle="bold"
+            android:paddingStart="20dp"
+            android:paddingEnd="20dp"
+            android:paddingTop="8dp"
+            android:paddingBottom="10dp"
+            android:fontFamily="@font/pjsans_bold" />
+
+    </LinearLayout>
 
     <!-- Bottom navigation bar -->
     <include
