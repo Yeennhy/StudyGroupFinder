@@ -58,6 +58,7 @@
     <!-- Session history list -->
     <androidx.recyclerview.widget.RecyclerView
         android:id="@+id/rvHistory"
+        android:layoutAnimation="@anim/layout_animation_slide_up"
         android:layout_width="0dp"
         android:layout_height="wrap_content"
         android:layout_marginTop="24dp"

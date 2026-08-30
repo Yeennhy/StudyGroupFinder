@@ -7,7 +7,8 @@ import com.studyfinder.app.util.visible
 
 /**
  * Common logic to switch visibility of loading / empty / error / offline
- * state views backed by a [UiState] (§2.1).
+ * state views backed by a [UiState] (§2.1). Whatever view becomes visible
+ * fades in, so state transitions never snap.
  */
 object StateRenderer {
 
@@ -26,14 +27,21 @@ object StateRenderer {
         contentView?.gone()
 
         when (state) {
-            is UiState.Loading -> loadingView?.visible()
-            is UiState.Empty -> emptyView?.visible()
-            is UiState.Error -> errorView?.visible()
+            is UiState.Loading -> loadingView.showFading()
+            is UiState.Empty -> emptyView.showFading()
+            is UiState.Error -> errorView.showFading()
             is UiState.Offline -> {
-                offlineView?.visible()
-                contentView?.visible()
+                offlineView.showFading()
+                contentView.showFading()
             }
-            is UiState.Success -> contentView?.visible()
+            is UiState.Success -> contentView.showFading()
         }
+    }
+
+    private fun View?.showFading() {
+        this ?: return
+        visible()
+        alpha = 0f
+        animate().alpha(1f).setDuration(180L).start()
     }
 }

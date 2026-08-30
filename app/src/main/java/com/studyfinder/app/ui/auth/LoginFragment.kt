@@ -64,6 +64,7 @@ class LoginFragment : Fragment() {
                 binding.tvPasswordError.text = "All fields are required"
                 binding.tvPasswordError.isVisible = true
             } else {
+                binding.stateLoading.root.isVisible = true
                 viewModel.signIn(email, password)
             }
         }
@@ -75,6 +76,7 @@ class LoginFragment : Fragment() {
 
         // Observe results
         viewModel.result.observe(viewLifecycleOwner) { result ->
+            if (result !is ActionResult.Idle) binding.stateLoading.root.isVisible = false
             when (result) {
                 is ActionResult.Idle -> {
                     binding.tvEmailError.isVisible = false

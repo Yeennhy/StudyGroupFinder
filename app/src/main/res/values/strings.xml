@@ -27,9 +27,10 @@
 
     <!-- Home UI states (§7.2 / §2.1) -->
     <string name="home_sort_label">Sort</string>
-    <string name="home_sort_time">Soonest first</string>
-    <string name="home_sort_expectation">Effort level</string>
-    <string name="home_sort_distance">Nearest first</string>
+    <string name="home_sort_time">Soonest time</string>
+    <string name="home_sort_name_asc">Name (A–Z)</string>
+    <string name="home_sort_name_desc">Name (Z–A)</string>
+    <string name="home_sort_distance">Nearest location</string>
     <string name="home_empty">No sessions match your filters yet. Try clearing a chip or check back later.</string>
     <string name="home_error">Couldn\'t load sessions. Check your connection and retry.</string>
     <string name="state_retry">Retry</string>
@@ -57,4 +58,5 @@
     <string name="empty_history">No past sessions to show — your finished sessions will appear here.</string>
     <string name="empty_profile">We couldn\'t load this profile.</string>
     <string name="empty_session_members">No members have joined yet.</string>
+    <string name="empty_student_search">No student found with that ID.</string>
 </resources>
