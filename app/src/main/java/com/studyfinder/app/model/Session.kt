@@ -36,6 +36,7 @@ data class Session(
     val mode: SessionMode = SessionMode.OPEN,
     val status: SessionStatus = SessionStatus.UPCOMING,
     val materialUrls: List<String> = emptyList(),
+    val tags: List<String> = emptyList(),
     val createdAtMillis: Long = 0L,
     val updatedAtMillis: Long = 0L,
 ) : Serializable {

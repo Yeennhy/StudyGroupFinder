@@ -1,77 +1,179 @@
 package com.studyfinder.app.ui.sessiondetail
 
 import androidx.lifecycle.ViewModel
+import androidx.lifecycle.viewModelScope
 import com.studyfinder.app.ServiceLocator
+import com.studyfinder.app.model.MemberStatus
 import com.studyfinder.app.model.Session
 import com.studyfinder.app.model.SessionMember
+import com.studyfinder.app.model.SessionMode
+import com.studyfinder.app.model.SessionStatus
 import com.studyfinder.app.model.SessionViewMode
+import com.studyfinder.app.util.ActionResult
+import com.studyfinder.app.util.UiState
+import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.SharingStarted
+import kotlinx.coroutines.flow.StateFlow
+import kotlinx.coroutines.flow.collectLatest
+import kotlinx.coroutines.flow.combine
+import kotlinx.coroutines.flow.stateIn
+import kotlinx.coroutines.launch
+import kotlinx.coroutines.tasks.await
 
 /** §7.3. */
 class SessionDetailViewModel : ViewModel() {
 
     private val sessionRepository = ServiceLocator.sessionRepository
+    private val auth = com.google.firebase.auth.FirebaseAuth.getInstance()
 
-    /**
-     * The action button state machine from §7.3, evaluated top to bottom.
-     * Keeping it as a sealed type means the fragment cannot forget a case.
-     */
+    private val _session = MutableStateFlow<UiState<Session>>(UiState.Loading)
+    val session: StateFlow<UiState<Session>> = _session
+
+    private val _myMembership = MutableStateFlow<SessionMember?>(null)
+    val myMembership: StateFlow<SessionMember?> = _myMembership
+
+    private val _blockedUids = MutableStateFlow<Set<String>>(emptySet())
+
+    private val _actionResult = MutableStateFlow<ActionResult?>(null)
+    val actionResult: StateFlow<ActionResult?> = _actionResult
+
+    private var viewMode: SessionViewMode = SessionViewMode.LIVE
+    private var currentSessionId: String? = null
+
+    val actionState: StateFlow<ActionState> = combine(_session, _myMembership, _blockedUids) { sessionState, membership, blocked ->
+        if (sessionState is UiState.Success) {
+            resolveActionState(sessionState.data, membership, viewMode, blocked)
+        } else {
+            ActionState.Join
+        }
+    }.stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), ActionState.Join)
+
     sealed interface ActionState {
-        /** Row 1 — opened from History. */
         data object PastView : ActionState
-
-        /** Row 2. */
         data object Cancelled : ActionState
-
-        /** Row 3 — I am the host. */
         data object Manage : ActionState
-
-        /** Row 4 — I was invited (§3.1 `invited` status). */
         data object AcceptInvite : ActionState
-
-        /** Row 5 — addition beyond the original spec, see §7.3. */
         data object Leave : ActionState
-
-        /** Row 6. */
         data object RequestPending : ActionState
-
-        /** Row 7. */
         data object Full : ActionState
-
-        /** Row 8. */
+        data object Blocked : ActionState
         data object Join : ActionState
-
-        /** Row 9. */
         data object RequestToJoin : ActionState
     }
 
     fun start(sessionId: String, viewMode: SessionViewMode) {
-        TODO("§7.3")
+        this.currentSessionId = sessionId
+        this.viewMode = viewMode
+        
+        viewModelScope.launch {
+            sessionRepository.observeSession(sessionId).collectLatest {
+                _session.value = it
+            }
+        }
+        
+        viewModelScope.launch {
+            sessionRepository.observeMyMembership(sessionId).collectLatest {
+                _myMembership.value = it
+            }
+        }
+
+        viewModelScope.launch {
+            ServiceLocator.profileRepository.observeBlockedUids().collectLatest {
+                _blockedUids.value = it
+            }
+        }
     }
 
     fun resolveActionState(
         session: Session,
         myMembership: SessionMember?,
         viewMode: SessionViewMode,
-    ): ActionState = TODO("§7.3 — the nine-row table, in order")
+        blocked: Set<String>
+    ): ActionState {
+        val currentUid = auth.currentUser?.uid ?: ""
+
+        // Row 1: Past View
+        if (viewMode == SessionViewMode.PAST) return ActionState.PastView
+
+        // Row 2: Cancelled
+        if (session.status == SessionStatus.CANCELLED) return ActionState.Cancelled
+
+        // Row 3: Host
+        if (session.hostUid == currentUid) return ActionState.Manage
+
+        // Row 4: Invited
+        if (myMembership?.status == MemberStatus.INVITED) return ActionState.AcceptInvite
+
+        // Row 5: Member
+        if (myMembership?.status == MemberStatus.ACCEPTED || myMembership?.status == MemberStatus.ADMIN) return ActionState.Leave
+
+        // Row 6: Pending
+        if (myMembership?.status == MemberStatus.PENDING) return ActionState.RequestPending
+
+        // Row 7: Blocked
+        if (session.containsBlockedUser(blocked)) return ActionState.Blocked
+        
+        // Row 8: Full
+        if (session.isFull) return ActionState.Full
+
+        // Rows 9 & 10: Join / Request
+        return if (session.mode == SessionMode.OPEN) ActionState.Join else ActionState.RequestToJoin
+    }
 
     fun join() {
-        TODO("§3.1")
+        val sid = currentSessionId ?: return
+        viewModelScope.launch {
+            _actionResult.value = sessionRepository.joinOpenSession(sid)
+        }
     }
 
     fun requestToJoin() {
-        TODO("§3.1")
+        val sid = currentSessionId ?: return
+        viewModelScope.launch {
+            _actionResult.value = sessionRepository.requestToJoin(sid)
+        }
     }
 
     fun acceptInvite() {
-        TODO("§3.1")
+        val sid = currentSessionId ?: return
+        viewModelScope.launch {
+            _actionResult.value = sessionRepository.acceptInvite(sid)
+        }
     }
 
     fun cancelRequest() {
-        TODO("§7.3")
+        val sid = currentSessionId ?: return
+        viewModelScope.launch {
+            _actionResult.value = sessionRepository.cancelJoinRequest(sid)
+        }
     }
 
-    /** Confirmation dialog first; also cancels the WorkManager reminder (§7.3, §8). */
     fun leave() {
-        TODO("§7.3")
+        val sid = currentSessionId ?: return
+        val uid = auth.currentUser?.uid ?: return
+        viewModelScope.launch {
+            _actionResult.value = sessionRepository.leaveOrRemove(sid, uid)
+        }
+    }
+
+    fun attachMaterial(uri: android.net.Uri) {
+        val sid = currentSessionId ?: return
+        viewModelScope.launch {
+            try {
+                val storageRef = com.google.firebase.storage.FirebaseStorage.getInstance().reference
+                    .child("sessions/$sid/materials/${System.currentTimeMillis()}")
+                
+                storageRef.putFile(uri).await()
+                val downloadUrl = storageRef.downloadUrl.await().toString()
+                
+                _actionResult.value = sessionRepository.attachMaterial(sid, downloadUrl)
+            } catch (e: Exception) {
+                _actionResult.value = ActionResult.Failure(e.message ?: "Upload failed")
+            }
+        }
+    }
+    
+    fun resetActionResult() {
+        _actionResult.value = null
     }
 }

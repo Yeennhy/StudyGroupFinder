@@ -9,30 +9,35 @@ import com.studyfinder.app.model.ExpectationLevel
 import com.studyfinder.app.model.Session
 import com.studyfinder.app.model.TagType
 import com.studyfinder.app.util.ActionResult
+import com.studyfinder.app.util.UiState
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
+import kotlinx.coroutines.flow.collectLatest
 import kotlinx.coroutines.launch
 
 /** §7.4. */
 class CreateSessionViewModel : ViewModel() {
 
     private val sessionRepository = ServiceLocator.sessionRepository
-    private val communityRepository = ServiceLocator.communityRepository
     private val profileRepository = ServiceLocator.profileRepository
 
     private val _locations = MutableStateFlow<List<CampusLocation>>(emptyList())
     val locations: StateFlow<List<CampusLocation>> = _locations
 
+    private val _prefilledSession = MutableStateFlow<Session?>(null)
+    val prefilledSession: StateFlow<Session?> = _prefilledSession
+
     private val _createResult = MutableStateFlow<ActionResult?>(null)
     val createResult: StateFlow<ActionResult?> = _createResult
 
     private var currentCommunityId: String? = null
+    private var prefillSessionId: String? = null
 
     init {
         loadCampusLocations()
         viewModelScope.launch {
             profileRepository.observeCurrentProfile().collect { state ->
-                if (state is com.studyfinder.app.util.UiState.Success) {
+                if (state is UiState.Success) {
                     currentCommunityId = state.data.communityId
                 }
             }
@@ -51,7 +56,14 @@ class CreateSessionViewModel : ViewModel() {
 
     /** Copies every field except date/time, which must be re-picked (§7.6). */
     fun prefillFrom(sessionId: String) {
-        // TODO: implementation for prefilling
+        prefillSessionId = sessionId
+        viewModelScope.launch {
+            sessionRepository.observeSession(sessionId).collectLatest { state ->
+                if (state is UiState.Success) {
+                    _prefilledSession.value = state.data
+                }
+            }
+        }
     }
 
     fun submit(
@@ -64,7 +76,8 @@ class CreateSessionViewModel : ViewModel() {
         startTimeMillis: Long,
         durationMinutes: Int,
         capacity: Int,
-        isGated: Boolean
+        isGated: Boolean,
+        tags: List<String> = emptyList()
     ) {
         val communityId = currentCommunityId
         if (communityId == null) {
@@ -79,9 +92,9 @@ class CreateSessionViewModel : ViewModel() {
                 id = "", 
                 communityId = communityId, 
                 hostUid = com.google.firebase.auth.FirebaseAuth.getInstance().currentUser?.uid ?: "",
-                courseId = "GENERAL",
-                courseName = "General Study",
-                courseCategory = CourseCategory.OTHER,
+                courseId = _prefilledSession.value?.courseId ?: "GENERAL",
+                courseName = _prefilledSession.value?.courseName ?: "General Study",
+                courseCategory = _prefilledSession.value?.courseCategory ?: CourseCategory.OTHER,
                 tagType = tagType,
                 expectationLevel = expectation,
                 title = title,
@@ -93,11 +106,16 @@ class CreateSessionViewModel : ViewModel() {
                 startTimeMillis = startTimeMillis,
                 endTimeMillis = endTimeMillis,
                 capacity = capacity,
-                mode = if (isGated) com.studyfinder.app.model.SessionMode.GATED else com.studyfinder.app.model.SessionMode.OPEN
+                mode = if (isGated) com.studyfinder.app.model.SessionMode.GATED else com.studyfinder.app.model.SessionMode.OPEN,
+                tags = tags
             )
             
             val result = sessionRepository.createSession(session)
             if (result is com.studyfinder.app.util.Result.Success) {
+                // If it was a "pick up", invite everyone from the old one
+                prefillSessionId?.let { oldId ->
+                    sessionRepository.inviteAllFrom(oldId, result.data)
+                }
                 _createResult.value = ActionResult.Success
             } else if (result is com.studyfinder.app.util.Result.Error) {
                 _createResult.value = ActionResult.Failure(result.message)

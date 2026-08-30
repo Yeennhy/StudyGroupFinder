@@ -146,7 +146,7 @@ class SessionRepository {
         awaitClose { listener.remove() }
     }
 
-    fun observeMySessions(): Flow<UiState<List<Session>>> = callbackFlow {
+    fun observeMySessions(includeCancelled: Boolean = false): Flow<UiState<List<Session>>> = callbackFlow {
         val uid = auth.currentUser?.uid
         if (uid == null) {
             trySend(UiState.Error("User not signed in"))
@@ -163,8 +163,10 @@ class SessionRepository {
                     return@addSnapshotListener
                 }
                 if (snapshot != null) {
-                    val sessions = snapshot.documents.mapNotNull { FirestoreMappers.toSession(it) }
-                        .filter { it.status != SessionStatus.CANCELLED }
+                    var sessions = snapshot.documents.mapNotNull { FirestoreMappers.toSession(it) }
+                    if (!includeCancelled) {
+                        sessions = sessions.filter { it.status != SessionStatus.CANCELLED }
+                    }
                     
                     // Cache to Room
                     val now = System.currentTimeMillis()

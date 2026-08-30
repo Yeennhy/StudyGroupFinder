@@ -38,16 +38,9 @@ class MySessionsFragment : Fragment() {
     private val calendarSessionAdapter = CalendarSessionAdapter { session -> handleSessionClick(session) }
 
     private fun handleSessionClick(session: Session) {
-        val currentUid = auth.currentUser?.uid
-        if (session.hostUid == currentUid) {
-            findNavController().navigate(
-                MySessionsFragmentDirections.actionMySessionsFragmentToSessionManageFragment(session.id)
-            )
-        } else {
-            findNavController().navigate(
-                MySessionsFragmentDirections.actionMySessionsFragmentToSessionDetailFragment(session.id, SessionViewMode.LIVE)
-            )
-        }
+        findNavController().navigate(
+            MySessionsFragmentDirections.actionMySessionsFragmentToSessionDetailFragment(session.id, SessionViewMode.LIVE)
+        )
     }
 
     override fun onCreateView(

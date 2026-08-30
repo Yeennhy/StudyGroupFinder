@@ -4,26 +4,34 @@ import android.os.Bundle
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
+import android.widget.Toast
+import androidx.activity.result.contract.ActivityResultContracts
+import androidx.core.view.isVisible
 import androidx.fragment.app.Fragment
 import androidx.fragment.app.viewModels
+import androidx.lifecycle.lifecycleScope
 import androidx.navigation.fragment.findNavController
 import androidx.navigation.fragment.navArgs
+import androidx.recyclerview.widget.LinearLayoutManager
+import com.bumptech.glide.Glide
+import com.google.android.material.chip.Chip
+import com.google.firebase.auth.FirebaseAuth
+import com.studyfinder.app.R
+import com.studyfinder.app.ServiceLocator
 import com.studyfinder.app.databinding.FragmentSessionDetailBinding
+import com.studyfinder.app.model.Session
+import com.studyfinder.app.model.SessionMember
+import com.studyfinder.app.model.SessionViewMode
+import com.studyfinder.app.ui.sessiondetail.SessionDetailViewModel.ActionState
+import com.studyfinder.app.util.ActionResult
+import com.studyfinder.app.util.DateTimeUtils
+import com.studyfinder.app.util.UiState
 import com.studyfinder.app.util.setupHeader
+import kotlinx.coroutines.flow.collectLatest
+import kotlinx.coroutines.launch
 
 /**
  * Session detail (§7.3).
- *
- * Header: course, tag type, time, location, capacity as X/Y joined.
- * Body: description, goals/agenda, expectation level, member avatars.
- *
- * A realtime `addSnapshotListener` stays open while this screen is visible —
- * that is what makes a host's edit or cancellation appear live without any
- * push notification (§8).
- *
- * The action button is a nine-row state machine (§7.3) driven by one document
- * read, `members/{myUid}`. `viewMode = PAST` suppresses every action — the
- * spec's "past view mode", reached from History.
  */
 class SessionDetailFragment : Fragment() {
 
@@ -31,6 +39,14 @@ class SessionDetailFragment : Fragment() {
     private val binding get() = _binding!!
     private val args: SessionDetailFragmentArgs by navArgs()
     private val viewModel: SessionDetailViewModel by viewModels()
+    private val auth = FirebaseAuth.getInstance()
+
+    private val attendeeAdapter = AttendeeAdapter { openMemberProfile(it.uid) }
+    private val materialAdapter = MaterialAdapter { /* TODO: Open URL */ }
+
+    private val filePickerLauncher = registerForActivityResult(ActivityResultContracts.GetContent()) { uri ->
+        uri?.let { viewModel.attachMaterial(it) }
+    }
 
     override fun onCreateView(
         inflater: LayoutInflater,
@@ -44,10 +60,189 @@ class SessionDetailFragment : Fragment() {
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
         setupHeader(binding.appHeader, "Session Details", showHistory = false, showBackBtn = true, showAvatar = false)
-        // §7.3 Implementation: observe session + membership.
+
+        setupRecyclerViews()
+        setupListeners()
+        viewModel.start(args.sessionId, args.viewMode)
+
+        viewLifecycleOwner.lifecycleScope.launch {
+            launch {
+                viewModel.session.collectLatest { state ->
+                    when (state) {
+                        is UiState.Success -> bindSession(state.data)
+                        is UiState.Error -> Toast.makeText(context, state.message, Toast.LENGTH_SHORT).show()
+                        else -> {}
+                    }
+                }
+            }
+            launch {
+                viewModel.actionState.collectLatest { state ->
+                    bindActionButton(state)
+                }
+            }
+            launch {
+                ServiceLocator.sessionRepository.observeMembers(args.sessionId).collectLatest { state ->
+                    if (state is UiState.Success<List<SessionMember>>) {
+                        val hostUid = (viewModel.session.value as? UiState.Success)?.data?.hostUid
+                        val attendees = state.data.filter { it.uid != hostUid }
+                        attendeeAdapter.submitList(attendees)
+                        
+                        val host = state.data.find { it.uid == hostUid }
+                        host?.let { bindHost(it) }
+                    }
+                }
+            }
+            launch {
+                viewModel.actionResult.collectLatest { result ->
+                    if (result is ActionResult.Success) {
+                        Toast.makeText(context, "Success", Toast.LENGTH_SHORT).show()
+                        viewModel.resetActionResult()
+                    } else if (result is ActionResult.Failure) {
+                        Toast.makeText(context, result.message, Toast.LENGTH_SHORT).show()
+                        viewModel.resetActionResult()
+                    }
+                }
+            }
+        }
     }
 
-    /** Host only — state-machine row 3. */
+    private fun setupRecyclerViews() {
+        binding.rvAttendees.apply {
+            layoutManager = LinearLayoutManager(context)
+            adapter = attendeeAdapter
+        }
+        binding.rvMaterials.apply {
+            layoutManager = LinearLayoutManager(context)
+            adapter = materialAdapter
+        }
+    }
+
+    private fun setupListeners() {
+        binding.uploadBtn.setOnClickListener {
+            filePickerLauncher.launch("*/*")
+        }
+        binding.rowInviteStudents.setOnClickListener {
+            openInviteByStudentId()
+        }
+    }
+
+    private fun bindSession(session: Session) {
+        binding.apply {
+            tvSessionTitle.text = session.title
+            tvSessionTime.text = DateTimeUtils.formatTime(session.startTimeMillis)
+            tvSessionLocation.text = session.locationName
+            
+            val durationMinutes = ((session.endTimeMillis - session.startTimeMillis) / 60000).toInt()
+            tvSessionDuration.text = DateTimeUtils.formatDuration(durationMinutes)
+
+            tagContainerInfo.removeAllViews()
+            addTag(session.courseCategory.wire, R.color.ginkgo_yellow)
+            addTag(session.tagType.wire, R.color.light_blue)
+
+            tvSessionDescription.text = session.description
+            tvAgenda.text = session.goals
+            
+            materialAdapter.submitList(session.materialUrls)
+            tvAttendeesCount.text = getString(R.string.attendees_count_format, session.joinedCount, session.capacity)
+
+            val isHost = session.hostUid == auth.currentUser?.uid
+            uploadBtnContainer.isVisible = isHost
+            rowInviteStudents.isVisible = isHost
+        }
+    }
+
+    private fun bindHost(member: SessionMember) {
+        binding.apply {
+            tvHostName.text = getString(R.string.host_name_format, member.profile?.name ?: "Unknown")
+            tvHostId.text = member.profile?.studentId ?: member.uid
+            
+            member.profile?.photoUrl?.let { url ->
+                if (url.isNotBlank()) {
+                    Glide.with(this@SessionDetailFragment).load(url).circleCrop().into(ivAvatar)
+                } else {
+                    ivAvatar.setImageResource(R.drawable.ic_profile)
+                }
+            } ?: ivAvatar.setImageResource(R.drawable.ic_profile)
+        }
+    }
+
+    private fun addTag(text: String, colorRes: Int) {
+        val chip = Chip(requireContext()).apply {
+            this.text = text
+            setChipBackgroundColorResource(colorRes)
+            setTextColor(requireContext().getColor(R.color.graphite))
+            chipStrokeWidth = 2.5f
+            setChipStrokeColorResource(R.color.graphite)
+            chipCornerRadius = 20f
+            isCloseIconVisible = false
+        }
+        binding.tagContainerInfo.addView(chip)
+    }
+
+    private fun bindActionButton(state: ActionState) {
+        binding.btnJoinSession.apply {
+            isEnabled = true
+            alpha = 1.0f
+            setBackgroundResource(R.drawable.bg_yellow_btn)
+
+            when (state) {
+                ActionState.PastView -> {
+                    text = "Pick up Session"
+                    setOnClickListener { continueFromThisSession() }
+                }
+                ActionState.Cancelled -> {
+                    text = "Cancelled by Host"
+                    isEnabled = false
+                    alpha = 0.5f
+                    setBackgroundResource(R.drawable.bg_gray_btn)
+                }
+                ActionState.Manage -> {
+                    text = "Manage Session"
+                    setOnClickListener { openManage() }
+                }
+                ActionState.AcceptInvite -> {
+                    text = "Accept Invite"
+                    setOnClickListener { viewModel.acceptInvite() }
+                }
+                ActionState.Leave -> {
+                    text = "Leave Session"
+                    setBackgroundResource(R.drawable.bg_clay_btn)
+                    setOnClickListener { viewModel.leave() }
+                }
+                ActionState.RequestPending -> {
+                    text = "Request Pending"
+                    isEnabled = false
+                    setBackgroundResource(R.drawable.bg_gray_btn)
+                }
+                ActionState.Full -> {
+                    text = "Session Full"
+                    isEnabled = false
+                    setBackgroundResource(R.drawable.bg_gray_btn)
+                }
+                ActionState.Blocked -> {
+                    text = "Contains Blocked User"
+                    isEnabled = false
+                    setBackgroundResource(R.drawable.bg_gray_btn)
+                }
+                ActionState.Join -> {
+                    text = "Join Session"
+                    setOnClickListener { viewModel.join() }
+                }
+                ActionState.RequestToJoin -> {
+                    text = "Request to Join"
+                    setOnClickListener { viewModel.requestToJoin() }
+                }
+            }
+        }
+    }
+
+    private fun openInviteByStudentId() {
+        findNavController().navigate(
+            SessionDetailFragmentDirections
+                .actionSessionDetailFragmentToInviteByStudentIdFragment(args.sessionId)
+        )
+    }
+
     private fun openManage() {
         findNavController().navigate(
             SessionDetailFragmentDirections
@@ -55,7 +250,6 @@ class SessionDetailFragment : Fragment() {
         )
     }
 
-    /** Tapping a member avatar opens their read-only profile (§7.7). */
     private fun openMemberProfile(uid: String) {
         findNavController().navigate(
             SessionDetailFragmentDirections
@@ -63,10 +257,6 @@ class SessionDetailFragment : Fragment() {
         )
     }
 
-    /**
-     * "Continue from last time" — the spec puts this button inside past
-     * session detail, and it also re-invites the original members (§7.6).
-     */
     private fun continueFromThisSession() {
         findNavController().navigate(
             SessionDetailFragmentDirections

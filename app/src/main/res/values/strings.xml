@@ -15,4 +15,8 @@
     <string name="title_history">History</string>
     <string name="title_inbox">Inbox</string>
     <string name="title_profile">Profile</string>
+
+    <string name="attendees_count_format">Attendees (%1$d/%2$d)</string>
+    <string name="host_name_format">%1$s (Host)</string>
+    <string name="pick_up_session">Pick up Session</string>
 </resources>

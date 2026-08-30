@@ -4,15 +4,20 @@ import android.net.Uri
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.studyfinder.app.ServiceLocator
+import com.studyfinder.app.data.remote.firestore.FirestoreMappers
+import com.studyfinder.app.data.remote.firestore.FirestoreRefs
 import com.studyfinder.app.model.CampusLocation
+import com.studyfinder.app.model.MemberStatus
 import com.studyfinder.app.model.Session
 import com.studyfinder.app.model.SessionMember
+import com.studyfinder.app.model.UserProfile
 import com.studyfinder.app.util.ActionResult
 import com.studyfinder.app.util.UiState
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.collectLatest
 import kotlinx.coroutines.launch
+import kotlinx.coroutines.tasks.await
 
 /** §7.5. */
 class SessionManageViewModel : ViewModel() {
@@ -35,6 +40,9 @@ class SessionManageViewModel : ViewModel() {
 
     private val _locations = MutableStateFlow<List<CampusLocation>>(emptyList())
     val locations: StateFlow<List<CampusLocation>> = _locations
+
+    private val _searchResults = MutableStateFlow<List<UserProfile>>(emptyList())
+    val searchResults: StateFlow<List<UserProfile>> = _searchResults
 
     private val _actionResult = MutableStateFlow<ActionResult?>(null)
     val actionResult: StateFlow<ActionResult?> = _actionResult
@@ -130,6 +138,35 @@ class SessionManageViewModel : ViewModel() {
 
     fun attachMaterial(uri: Uri) {
         // TODO: Implementation for storage upload then db update
+    }
+
+    fun searchUsers(query: String) {
+        if (query.isBlank()) {
+            _searchResults.value = emptyList()
+            return
+        }
+        viewModelScope.launch {
+            _searchResults.value = profileRepository.findByStudentId(query)
+        }
+    }
+
+    fun inviteUser(uid: String) {
+        val sid = currentSessionId ?: return
+        viewModelScope.launch {
+            try {
+                // 1. Create member doc with status INVITED
+                FirestoreRefs.member(sid, uid).set(
+                    FirestoreMappers.memberPayload(MemberStatus.INVITED)
+                ).await()
+                
+                // 2. Send inbox notification
+                inboxRepository.sendInvite(uid, sid)
+                
+                _actionResult.value = ActionResult.Success
+            } catch (e: Exception) {
+                _actionResult.value = ActionResult.Failure(e.message ?: "Invite failed")
+            }
+        }
     }
     
     fun resetActionResult() {
