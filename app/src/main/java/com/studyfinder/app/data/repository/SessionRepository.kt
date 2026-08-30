@@ -146,38 +146,36 @@ class SessionRepository {
         awaitClose { listener.remove() }
     }
 
-    fun observeMySessions(): Flow<UiState<List<Session>>> = flow {
-        emit(UiState.Loading)
-        val uid = "brrTa7ftM0PaHJd68aFFx0HcsRI3"
-        val now = System.currentTimeMillis()
-        val sessions = listOf(
-            Session(
-                id = "mock-1",
-                title = "Intro to Algorithms",
-                courseName = "Data Structures",
-                locationName = "Floor 9 Library",
-                startTimeMillis = now + 3600000,
-                endTimeMillis = now + 10800000,
-                joinedCount = 4,
-                capacity = 6,
-                memberUids = listOf(uid),
-                communityId = "HCMUS"
-            ),
-            Session(
-                id = "mock-2",
-                title = "Calc III Study Group",
-                courseName = "Calculus 3",
-                locationName = "Library Rm 402",
-                startTimeMillis = now + 86400000 + 18000000,
-                endTimeMillis = now + 86400000 + 25200000,
-                joinedCount = 8,
-                capacity = 15,
-                memberUids = listOf(uid),
-                communityId = "HCMUS"
-            )
-        )
-        emit(UiState.Success(sessions))
-    }
+    fun observeMySessions(): Flow<UiState<List<Session>>> = callbackFlow {
+        val uid = auth.currentUser?.uid
+        if (uid == null) {
+            trySend(UiState.Error("User not signed in"))
+            close()
+            return@callbackFlow
+        }
+
+        val listener = FirestoreRefs.sessions()
+            .whereArrayContains(Field.MEMBER_UIDS, uid)
+            .orderBy(Field.START_TIME, Query.Direction.ASCENDING)
+            .addSnapshotListener { snapshot, error ->
+                if (error != null) {
+                    trySend(UiState.Error(error.message ?: "Fetch failed", error))
+                    return@addSnapshotListener
+                }
+                if (snapshot != null) {
+                    val sessions = snapshot.documents.mapNotNull { FirestoreMappers.toSession(it) }
+                    
+                    // Cache to Room
+                    val now = System.currentTimeMillis()
+                    scope.launch {
+                        mySessionDao.upsertAll(sessions.map { FirestoreMappers.toMySessionEntity(it, now) })
+                    }
+                    
+                    trySend(UiState.Success(sessions))
+                }
+            }
+        awaitClose { listener.remove() }
+    }.onStart { emit(UiState.Loading) }
 
     fun observePendingRequests(sessionId: String): Flow<UiState<List<SessionMember>>> = callbackFlow {
         val listener = FirestoreRefs.members(sessionId)
@@ -330,7 +328,7 @@ class SessionRepository {
 
     suspend fun createSession(session: Session): Result<String> {
         return try {
-            val uid = auth.currentUser?.uid ?: "brrTa7ftM0PaHJd68aFFx0HcsRI3" // Hardcoded for Tester
+            val uid = auth.currentUser?.uid ?: throw Exception("Not signed in")
             val sessionRef = FirestoreRefs.sessions().document()
             val memberRef = FirestoreRefs.member(sessionRef.id, uid)
             

@@ -2,6 +2,7 @@ package com.studyfinder.app.ui.mysessions
 
 import android.view.LayoutInflater
 import android.view.ViewGroup
+import androidx.core.content.res.ResourcesCompat
 import androidx.recyclerview.widget.DiffUtil
 import androidx.recyclerview.widget.ListAdapter
 import androidx.recyclerview.widget.RecyclerView
@@ -121,9 +122,7 @@ class CalendarSessionAdapter(
 }
 
 /**
- * The calendar half of §7.6 — one month of day cells in a
- * `GridLayoutManager(context, 7)`. Each cell shows the date and a dot when
- * that day has sessions; tapping filters the list underneath.
+ * The calendar half of §7.6 — one month of day cells.
  */
 class CalendarDayAdapter(
     private val onDayClick: (LocalDate) -> Unit,
@@ -149,23 +148,23 @@ class CalendarDayAdapter(
         holder.binding.apply {
             tvDayNumber.text = day.date.dayOfMonth.toString()
             
-            // Highlight current month vs other months
-            tvDayNumber.alpha = if (day.inCurrentMonth) 1.0f else 0.3f
-            
             // Selection highlight
             val isSelected = day.date == selectedDate
             tvDayNumber.setBackgroundResource(
                 if (isSelected) R.drawable.bg_calendar_selected else 0
             )
             tvDayNumber.setTextColor(root.context.getColor(R.color.graphite))
-            
+
             // Bold if in current month
             val typeFace = if (day.inCurrentMonth) {
-                androidx.core.content.res.ResourcesCompat.getFont(root.context, R.font.pjsans_bold)
+                ResourcesCompat.getFont(root.context, R.font.pjsans_bold)
             } else {
-                androidx.core.content.res.ResourcesCompat.getFont(root.context, R.font.pjsans_regular)
+                ResourcesCompat.getFont(root.context, R.font.pjsans_regular)
             }
             tvDayNumber.typeface = typeFace
+            
+            // Faint color for days not in current month
+            tvDayNumber.alpha = if (day.inCurrentMonth) 1.0f else 0.4f
 
             // Busy highlight
             if (day.sessionCount > 0 && !isSelected) {

@@ -29,45 +29,28 @@ class MySessionsViewModel : ViewModel() {
     private val _currentMonth = MutableStateFlow(YearMonth.now())
     val currentMonth: StateFlow<YearMonth> = _currentMonth
 
+    init {
+        viewModelScope.launch {
+            upcomingSessions.collect { state ->
+                if (state is UiState.Success && state.data.isNotEmpty()) {
+                    // Automatically jump to the month of the first upcoming session
+                    val firstSessionDate = DateTimeUtils.toLocalDate(state.data.first().startTimeMillis)
+                    _currentMonth.value = YearMonth.from(firstSessionDate)
+                    _selectedDate.value = firstSessionDate
+                }
+            }
+        }
+    }
+
     private val _selectedDate = MutableStateFlow(LocalDate.now())
     val selectedDate: StateFlow<LocalDate> = _selectedDate
 
     val upcomingSessions = sessionRepository.observeMySessions()
         .map { state ->
-            if (state is UiState.Success && state.data.isNotEmpty()) {
+            if (state is UiState.Success) {
                 val now = System.currentTimeMillis()
                 UiState.Success(state.data.filter { it.endTimeMillis > now }
                     .sortedBy { it.startTimeMillis })
-            } else if (state is UiState.Success || state is UiState.Empty) {
-                // Fallback to static mock data for demo/testing
-                val uid = "brrTa7ftM0PaHJd68aFFx0HcsRI3"
-                val now = System.currentTimeMillis()
-                UiState.Success(listOf(
-                    Session(
-                        id = "mock-1",
-                        title = "Intro to Algorithms",
-                        courseName = "Data Structures",
-                        locationName = "Floor 9 Library",
-                        startTimeMillis = now + 3600000,
-                        endTimeMillis = now + 10800000,
-                        joinedCount = 4,
-                        capacity = 6,
-                        memberUids = listOf(uid),
-                        communityId = "HCMUS"
-                    ),
-                    Session(
-                        id = "mock-2",
-                        title = "Calc III Study Group",
-                        courseName = "Calculus 3",
-                        locationName = "Library Rm 402",
-                        startTimeMillis = now + 86400000 + 18000000,
-                        endTimeMillis = now + 86400000 + 25200000,
-                        joinedCount = 8,
-                        capacity = 15,
-                        memberUids = listOf(uid),
-                        communityId = "HCMUS"
-                    )
-                ))
             } else state
         }
         .stateIn(viewModelScope, SharingStarted.Lazily, UiState.Loading)
@@ -152,62 +135,5 @@ class MySessionsViewModel : ViewModel() {
 
     fun prevMonth() {
         _currentMonth.value = _currentMonth.value.minusMonths(1)
-    }
-
-    /**
-     * Seeds mock data locally if Firestore is empty/unreachable for testing (§7.6).
-     */
-    fun seedMockData() {
-        viewModelScope.launch {
-            val uid = "brrTa7ftM0PaHJd68aFFx0HcsRI3"
-            val now = com.google.firebase.Timestamp.now()
-            val calendar = java.util.Calendar.getInstance()
-            
-            // Mock Session 1 (Today)
-            val session1 = mapOf(
-                "communityId" to "HCMUS",
-                "hostUid" to "other-user",
-                "title" to "Intro to Algorithms",
-                "courseName" to "Data Structures",
-                "locationName" to "Floor 9 Library",
-                "startTime" to now,
-                "endTime" to com.google.firebase.Timestamp(java.util.Date(System.currentTimeMillis() + 7200000)),
-                "joinedCount" to 4,
-                "capacity" to 6,
-                "memberUids" to listOf(uid, "other-user"),
-                "status" to "upcoming",
-                "mode" to "open"
-            )
-
-            // Mock Session 2 (Tomorrow)
-            calendar.add(java.util.Calendar.DAY_OF_YEAR, 1)
-            calendar.set(java.util.Calendar.HOUR_OF_DAY, 14)
-            val startTime2 = calendar.time
-            calendar.add(java.util.Calendar.HOUR, 2)
-            val endTime2 = calendar.time
-
-            val session2 = mapOf(
-                "communityId" to "HCMUS",
-                "hostUid" to uid,
-                "title" to "Calc III Study Group",
-                "courseName" to "Calculus 3",
-                "locationName" to "Library Rm 402",
-                "startTime" to com.google.firebase.Timestamp(startTime2),
-                "endTime" to com.google.firebase.Timestamp(endTime2),
-                "joinedCount" to 8,
-                "capacity" to 15,
-                "memberUids" to listOf(uid),
-                "status" to "upcoming",
-                "mode" to "gated"
-            )
-
-            try {
-                val db = com.google.firebase.firestore.FirebaseFirestore.getInstance()
-                db.collection("sessions").add(session1)
-                db.collection("sessions").add(session2)
-            } catch (e: Exception) {
-                // Ignore if rules fail
-            }
-        }
     }
 }

@@ -5,6 +5,7 @@ import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
 import android.widget.Toast
+import androidx.core.content.res.ResourcesCompat
 import androidx.core.view.isVisible
 import androidx.fragment.app.Fragment
 import androidx.fragment.app.viewModels
@@ -58,25 +59,22 @@ class MySessionsFragment : Fragment() {
         setupListView()
         setupCalendarView()
 
+        val pjsansBold = ResourcesCompat.getFont(requireContext(), R.font.pjsans_bold)
+        val pjsansRegular = ResourcesCompat.getFont(requireContext(), R.font.pjsans_regular)
+
         viewLifecycleOwner.lifecycleScope.launch {
             viewModel.viewType.collect { type ->
                 val isList = type == MySessionsViewModel.ViewType.LIST
                 binding.groupList.isVisible = isList
                 binding.groupCalendar.isVisible = !isList
                 
-                binding.toggleListView.setBackgroundResource(
-                    if (isList) R.drawable.bg_segment_myses else 0
-                )
-                binding.toggleListView.setTextColor(
-                    context?.getColor(if (isList) R.color.graphite else R.color.light_graphite)!!
-                )
+                binding.toggleListView.setBackgroundResource(if (isList) R.drawable.bg_segment_myses else 0)
+                binding.toggleListView.setTextColor(context?.getColor(if (isList) R.color.graphite else R.color.light_graphite)!!)
+                binding.toggleListView.typeface = if (isList) pjsansBold else pjsansRegular
 
-                binding.toggleCalendar.setBackgroundResource(
-                    if (!isList) R.drawable.bg_segment_myses else 0
-                )
-                binding.toggleCalendar.setTextColor(
-                    context?.getColor(if (!isList) R.color.graphite else R.color.light_graphite)!!
-                )
+                binding.toggleCalendar.setBackgroundResource(if (!isList) R.drawable.bg_segment_myses else 0)
+                binding.toggleCalendar.setTextColor(context?.getColor(if (!isList) R.color.graphite else R.color.light_graphite)!!)
+                binding.toggleCalendar.typeface = if (!isList) pjsansBold else pjsansRegular
             }
         }
 

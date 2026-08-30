@@ -18,6 +18,7 @@ class CreateSessionViewModel : ViewModel() {
 
     private val sessionRepository = ServiceLocator.sessionRepository
     private val communityRepository = ServiceLocator.communityRepository
+    private val profileRepository = ServiceLocator.profileRepository
 
     private val _locations = MutableStateFlow<List<CampusLocation>>(emptyList())
     val locations: StateFlow<List<CampusLocation>> = _locations
@@ -25,8 +26,17 @@ class CreateSessionViewModel : ViewModel() {
     private val _createResult = MutableStateFlow<ActionResult?>(null)
     val createResult: StateFlow<ActionResult?> = _createResult
 
+    private var currentCommunityId: String? = null
+
     init {
         loadCampusLocations()
+        viewModelScope.launch {
+            profileRepository.observeCurrentProfile().collect { state ->
+                if (state is com.studyfinder.app.util.UiState.Success) {
+                    currentCommunityId = state.data.communityId
+                }
+            }
+        }
     }
 
     fun loadCampusLocations() {
@@ -56,18 +66,20 @@ class CreateSessionViewModel : ViewModel() {
         capacity: Int,
         isGated: Boolean
     ) {
+        val communityId = currentCommunityId
+        if (communityId == null) {
+            _createResult.value = ActionResult.Failure("Community not selected")
+            return
+        }
+
         viewModelScope.launch {
             val endTimeMillis = startTimeMillis + (durationMinutes * 60000L)
             
-            // We use tags instead of specific course objects now.
-            // For the Session model, we might need a dummy course or update the model.
-            // Since we're bypassing backend, we'll just build a session with dummy course info if needed.
-            
             val session = Session(
                 id = "", 
-                communityId = "HCMUS", 
-                hostUid = "brrTa7ftM0PaHJd68aFFx0HcsRI3",
-                courseId = "GENERAL", // Dummy since course selection is removed
+                communityId = communityId, 
+                hostUid = com.google.firebase.auth.FirebaseAuth.getInstance().currentUser?.uid ?: "",
+                courseId = "GENERAL",
                 courseName = "General Study",
                 courseCategory = CourseCategory.OTHER,
                 tagType = tagType,
