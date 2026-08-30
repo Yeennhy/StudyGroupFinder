@@ -73,7 +73,7 @@ class MySessionsViewModel : ViewModel() {
                     items.add(MySessionListItem.SessionItem(session))
                 }
             }
-            UiState.Success(items)
+            if (items.isEmpty()) UiState.Empty() else UiState.Success(items)
         } else if (state is UiState.Error) {
             UiState.Error(state.message, state.cause)
         } else if (state is UiState.Empty) {

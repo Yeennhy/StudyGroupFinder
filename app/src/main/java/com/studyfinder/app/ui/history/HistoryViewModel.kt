@@ -26,7 +26,8 @@ class HistoryViewModel : ViewModel() {
             if (state is UiState.Success) {
                 val now = System.currentTimeMillis()
                 val items = state.data.filter { it.isPast(now) || it.status == SessionStatus.CANCELLED }
-                UiState.Success(items.sortedByDescending { it.startTimeMillis })
+                    .sortedByDescending { it.startTimeMillis }
+                if (items.isEmpty()) UiState.Empty() else UiState.Success(items)
             } else state
         }
         .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), UiState.Loading)

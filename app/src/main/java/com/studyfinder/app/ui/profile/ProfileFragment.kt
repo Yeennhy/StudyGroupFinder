@@ -120,16 +120,27 @@ class ProfileFragment : Fragment() {
     }
 
     private fun observeViewModel() {
+        binding.stateEmpty.tvStateEmptyMessage.setText(R.string.empty_profile)
+        binding.stateError.btnStateRetry.setOnClickListener { activity?.recreate() }
+
         viewModel.profile.observe(viewLifecycleOwner) { state ->
+            // Don't yank the form out from under an in-progress edit.
+            if (!isEditing) {
+                com.studyfinder.app.ui.common.StateRenderer.render(
+                    state = state,
+                    loadingView = binding.stateLoading.root,
+                    emptyView = binding.stateEmpty.root,
+                    errorView = binding.stateError.root,
+                    offlineView = binding.stateOfflineBanner.root,
+                    contentView = binding.scrollContent,
+                )
+            }
             when (state) {
-                is UiState.Loading -> {
-                    // TODO: Show progress
-                }
                 is UiState.Success -> {
-                    val profile = state.data
-                    if (!isEditing) {
-                        bindProfile(profile)
-                    }
+                    if (!isEditing) bindProfile(state.data)
+                }
+                is UiState.Offline -> {
+                    if (!isEditing) bindProfile(state.cached)
                 }
                 is UiState.Error -> {
                     Toast.makeText(context, state.message, Toast.LENGTH_SHORT).show()
