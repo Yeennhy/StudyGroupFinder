@@ -103,12 +103,16 @@ class ActivityGraphView(context: Context, attrs: AttributeSet?) : View(context, 
         // Month labels
         var lastMonth = -1
         weeks.forEachIndexed { col, week ->
-            val firstDay = week[0].date
-            if (firstDay.monthValue != lastMonth) {
-                val monthLabel = firstDay.month.getDisplayName(TextStyle.SHORT, Locale.getDefault())
+            // Check if any day in this week belongs to a month we haven't labeled yet
+            val newMonthDay = week.find { it.date.monthValue != lastMonth }
+            
+            if (newMonthDay != null) {
+                val dateToLabel = newMonthDay.date
+                val monthLabel = dateToLabel.month.getDisplayName(TextStyle.SHORT, Locale.getDefault())
                 val x = labelAreaLeft + col * (cellSize + cellGap)
+                
                 canvas.drawText(monthLabel, x, labelAreaTop - 8f * resources.displayMetrics.density, textPaint)
-                lastMonth = firstDay.monthValue
+                lastMonth = dateToLabel.monthValue
             }
         }
     }
