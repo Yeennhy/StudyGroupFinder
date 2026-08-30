@@ -1,0 +1,188 @@
+<?xml version="1.0" encoding="utf-8"?>
+<androidx.constraintlayout.widget.ConstraintLayout
+    xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:background="@drawable/bg_dotted_paper">
+
+    <!-- Header - pinned at top -->
+    <include
+        android:id="@+id/appHeader"
+        layout="@layout/layout_app_header"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:elevation="8dp"
+        app:layout_constraintTop_toTopOf="parent" />
+
+    <!-- Main scroll area - everything below header scrolls -->
+    <androidx.core.widget.NestedScrollView
+        android:id="@+id/mainScrollView"
+        android:layout_width="0dp"
+        android:layout_height="0dp"
+        android:fillViewport="true"
+        app:layout_constraintTop_toBottomOf="@id/appHeader"
+        app:layout_constraintBottom_toTopOf="@id/navBar"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintEnd_toEndOf="parent">
+
+        <androidx.constraintlayout.widget.ConstraintLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:paddingBottom="40dp">
+
+            <!-- View Switcher Toggle -->
+            <LinearLayout
+                android:id="@+id/toggleViewMode"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="28dp"
+                android:layout_marginStart="60dp"
+                android:layout_marginEnd="60dp"
+                android:orientation="horizontal"
+                android:background="@drawable/bg_selector_myses"
+                android:padding="8dp"
+                app:layout_constraintTop_toTopOf="parent">
+
+                <TextView
+                    android:id="@+id/toggleListView"
+                    android:layout_width="0dp"
+                    android:layout_height="wrap_content"
+                    android:layout_weight="1"
+                    android:text="List View"
+                    android:textStyle="bold"
+                    android:textSize="12sp"
+                    android:textColor="@color/graphite"
+                    android:gravity="center"
+                    android:paddingVertical="8dp"
+                    android:fontFamily="@font/bricolagegrotesque_bold"
+                    android:background="@drawable/bg_segment_myses" />
+
+                <TextView
+                    android:id="@+id/toggleCalendar"
+                    android:layout_width="0dp"
+                    android:layout_height="wrap_content"
+                    android:layout_weight="1"
+                    android:text="Calendar View"
+                    android:textSize="12sp"
+                    android:textColor="@color/light_graphite"
+                    android:gravity="center"
+                    android:paddingVertical="8dp"
+                    android:fontFamily="@font/bricolagegrotesque_bold" />
+
+            </LinearLayout>
+
+            <!-- LIST VIEW CONTENT -->
+            <LinearLayout
+                android:id="@+id/groupList"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:orientation="vertical"
+                android:visibility="visible"
+                app:layout_constraintTop_toBottomOf="@id/toggleViewMode">
+
+                <LinearLayout
+                    android:id="@+id/rowSectionTitle"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="24dp"
+                    android:layout_marginStart="20dp"
+                    android:gravity="center_vertical">
+                    <ImageView android:layout_width="20dp" android:layout_height="20dp" android:src="@drawable/ic_profactivity" app:tint="@color/graphite" android:contentDescription="Upcoming icon" />
+                    <TextView android:layout_width="wrap_content" android:layout_height="wrap_content" android:layout_marginStart="10dp" android:text="Upcoming Sessions" android:textStyle="bold" android:textSize="24sp" android:textColor="@color/graphite" android:fontFamily="@font/bricolagegrotesque_bold" />
+                </LinearLayout>
+
+                <androidx.recyclerview.widget.RecyclerView
+                    android:id="@+id/rvSessions"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="16dp"
+                    android:paddingHorizontal="20dp"
+                    android:nestedScrollingEnabled="false"
+                    tools:listitem="@layout/item_session_list" />
+            </LinearLayout>
+
+            <!-- CALENDAR VIEW CONTENT -->
+            <LinearLayout
+                android:id="@+id/groupCalendar"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:orientation="vertical"
+                android:visibility="gone"
+                app:layout_constraintTop_toBottomOf="@id/toggleViewMode">
+
+                <LinearLayout
+                    android:id="@+id/cardCalendar"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="24dp"
+                    android:layout_marginStart="16dp"
+                    android:layout_marginEnd="16dp"
+                    android:orientation="vertical"
+                    android:padding="4dp"
+                    android:background="@drawable/bg_whitebox_dropsd">
+
+                    <RelativeLayout android:layout_width="match_parent" android:layout_height="wrap_content" android:background="@drawable/bg_card_header_clay" android:padding="12dp">
+                        <ImageButton android:id="@+id/btnPrevMonth" android:layout_width="32dp" android:layout_height="32dp" android:layout_alignParentStart="true" android:src="@drawable/ic_chevron_right" android:scaleX="-1" android:background="@android:color/transparent" app:tint="@color/graphite" android:contentDescription="Prev month" />
+                        <TextView android:id="@+id/tvMonthYear" android:layout_width="wrap_content" android:layout_height="wrap_content" android:layout_centerInParent="true" android:textStyle="bold" android:textSize="20sp" android:textColor="@color/graphite" android:fontFamily="@font/bricolagegrotesque_bold" tools:text="October 2023" />
+                        <ImageButton android:id="@+id/btnNextMonth" android:layout_width="32dp" android:layout_height="32dp" android:layout_alignParentEnd="true" android:src="@drawable/ic_chevron_right" android:background="@android:color/transparent" app:tint="@color/graphite" android:contentDescription="Next month" />
+                    </RelativeLayout>
+
+                    <View android:layout_width="match_parent" android:layout_height="2dp" android:background="@color/graphite" />
+
+                    <LinearLayout android:layout_width="match_parent" android:layout_height="wrap_content" android:orientation="horizontal" android:paddingVertical="8dp" android:paddingHorizontal="4dp" android:background="@color/white">
+                        <TextView style="@style/CalendarWeekdayLabel" android:text="M" />
+                        <TextView style="@style/CalendarWeekdayLabel" android:text="T" />
+                        <TextView style="@style/CalendarWeekdayLabel" android:text="W" />
+                        <TextView style="@style/CalendarWeekdayLabel" android:text="T" />
+                        <TextView style="@style/CalendarWeekdayLabel" android:text="F" />
+                        <TextView style="@style/CalendarWeekdayLabel" android:text="S" />
+                        <TextView style="@style/CalendarWeekdayLabel" android:text="S" />
+                    </LinearLayout>
+
+                    <androidx.recyclerview.widget.RecyclerView
+                        android:id="@+id/rvCalendarDays"
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:background="@color/white"
+                        android:paddingBottom="8dp"
+                        android:nestedScrollingEnabled="false"
+                        app:layoutManager="androidx.recyclerview.widget.GridLayoutManager"
+                        app:spanCount="7"
+                        tools:listitem="@layout/item_calendar_day" />
+                </LinearLayout>
+
+                <include
+                    android:id="@+id/rowSelectedDate"
+                    layout="@layout/item_my_session_dateheader"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="20dp"
+                    android:layout_marginStart="20dp"
+                    android:layout_marginEnd="20dp" />
+
+                <androidx.recyclerview.widget.RecyclerView
+                    android:id="@+id/rvSelectedDateSessions"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="14dp"
+                    android:paddingHorizontal="20dp"
+                    android:paddingBottom="40dp"
+                    android:clipToPadding="false"
+                    android:nestedScrollingEnabled="false"
+                    tools:listitem="@layout/item_session_calendar" />
+            </LinearLayout>
+
+        </androidx.constraintlayout.widget.ConstraintLayout>
+    </androidx.core.widget.NestedScrollView>
+
+    <!-- Bottom nav - pinned at bottom -->
+    <include
+        android:id="@+id/navBar"
+        layout="@layout/fragment_navbar"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        app:layout_constraintBottom_toBottomOf="parent" />
+
+</androidx.constraintlayout.widget.ConstraintLayout>

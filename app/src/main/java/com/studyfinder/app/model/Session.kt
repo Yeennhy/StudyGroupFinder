@@ -1,5 +1,7 @@
 package com.studyfinder.app.model
 
+import java.io.Serializable
+
 /**
  * A study session — `sessions/{sessionId}` in Firestore (§3.1).
  *
@@ -36,7 +38,7 @@ data class Session(
     val materialUrls: List<String> = emptyList(),
     val createdAtMillis: Long = 0L,
     val updatedAtMillis: Long = 0L,
-) {
+) : Serializable {
     val isFull: Boolean get() = joinedCount >= capacity
 
     /** Past-vs-upcoming is derived, never stored (§3.1). */

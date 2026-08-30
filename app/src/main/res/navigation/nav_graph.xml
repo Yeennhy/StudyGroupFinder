@@ -14,7 +14,7 @@
     xmlns:app="http://schemas.android.com/apk/res-auto"
     xmlns:tools="http://schemas.android.com/tools"
     android:id="@+id/nav_graph"
-    app:startDestination="@id/splashFragment">
+    app:startDestination="@id/homeFragment">
 
     <!-- ============================ auth (§7.0) ============================ -->
 
@@ -123,6 +123,11 @@
             app:destination="@id/loginFragment"
             app:popUpTo="@id/nav_graph"
             app:popUpToInclusive="true" />
+        <action
+            android:id="@+id/action_successFragment_to_homeFragment"
+            app:destination="@id/homeFragment"
+            app:popUpTo="@id/nav_graph"
+            app:popUpToInclusive="true" />
     </fragment>
 
     <!-- ====================== community selection (§7.1) ==================== -->
@@ -223,6 +228,11 @@
             app:destination="@id/sessionDetailFragment"
             app:popUpTo="@id/createSessionFragment"
             app:popUpToInclusive="true" />
+        <action
+            android:id="@+id/action_createSessionFragment_to_successFragment"
+            app:destination="@id/successFragment"
+            app:popUpTo="@id/createSessionFragment"
+            app:popUpToInclusive="true" />
     </fragment>
 
     <!-- ======================= session management (§7.5) =================== -->
@@ -262,11 +272,14 @@
         android:id="@+id/mySessionsFragment"
         android:name="com.studyfinder.app.ui.mysessions.MySessionsFragment"
         android:label="@string/title_my_sessions"
-        tools:layout="@layout/fragment_my_sessions_list">
+        tools:layout="@layout/fragment_my_sessions">
 
         <action
             android:id="@+id/action_mySessionsFragment_to_sessionDetailFragment"
             app:destination="@id/sessionDetailFragment" />
+        <action
+            android:id="@+id/action_mySessionsFragment_to_sessionManageFragment"
+            app:destination="@id/sessionManageFragment" />
         <action
             android:id="@+id/action_mySessionsFragment_to_historyFragment"
             app:destination="@id/historyFragment" />

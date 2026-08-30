@@ -72,6 +72,7 @@
                         android:fontFamily="@font/bricolagegrotesque_bold" />
                     
                     <ImageButton
+                        android:id="@+id/btnEditSession"
                         android:layout_width="38dp"
                         android:layout_height="38dp"
                         app:layout_constraintEnd_toEndOf="parent"
@@ -303,7 +304,7 @@
                 </RelativeLayout>
 
                 <androidx.recyclerview.widget.RecyclerView
-                    android:id="@+id/rvMaterials"
+                    android:id="@+id/rvPendingRequests"
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
                     android:layout_marginTop="12dp"
@@ -491,7 +492,7 @@
                 android:text="Save"
                 android:textAllCaps="false"
                 android:textStyle="bold"
-                android:textSize="20sp"
+                android:textSize="16sp"
                 android:textColor="@color/graphite"
                 android:gravity="center"
                 android:paddingTop="16dp"
@@ -514,10 +515,10 @@
                 android:insetTop="0dp"
                 android:insetBottom="0dp"
                 android:minHeight="0dp"
-                android:text="Terminate"
+                android:text="Cancel Session"
                 android:textAllCaps="false"
                 android:textStyle="bold"
-                android:textSize="20sp"
+                android:textSize="16sp"
                 android:textColor="@color/graphite"
                 android:gravity="center"
                 android:paddingTop="16dp"

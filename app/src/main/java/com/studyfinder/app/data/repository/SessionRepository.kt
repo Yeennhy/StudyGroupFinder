@@ -25,6 +25,7 @@ import kotlinx.coroutines.channels.awaitClose
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.callbackFlow
 import kotlinx.coroutines.flow.first
+import kotlinx.coroutines.flow.flow
 import kotlinx.coroutines.flow.onStart
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.tasks.await
@@ -163,6 +164,7 @@ class SessionRepository {
                 }
                 if (snapshot != null) {
                     val sessions = snapshot.documents.mapNotNull { FirestoreMappers.toSession(it) }
+                        .filter { it.status != SessionStatus.CANCELLED }
                     
                     // Cache to Room
                     val now = System.currentTimeMillis()
@@ -373,6 +375,13 @@ class SessionRepository {
         ActionResult.Success
     } catch (e: Exception) {
         ActionResult.Failure(e.message ?: "Cancellation failed", e)
+    }
+
+    suspend fun finishSession(sessionId: String): ActionResult = try {
+        FirestoreRefs.session(sessionId).update(Field.STATUS, SessionStatus.FINISHED.wire).await()
+        ActionResult.Success
+    } catch (e: Exception) {
+        ActionResult.Failure(e.message ?: "Operation failed", e)
     }
 
     suspend fun attachMaterial(sessionId: String, materialUrl: String): ActionResult = try {

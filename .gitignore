@@ -18,3 +18,8 @@ local.properties
 
 # Emulator log produced by scripts/start-android.sh
 emulator_log.txt
+.idea/misc.xml
+
+# Secrets and Configs
+app/google-services.json
+app/src/main/java/com/studyfinder/app/util/CloudinaryConfig.kt

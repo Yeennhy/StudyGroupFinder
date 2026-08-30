@@ -68,7 +68,8 @@ enum class SessionMode(override val wire: String) : WireEnum {
  */
 enum class SessionStatus(override val wire: String) : WireEnum {
     UPCOMING("upcoming"),
-    CANCELLED("cancelled");
+    CANCELLED("cancelled"),
+    FINISHED("finished");
 
     companion object {
         fun from(wire: String?): SessionStatus? = entries.firstOrNull { it.wire == wire }

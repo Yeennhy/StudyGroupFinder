@@ -39,7 +39,10 @@ class HomeFragment : Fragment() {
         super.onViewCreated(view, savedInstanceState)
         setupNavbar(binding.navBar)
         setupHeader(binding.appHeader, "Home", showHistory = true, showBackBtn = false, showAvatar = true)
-        // §7.2 Implementation: adapter, sort toggle, search, both chip groups, etc.
+
+        binding.fabAdd.setOnClickListener {
+            openCreateSession()
+        }
     }
 
     private fun openSession(sessionId: String) {
