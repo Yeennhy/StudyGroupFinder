@@ -35,4 +35,9 @@
     <string name="state_retry">Retry</string>
     <string name="state_offline_banner">Showing saved data — you\'re offline</string>
     <string name="cd_category_filter">Course type filter</string>
+
+    <!-- Community selection UI states (§7.1) -->
+    <string name="communities_empty">No communities match. Try another name or city.</string>
+    <string name="communities_error">Couldn\'t load communities. Check your connection and retry.</string>
+    <string name="city_all">All cities</string>
 </resources>
