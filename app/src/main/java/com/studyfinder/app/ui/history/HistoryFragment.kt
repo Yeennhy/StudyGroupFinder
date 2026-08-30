@@ -6,23 +6,30 @@ import android.view.View
 import android.view.ViewGroup
 import androidx.fragment.app.Fragment
 import androidx.fragment.app.viewModels
+import androidx.lifecycle.lifecycleScope
 import androidx.navigation.fragment.findNavController
+import androidx.recyclerview.widget.LinearLayoutManager
+import com.studyfinder.app.R
 import com.studyfinder.app.databinding.FragmentHistoryBinding
 import com.studyfinder.app.model.SessionViewMode
+import com.studyfinder.app.util.ActionResult
+import com.studyfinder.app.util.UiState
 import com.studyfinder.app.util.setupHeader
+import kotlinx.coroutines.flow.collectLatest
+import kotlinx.coroutines.launch
 
 /**
- * Session history (§7.6) — time, location and tags per row.
- *
- * Rows open Session Detail in **past view mode**, where every action button
- * is suppressed and the "continue from last time" button lives (§7.3 row 1).
- * Cancelled sessions appear struck through rather than vanishing.
+ * Session history (§7.6).
  */
 class HistoryFragment : Fragment() {
 
     private var _binding: FragmentHistoryBinding? = null
     private val binding get() = _binding!!
     private val viewModel: HistoryViewModel by viewModels()
+
+    private val adapter = HistoryAdapter { session ->
+        openPastSession(session.id)
+    }
 
     override fun onCreateView(
         inflater: LayoutInflater,
@@ -35,8 +42,45 @@ class HistoryFragment : Fragment() {
 
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
-        setupHeader(binding.appHeader, "History", showHistory = false, showBackBtn = true, showAvatar = false)
-        // §7.6 Implementation: past list.
+        setupHeader(
+            binding = binding.appHeader,
+            title = "History",
+            showHistory = false,
+            showBackBtn = true,
+            showAvatar = false,
+            rightBtnIcon = R.drawable.ic_download // Use download icon for export
+        )
+        
+        binding.appHeader.rightmostBtn.setOnClickListener {
+            viewModel.exportPdf()
+        }
+
+        binding.rvHistory.layoutManager = LinearLayoutManager(context)
+        binding.rvHistory.adapter = adapter
+
+        viewLifecycleOwner.lifecycleScope.launch {
+            launch {
+                viewModel.historySessions.collectLatest { state ->
+                    if (state is UiState.Success) {
+                        adapter.submitList(state.data)
+                    }
+                }
+            }
+            launch {
+                viewModel.exportResult.collectLatest { result ->
+                    if (result is ActionResult.Success) {
+                        viewModel.resetExportResult()
+                        val bundle = Bundle().apply {
+                            putString("message", "History Exported!")
+                            putString("subtitle", "Your session history has been saved as PDF.")
+                            putString("buttonText", "Back to History")
+                            putBoolean("isSignupSuccess", false)
+                        }
+                        findNavController().navigate(R.id.action_historyFragment_to_successFragment, bundle)
+                    }
+                }
+            }
+        }
     }
 
     private fun openPastSession(sessionId: String) {

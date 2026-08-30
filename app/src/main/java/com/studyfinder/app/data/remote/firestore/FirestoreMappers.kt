@@ -54,6 +54,7 @@ object FirestoreMappers {
             mode = SessionMode.from(doc.getString(Field.MODE)) ?: SessionMode.OPEN,
             status = SessionStatus.from(doc.getString(Field.STATUS)) ?: SessionStatus.UPCOMING,
             materialUrls = (doc.get(Field.MATERIAL_URLS) as? List<*>)?.mapNotNull { it as? String } ?: emptyList(),
+            tags = (doc.get("tags") as? List<*>)?.mapNotNull { it as? String } ?: emptyList(),
             createdAtMillis = doc.getTimestamp(Field.CREATED_AT)?.toDate()?.time ?: 0L,
             updatedAtMillis = doc.getTimestamp(Field.UPDATED_AT)?.toDate()?.time ?: 0L,
         )
@@ -137,6 +138,7 @@ object FirestoreMappers {
         Field.MODE to session.mode.wire,
         Field.STATUS to SessionStatus.UPCOMING.wire,
         Field.MATERIAL_URLS to session.materialUrls,
+        "tags" to session.tags,
         Field.CREATED_AT to Timestamp.now(),
         Field.UPDATED_AT to Timestamp.now(),
     )
@@ -152,6 +154,7 @@ object FirestoreMappers {
         Field.END_TIME to Timestamp(java.util.Date(session.endTimeMillis)),
         Field.CAPACITY to session.capacity,
         Field.MODE to session.mode.wire,
+        "tags" to session.tags,
         Field.UPDATED_AT to Timestamp.now(),
     )
 

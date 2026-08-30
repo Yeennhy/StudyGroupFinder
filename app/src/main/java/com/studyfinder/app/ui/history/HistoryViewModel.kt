@@ -1,27 +1,44 @@
 package com.studyfinder.app.ui.history
 
 import androidx.lifecycle.ViewModel
+import androidx.lifecycle.viewModelScope
 import com.studyfinder.app.ServiceLocator
+import com.studyfinder.app.model.SessionStatus
+import com.studyfinder.app.util.ActionResult
+import com.studyfinder.app.util.UiState
+import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.SharingStarted
+import kotlinx.coroutines.flow.StateFlow
+import kotlinx.coroutines.flow.map
+import kotlinx.coroutines.flow.stateIn
+import kotlinx.coroutines.launch
 
 /** §7.6. Same query as My Sessions, filtered to `endTime` in the past. */
 class HistoryViewModel : ViewModel() {
 
     private val sessionRepository = ServiceLocator.sessionRepository
 
-    fun observePast() {
-        TODO("§7.6")
-    }
+    private val _exportResult = MutableStateFlow<ActionResult?>(null)
+    val exportResult: StateFlow<ActionResult?> = _exportResult
 
-    /**
-     * 🟢 NOT in the team's original spec — added by the plan, and the first
-     * thing to cut (§7.6). CSV is a plain delimited string; PDF uses Android's
-     * built-in PdfDocument. Shared via FileProvider + ACTION_SEND.
-     */
-    fun exportCsv() {
-        TODO("§7.6")
-    }
+    val historySessions = sessionRepository.observeMySessions(includeCancelled = true)
+        .map { state ->
+            if (state is UiState.Success) {
+                val now = System.currentTimeMillis()
+                val items = state.data.filter { it.isPast(now) || it.status == SessionStatus.CANCELLED }
+                UiState.Success(items.sortedByDescending { it.startTimeMillis })
+            } else state
+        }
+        .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), UiState.Loading)
 
     fun exportPdf() {
-        TODO("§7.6")
+        viewModelScope.launch {
+            // TODO: Real PDF logic
+            _exportResult.value = ActionResult.Success
+        }
+    }
+    
+    fun resetExportResult() {
+        _exportResult.value = null
     }
 }

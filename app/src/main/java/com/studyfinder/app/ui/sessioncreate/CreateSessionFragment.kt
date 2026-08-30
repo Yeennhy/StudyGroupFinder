@@ -11,12 +11,15 @@ import androidx.fragment.app.Fragment
 import androidx.fragment.app.viewModels
 import androidx.lifecycle.lifecycleScope
 import androidx.navigation.fragment.findNavController
+import androidx.navigation.fragment.navArgs
+import com.google.android.material.chip.Chip
 import com.google.android.material.datepicker.MaterialDatePicker
 import com.google.android.material.timepicker.MaterialTimePicker
 import com.google.android.material.timepicker.TimeFormat
 import com.studyfinder.app.R
 import com.studyfinder.app.databinding.FragmentCreateSessionBinding
 import com.studyfinder.app.model.ExpectationLevel
+import com.studyfinder.app.model.Session
 import com.studyfinder.app.model.TagType
 import com.studyfinder.app.util.ActionResult
 import com.studyfinder.app.util.setupHeader
@@ -31,11 +34,13 @@ class CreateSessionFragment : Fragment() {
     private var _binding: FragmentCreateSessionBinding? = null
     private val binding get() = _binding!!
     private val viewModel: CreateSessionViewModel by viewModels()
+    private val args: CreateSessionFragmentArgs by navArgs()
 
     private var selectedDate = Calendar.getInstance()
     private var durationMinutes = 90
     private var capacity = 4
     private var isGated = false
+    private val selectedTags = mutableListOf<String>()
 
     override fun onCreateView(
         inflater: LayoutInflater,
@@ -55,6 +60,10 @@ class CreateSessionFragment : Fragment() {
         setupSchedule()
         setupCapacity()
         setupSubmit()
+
+        args.prefillFromSessionId?.let {
+            viewModel.prefillFrom(it)
+        }
 
         observeViewModel()
     }
@@ -167,7 +176,9 @@ class CreateSessionFragment : Fragment() {
     }
 
     private fun setupSubmit() {
-        // TODO: Tag logic we will do later
+        binding.btnAddTag.setOnClickListener {
+            showAddTagDialog()
+        }
 
         binding.btnCreateSession.setOnClickListener {
             val title = binding.etTitle.text.toString()
@@ -195,28 +206,95 @@ class CreateSessionFragment : Fragment() {
                 startTimeMillis = selectedDate.timeInMillis,
                 durationMinutes = durationMinutes,
                 capacity = capacity,
-                isGated = isGated
+                isGated = isGated,
+                tags = selectedTags
             )
         }
     }
 
-    private fun observeViewModel() {
-        viewLifecycleOwner.lifecycleScope.launch {
-            viewModel.createResult.collect { result ->
-                if (result is ActionResult.Success) {
-                    viewModel.resetResult()
-                    findNavController().navigate(
-                        CreateSessionFragmentDirections.actionCreateSessionFragmentToSuccessFragment(
-                            message = "Session Created!",
-                            subtitle = "Your study group is now live.",
-                            buttonText = "View My Sessions",
-                            isSignupSuccess = false
-                        )
-                    )
-                } else if (result is ActionResult.Failure) {
-                    Toast.makeText(context, "Error: ${result.message}", Toast.LENGTH_LONG).show()
+    private fun showAddTagDialog() {
+        val editText = android.widget.EditText(requireContext())
+        androidx.appcompat.app.AlertDialog.Builder(requireContext())
+            .setTitle("Add Tag")
+            .setView(editText)
+            .setPositiveButton("Add") { _, _ ->
+                val tag = editText.text.toString().trim()
+                if (tag.isNotBlank()) {
+                    addTagToUi(tag)
                 }
             }
+            .setNegativeButton("Cancel", null)
+            .show()
+    }
+
+    private fun addTagToUi(tag: String) {
+        if (selectedTags.contains(tag)) return
+        selectedTags.add(tag)
+        val chip = Chip(requireContext()).apply {
+            text = tag
+            isCloseIconVisible = true
+            setOnCloseIconClickListener {
+                selectedTags.remove(tag)
+                binding.tagContainer.removeView(this)
+            }
+        }
+        binding.tagContainer.addView(chip, binding.tagContainer.childCount - 1)
+    }
+
+    private fun observeViewModel() {
+        viewLifecycleOwner.lifecycleScope.launch {
+            launch {
+                viewModel.prefilledSession.collect { session ->
+                    session?.let { fillUi(it) }
+                }
+            }
+            launch {
+                viewModel.createResult.collect { result ->
+                    if (result is ActionResult.Success) {
+                        viewModel.resetResult()
+                        findNavController().navigate(
+                            CreateSessionFragmentDirections.actionCreateSessionFragmentToSuccessFragment(
+                                message = "Session Created!",
+                                subtitle = "Your study group is now live.",
+                                buttonText = "View My Sessions",
+                                isSignupSuccess = false
+                            )
+                        )
+                    } else if (result is ActionResult.Failure) {
+                        Toast.makeText(context, "Error: ${result.message}", Toast.LENGTH_LONG).show()
+                    }
+                }
+            }
+        }
+    }
+
+    private fun fillUi(session: Session) {
+        binding.apply {
+            etTitle.setText(session.title)
+            etDescription.setText(session.description)
+            etGoals.setText(session.goals)
+            
+            spinnerPreparingFor.setSelection(TagType.entries.indexOf(session.tagType))
+            spinnerExpectation.setSelection(ExpectationLevel.entries.indexOf(session.expectationLevel))
+            
+            // Location selection needs to wait for spinner Campus to be populated
+            viewLifecycleOwner.lifecycleScope.launch {
+                viewModel.locations.collect { locations ->
+                    val index = locations.indexOfFirst { it.name == session.locationName }
+                    if (index != -1) spinnerCampus.setSelection(index)
+                }
+            }
+            
+            capacity = session.capacity
+            tvCapacity.text = capacity.toString()
+            
+            isGated = session.mode == com.studyfinder.app.model.SessionMode.GATED
+            updateToggleUI()
+
+            tagContainer.removeAllViews()
+            session.tags.forEach { addTagToUi(it) }
+            // Add back the "+" button
+            tagContainer.addView(btnAddTag)
         }
     }
 
