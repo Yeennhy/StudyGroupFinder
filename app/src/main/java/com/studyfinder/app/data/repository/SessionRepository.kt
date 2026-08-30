@@ -164,6 +164,7 @@ class SessionRepository {
                 }
                 if (snapshot != null) {
                     val sessions = snapshot.documents.mapNotNull { FirestoreMappers.toSession(it) }
+                        .filter { it.status != SessionStatus.CANCELLED }
                     
                     // Cache to Room
                     val now = System.currentTimeMillis()
