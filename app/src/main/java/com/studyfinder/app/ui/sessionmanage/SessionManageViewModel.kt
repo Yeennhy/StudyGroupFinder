@@ -4,6 +4,7 @@ import android.net.Uri
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.studyfinder.app.ServiceLocator
+import com.studyfinder.app.model.CampusLocation
 import com.studyfinder.app.model.Session
 import com.studyfinder.app.model.SessionMember
 import com.studyfinder.app.util.ActionResult
@@ -18,17 +19,41 @@ class SessionManageViewModel : ViewModel() {
 
     private val sessionRepository = ServiceLocator.sessionRepository
     private val inboxRepository = ServiceLocator.inboxRepository
+    private val profileRepository = ServiceLocator.profileRepository
 
     private val _session = MutableStateFlow<UiState<Session>>(UiState.Loading)
     val session: StateFlow<UiState<Session>> = _session
 
+    private val _pendingSession = MutableStateFlow<Session?>(null)
+    val pendingSession: StateFlow<Session?> = _pendingSession
+
     private val _pendingRequests = MutableStateFlow<UiState<List<SessionMember>>>(UiState.Loading)
     val pendingRequests: StateFlow<UiState<List<SessionMember>>> = _pendingRequests
+
+    private val _members = MutableStateFlow<UiState<List<SessionMember>>>(UiState.Loading)
+    val members: StateFlow<UiState<List<SessionMember>>> = _members
+
+    private val _locations = MutableStateFlow<List<CampusLocation>>(emptyList())
+    val locations: StateFlow<List<CampusLocation>> = _locations
 
     private val _actionResult = MutableStateFlow<ActionResult?>(null)
     val actionResult: StateFlow<ActionResult?> = _actionResult
 
     private var currentSessionId: String? = null
+
+    init {
+        loadCampusLocations()
+    }
+
+    private fun loadCampusLocations() {
+        // Mock data for UI testing as requested
+        _locations.value = listOf(
+            CampusLocation("LIB", "Main Library", 10.7629, 106.6822),
+            CampusLocation("SRA", "Study Room A", 10.7631, 106.6825),
+            CampusLocation("HALL-B", "Hall B", 10.7630, 106.6820),
+            CampusLocation("CAFE", "Campus Cafe", 10.7625, 106.6815)
+        )
+    }
 
     fun start(sessionId: String) {
         currentSessionId = sessionId
@@ -38,12 +63,21 @@ class SessionManageViewModel : ViewModel() {
             }
         }
         observePendingRequests(sessionId)
+        observeMembers(sessionId)
     }
 
     private fun observePendingRequests(sessionId: String) {
         viewModelScope.launch {
             sessionRepository.observePendingRequests(sessionId).collectLatest {
                 _pendingRequests.value = it
+            }
+        }
+    }
+
+    private fun observeMembers(sessionId: String) {
+        viewModelScope.launch {
+            sessionRepository.observeMembers(sessionId).collectLatest {
+                _members.value = it
             }
         }
     }
@@ -70,8 +104,13 @@ class SessionManageViewModel : ViewModel() {
     }
 
     fun saveEdits(session: Session) {
+        _pendingSession.value = session
+    }
+
+    fun submitChanges() {
+        val sessionToSave = _pendingSession.value ?: (_session.value as? UiState.Success)?.data ?: return
         viewModelScope.launch {
-            _actionResult.value = sessionRepository.editSession(session)
+            _actionResult.value = sessionRepository.editSession(sessionToSave)
         }
     }
 
@@ -79,6 +118,13 @@ class SessionManageViewModel : ViewModel() {
         val sid = currentSessionId ?: return
         viewModelScope.launch {
             _actionResult.value = sessionRepository.cancelSession(sid)
+        }
+    }
+
+    fun finishSession() {
+        val sid = currentSessionId ?: return
+        viewModelScope.launch {
+            _actionResult.value = sessionRepository.finishSession(sid)
         }
     }
 

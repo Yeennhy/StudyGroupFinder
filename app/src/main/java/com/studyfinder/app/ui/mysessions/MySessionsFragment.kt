@@ -4,7 +4,6 @@ import android.os.Bundle
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
-import android.widget.Toast
 import androidx.core.content.res.ResourcesCompat
 import androidx.core.view.isVisible
 import androidx.fragment.app.Fragment
@@ -13,8 +12,10 @@ import androidx.lifecycle.lifecycleScope
 import androidx.navigation.fragment.findNavController
 import androidx.recyclerview.widget.GridLayoutManager
 import androidx.recyclerview.widget.LinearLayoutManager
+import com.google.firebase.auth.FirebaseAuth
 import com.studyfinder.app.R
 import com.studyfinder.app.databinding.FragmentMySessionsBinding
+import com.studyfinder.app.model.Session
 import com.studyfinder.app.model.SessionViewMode
 import com.studyfinder.app.util.UiState
 import com.studyfinder.app.util.setupHeader
@@ -30,13 +31,23 @@ class MySessionsFragment : Fragment() {
     private var _binding: FragmentMySessionsBinding? = null
     private val binding get() = _binding!!
     private val viewModel: MySessionsViewModel by viewModels()
+    private val auth = FirebaseAuth.getInstance()
 
-    private val listAdapter = MySessionListAdapter { session -> 
-        Toast.makeText(context, "Clicked: ${session.title}", Toast.LENGTH_SHORT).show()
-    }
+    private val listAdapter = MySessionListAdapter { session -> handleSessionClick(session) }
     private val calendarDayAdapter = CalendarDayAdapter { date -> viewModel.selectDate(date) }
-    private val calendarSessionAdapter = CalendarSessionAdapter { session -> 
-        Toast.makeText(context, "Clicked: ${session.title}", Toast.LENGTH_SHORT).show()
+    private val calendarSessionAdapter = CalendarSessionAdapter { session -> handleSessionClick(session) }
+
+    private fun handleSessionClick(session: Session) {
+        val currentUid = auth.currentUser?.uid
+        if (session.hostUid == currentUid) {
+            findNavController().navigate(
+                MySessionsFragmentDirections.actionMySessionsFragmentToSessionManageFragment(session.id)
+            )
+        } else {
+            findNavController().navigate(
+                MySessionsFragmentDirections.actionMySessionsFragmentToSessionDetailFragment(session.id, SessionViewMode.LIVE)
+            )
+        }
     }
 
     override fun onCreateView(

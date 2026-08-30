@@ -376,6 +376,13 @@ class SessionRepository {
         ActionResult.Failure(e.message ?: "Cancellation failed", e)
     }
 
+    suspend fun finishSession(sessionId: String): ActionResult = try {
+        FirestoreRefs.session(sessionId).update(Field.STATUS, SessionStatus.FINISHED.wire).await()
+        ActionResult.Success
+    } catch (e: Exception) {
+        ActionResult.Failure(e.message ?: "Operation failed", e)
+    }
+
     suspend fun attachMaterial(sessionId: String, materialUrl: String): ActionResult = try {
         FirestoreRefs.session(sessionId).update(
             Field.MATERIAL_URLS, FieldValue.arrayUnion(materialUrl),

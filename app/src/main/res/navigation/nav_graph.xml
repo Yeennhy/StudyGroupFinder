@@ -278,6 +278,9 @@
             android:id="@+id/action_mySessionsFragment_to_sessionDetailFragment"
             app:destination="@id/sessionDetailFragment" />
         <action
+            android:id="@+id/action_mySessionsFragment_to_sessionManageFragment"
+            app:destination="@id/sessionManageFragment" />
+        <action
             android:id="@+id/action_mySessionsFragment_to_historyFragment"
             app:destination="@id/historyFragment" />
     </fragment>
