@@ -21,7 +21,22 @@ class CommunityListAdapter(
     )
 
     override fun onBindViewHolder(holder: ViewHolder, position: Int) {
-        TODO("§7.1")
+        val community = getItem(position)
+        val b = holder.binding
+
+        b.tvCommunityName.text = community.name
+        b.tvLocation.text = community.city.ifBlank { "—" }
+        b.ivVerifiedBadge.visibility = if (community.verified) android.view.View.VISIBLE else android.view.View.GONE
+
+        b.tvMembers.text = when {
+            community.verified && community.domainWhitelist.isNotEmpty() ->
+                "@${community.domainWhitelist.first()}"
+            community.verified -> "Verified community"
+            else -> "Open to everyone"
+        }
+
+        b.btnJoinCommunity.setOnClickListener { onClick(community) }
+        b.root.setOnClickListener { onClick(community) }
     }
 
     private companion object {
