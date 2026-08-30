@@ -9,6 +9,7 @@ import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
 import android.widget.ImageView
+import android.widget.Toast
 import androidx.activity.result.PickVisualMediaRequest
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.core.content.ContextCompat
@@ -20,16 +21,16 @@ import androidx.fragment.app.viewModels
 import androidx.navigation.fragment.findNavController
 import androidx.navigation.fragment.navArgs
 import com.bumptech.glide.Glide
-import com.google.android.material.dialog.MaterialAlertDialogBuilder
 import com.studyfinder.app.R
 import com.studyfinder.app.databinding.FragmentProfileBinding
+import com.studyfinder.app.model.UserProfile
+import com.studyfinder.app.util.ActivityGraphUtils
+import com.studyfinder.app.ui.sessionmanage.ConfirmationDialogFragment
+import com.studyfinder.app.util.ActionResult
+import com.studyfinder.app.util.UiState
 import com.studyfinder.app.util.setupHeader
 import com.studyfinder.app.util.setupNavbar
 import java.io.File
-import android.widget.Toast
-import com.studyfinder.app.util.ActionResult
-import com.studyfinder.app.util.UiState
-import com.studyfinder.app.model.UserProfile
 
 /**
  * Profile (§7.7) — two viewing modes in one destination.
@@ -106,8 +107,12 @@ class ProfileFragment : Fragment() {
         }
 
         binding.btnUnblock.setOnClickListener {
-            args.uid?.let { viewModel.unblockUser(it) }
+            args.uid?.let { viewModel.blockUser(it) }
         }
+
+        // Only self-view can edit or change community (§7.7)
+        binding.btnEditDetails.isVisible = isSelfView
+        binding.btnCommunityArrow.isVisible = isSelfView
 
         observeViewModel()
         
@@ -143,6 +148,8 @@ class ProfileFragment : Fragment() {
                     Toast.makeText(context, "Profile updated", Toast.LENGTH_SHORT).show()
                     isEditing = false
                     setEditMode(false)
+                    // Refresh UI with the latest data from the ViewModel
+                    (viewModel.profile.value as? UiState.Success)?.data?.let { bindProfile(it) }
                     viewModel.clearSaveResult()
                 }
                 is ActionResult.Failure -> {
@@ -151,6 +158,11 @@ class ProfileFragment : Fragment() {
                 }
                 else -> {}
             }
+        }
+
+        viewModel.activityCells.observe(viewLifecycleOwner) { cells ->
+            val weeks = ActivityGraphUtils.buildWeeks(cells.associate { it.date to it.count })
+            binding.activityGraph.submitData(weeks)
         }
     }
 
@@ -175,15 +187,19 @@ class ProfileFragment : Fragment() {
     }
 
     private fun showAvatarSourceDialog() {
-        MaterialAlertDialogBuilder(requireContext())
-            .setTitle("Change Profile Picture")
-            .setItems(arrayOf("Select from Gallery", "Take Photo")) { _, which ->
-                when (which) {
-                    0 -> pickMedia.launch(PickVisualMediaRequest(ActivityResultContracts.PickVisualMedia.ImageOnly))
-                    1 -> launchCamera()
-                }
-            }
-            .show()
+        ConfirmationDialogFragment.newInstance(
+            title = "Change Photo",
+            subtitle = "Select your profile picture source",
+            buttonText = "Camera",
+            cancelText = "Gallery",
+            secondaryButtonText = "Cancel",
+            iconRes = R.drawable.ic_profile,
+            iconBgColor = ContextCompat.getColor(requireContext(), R.color.theme_gray),
+            iconTint = ContextCompat.getColor(requireContext(), R.color.graphite)
+        ).apply {
+            setOnConfirmListener { launchCamera() }
+            setOnCancelListener { pickMedia.launch(PickVisualMediaRequest(ActivityResultContracts.PickVisualMedia.ImageOnly)) }
+        }.show(parentFragmentManager, "AvatarSourceDialog")
     }
 
     private fun launchCamera() {
@@ -235,7 +251,18 @@ class ProfileFragment : Fragment() {
                 if (isSelfView) {
                     showSignOutConfirmationDialog()
                 } else if (!isBlocked) {
-                    args.uid?.let { viewModel.blockUser(it) }
+                    ConfirmationDialogFragment.newInstance(
+                        title = "Block User",
+                        subtitle = "Are you sure you want to block this user?",
+                        buttonText = "Block",
+                        cancelText = "Cancel",
+                        iconRes = R.drawable.ic_block,
+                        iconBgColor = ContextCompat.getColor(requireContext(), R.color.deep_red),
+                        iconTint = ContextCompat.getColor(requireContext(), R.color.white),
+                        confirmBtnBgRes = R.drawable.bg_red_btn
+                    ).apply {
+                        setOnConfirmListener { args.uid?.let { viewModel.blockUser(it) } }
+                    }.show(parentFragmentManager, "BlockConfirmationDialog")
                 }
             }
         )
@@ -276,6 +303,7 @@ class ProfileFragment : Fragment() {
         binding.tvMajorValue.isVisible = !enabled
         binding.tvAdmissionYearValue.isVisible = !enabled
         binding.cardSessionActivity.isVisible = !enabled
+        binding.cardCommunity.isVisible = !enabled
 
         // Toggle visibility of editing views
         binding.tvEditName.isVisible = enabled
@@ -287,6 +315,10 @@ class ProfileFragment : Fragment() {
         binding.etAdmissionYearValue.isVisible = enabled
         binding.btnEditAvatar.isVisible = enabled
         binding.btnSaveChanges.isVisible = enabled
+
+        // Hide edit triggers while editing or if not self-view
+        binding.btnEditDetails.isVisible = isSelfView && !enabled
+        binding.btnCommunityArrow.isVisible = isSelfView && !enabled
 
         if (enabled) {
             // Copy data to EditTexts
@@ -326,14 +358,16 @@ class ProfileFragment : Fragment() {
     }
 
     private fun showSignOutConfirmationDialog() {
-        MaterialAlertDialogBuilder(requireContext())
-            .setTitle("Sign Out")
-            .setMessage("Are you sure you want to sign out?")
-            .setNegativeButton("Cancel", null)
-            .setPositiveButton("Sign Out") { _, _ ->
-                signOut()
-            }
-            .show()
+        ConfirmationDialogFragment.newInstance(
+            title = "Sign Out",
+            subtitle = "Are you sure you want to sign out?",
+            buttonText = "Sign Out",
+            cancelText = "Cancel",
+            iconRes = R.drawable.ic_signout,
+            iconBgColor = ContextCompat.getColor(requireContext(), R.color.theme_gray)
+        ).apply {
+            setOnConfirmListener { signOut() }
+        }.show(parentFragmentManager, "SignOutDialog")
     }
 
     /** Sign-out clears the Room cache, then pops the whole stack (§7.0). */

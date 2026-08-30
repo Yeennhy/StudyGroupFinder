@@ -146,10 +146,9 @@ class SessionRepository {
         awaitClose { listener.remove() }
     }
 
-    fun observeMySessions(includeCancelled: Boolean = false): Flow<UiState<List<Session>>> = callbackFlow {
-        val uid = auth.currentUser?.uid
-        if (uid == null) {
-            trySend(UiState.Error("User not signed in"))
+    fun observeUserSessions(uid: String, includeCancelled: Boolean = false): Flow<UiState<List<Session>>> = callbackFlow {
+        if (uid.isBlank()) {
+            trySend(UiState.Success(emptyList()))
             close()
             return@callbackFlow
         }
@@ -168,10 +167,12 @@ class SessionRepository {
                         sessions = sessions.filter { it.status != SessionStatus.CANCELLED }
                     }
                     
-                    // Cache to Room
-                    val now = System.currentTimeMillis()
-                    scope.launch {
-                        mySessionDao.upsertAll(sessions.map { FirestoreMappers.toMySessionEntity(it, now) })
+                    // Cache to Room if it's current user
+                    if (uid == auth.currentUser?.uid) {
+                        val now = System.currentTimeMillis()
+                        scope.launch {
+                            mySessionDao.upsertAll(sessions.map { FirestoreMappers.toMySessionEntity(it, now) })
+                        }
                     }
                     
                     trySend(UiState.Success(sessions))
@@ -179,6 +180,11 @@ class SessionRepository {
             }
         awaitClose { listener.remove() }
     }.onStart { emit(UiState.Loading) }
+
+    fun observeMySessions(includeCancelled: Boolean = false): Flow<UiState<List<Session>>> {
+        val uid = auth.currentUser?.uid ?: return flow { emit(UiState.Error("User not signed in")) }
+        return observeUserSessions(uid, includeCancelled)
+    }
 
     fun observePendingRequests(sessionId: String): Flow<UiState<List<SessionMember>>> = callbackFlow {
         val listener = FirestoreRefs.members(sessionId)

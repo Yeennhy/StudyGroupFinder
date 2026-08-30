@@ -23,4 +23,10 @@
 
     <color name="gray_dot">#BFE2E2E2</color>
     <color name="brown_dot">#80CDC6B3</color>
+
+    <!-- Activity Graph Tokens -->
+    <color name="graphite_10">#E2E2E2</color>
+    <color name="activity_low">@color/light_blue</color>
+    <color name="activity_mid">#ADD9D8</color>
+    <color name="activity_high">@color/ginkgo_yellow</color>
 </resources>

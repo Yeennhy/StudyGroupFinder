@@ -15,6 +15,7 @@
         android:layout_width="match_parent"
         android:layout_height="0dp"
         android:clipToPadding="false"
+        android:paddingBottom="40dp"
         android:clipChildren="false"
         android:fillViewport="true"
         app:layout_constraintTop_toTopOf="parent"
@@ -468,7 +469,7 @@
                             android:layout_alignParentEnd="true"
                             android:layout_centerVertical="true"
                             android:text="Computer Science"
-                            android:textSize="14sp"
+                            android:textSize="16sp"
                             android:textColor="@color/graphite"
                             android:fontFamily="@font/bricolagegrotesque_medium" />
 
@@ -480,7 +481,7 @@
                             android:layout_centerVertical="true"
                             android:background="@drawable/bg_input_field"
                             android:padding="8dp"
-                            android:textSize="13sp"
+                            android:textSize="16sp"
                             android:textColor="@color/graphite"
                             android:fontFamily="@font/bricolagegrotesque_medium"
                             android:singleLine="true"
@@ -520,7 +521,7 @@
                             android:layout_alignParentEnd="true"
                             android:layout_centerVertical="true"
                             android:text="Software Engineering"
-                            android:textSize="14sp"
+                            android:textSize="16sp"
                             android:textColor="@color/graphite"
                             android:fontFamily="@font/bricolagegrotesque_medium" />
 
@@ -532,7 +533,7 @@
                             android:layout_centerVertical="true"
                             android:background="@drawable/bg_input_field"
                             android:padding="8dp"
-                            android:textSize="13sp"
+                            android:textSize="16sp"
                             android:textColor="@color/graphite"
                             android:fontFamily="@font/bricolagegrotesque_medium"
                             android:singleLine="true"
@@ -571,7 +572,7 @@
                             android:layout_alignParentEnd="true"
                             android:layout_centerVertical="true"
                             android:text="2024"
-                            android:textSize="14sp"
+                            android:textSize="16sp"
                             android:textColor="@color/graphite"
                             android:fontFamily="@font/bricolagegrotesque_medium" />
 
@@ -583,7 +584,7 @@
                             android:layout_centerVertical="true"
                             android:background="@drawable/bg_input_field"
                             android:padding="8dp"
-                            android:textSize="14sp"
+                            android:textSize="16sp"
                             android:textColor="@color/graphite"
                             android:fontFamily="@font/bricolagegrotesque_medium"
                             android:inputType="number"
@@ -674,15 +675,12 @@
                     android:background="@color/white"
                     android:padding="16dp">
 
-                    <!-- Placeholder image for the contribution/commit graph -->
-                    <ImageView
-                        android:id="@+id/ivActivityGraph"
+                    <!-- Custom Activity Graph -->
+                    <com.studyfinder.app.ui.profile.ActivityGraphView
+                        android:id="@+id/activityGraph"
                         android:layout_width="match_parent"
-                        android:layout_height="110dp"
-
-                        android:src="@drawable/img_activity_placeholder"
-                        android:contentDescription="Session activity graph"
-                        tools:ignore="ContentDescription" />
+                        android:layout_height="wrap_content"
+                        app:cellGap="4dp"/>
 
                     <!-- Legend -->
                     <LinearLayout
