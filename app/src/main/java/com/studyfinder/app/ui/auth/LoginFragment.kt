@@ -2,9 +2,13 @@ package com.studyfinder.app.ui.auth
 
 import android.graphics.Paint
 import android.os.Bundle
+import android.text.method.HideReturnsTransformationMethod
+import android.text.method.PasswordTransformationMethod
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
+import android.widget.EditText
+import android.widget.ImageButton
 import androidx.core.view.isVisible
 import androidx.fragment.app.Fragment
 import androidx.fragment.app.viewModels
@@ -67,6 +71,8 @@ class LoginFragment : Fragment() {
         binding.tvForgotPassword.setOnClickListener { goToForgotPassword() }
         binding.tvSignUp.setOnClickListener { goToSignup() }
 
+        setupPasswordToggle(binding.etPassword, binding.btnTogglePassword)
+
         // Observe results
         viewModel.result.observe(viewLifecycleOwner) { result ->
             when (result) {
@@ -127,6 +133,21 @@ class LoginFragment : Fragment() {
         findNavController().navigate(
             LoginFragmentDirections.actionLoginFragmentToHomeFragment()
         )
+    }
+
+    private fun setupPasswordToggle(editText: EditText, toggleButton: ImageButton) {
+        var isPasswordVisible = false
+        toggleButton.setOnClickListener {
+            isPasswordVisible = !isPasswordVisible
+            if (isPasswordVisible) {
+                editText.transformationMethod = HideReturnsTransformationMethod.getInstance()
+                toggleButton.setImageResource(R.drawable.ic_eye_cross)
+            } else {
+                editText.transformationMethod = PasswordTransformationMethod.getInstance()
+                toggleButton.setImageResource(R.drawable.ic_eye)
+            }
+            editText.setSelection(editText.text.length)
+        }
     }
 
     override fun onDestroyView() {

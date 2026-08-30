@@ -1,10 +1,17 @@
 package com.studyfinder.app.util
 
+import android.content.res.ColorStateList
 import android.view.View
+import android.widget.ImageView
+import androidx.core.content.ContextCompat
+import androidx.core.view.setPadding
 import androidx.fragment.app.Fragment
+import androidx.lifecycle.asLiveData
 import androidx.navigation.NavDirections
 import androidx.navigation.fragment.findNavController
+import com.bumptech.glide.Glide
 import com.studyfinder.app.R
+import com.studyfinder.app.ServiceLocator
 import com.studyfinder.app.databinding.LayoutAppHeaderBinding
 import com.studyfinder.app.ui.home.HomeFragmentDirections
 import com.studyfinder.app.ui.inbox.InboxFragmentDirections
@@ -36,6 +43,37 @@ fun Fragment.setupHeader(
 
     // Avatar visibility
     binding.userAvatarContainer.visibility = if (showAvatar) View.VISIBLE else View.GONE
+    if (showAvatar) {
+        binding.userAvatarContainer.setOnClickListener {
+            navController.navigate(R.id.profileFragment)
+        }
+
+        ServiceLocator.profileRepository.observeCurrentProfile().asLiveData()
+            .observe(viewLifecycleOwner) { state ->
+                if (state is UiState.Success) {
+                    val profile = state.data
+                    binding.userAvatar.apply {
+                        if (profile.photoUrl.isNotBlank()) {
+                            setPadding(0)
+                            scaleType = ImageView.ScaleType.CENTER_CROP
+                            imageTintList = null
+                            Glide.with(this@setupHeader)
+                                .load(profile.photoUrl)
+                                .circleCrop()
+                                .into(this)
+                        } else {
+                            val paddingPx = (10 * resources.displayMetrics.density).toInt()
+                            setPadding(paddingPx)
+                            scaleType = ImageView.ScaleType.FIT_CENTER
+                            imageTintList = ColorStateList.valueOf(
+                                ContextCompat.getColor(requireContext(), R.color.graphite)
+                            )
+                            setImageResource(R.drawable.ic_profile)
+                        }
+                    }
+                }
+            }
+    }
     
     // Header button logic
     when {

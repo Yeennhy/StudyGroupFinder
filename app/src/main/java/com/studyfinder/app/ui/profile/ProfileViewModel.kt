@@ -13,6 +13,7 @@ import com.studyfinder.app.util.UiState
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.flatMapLatest
+import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.launch
 
 /** §7.7. */
@@ -30,6 +31,10 @@ class ProfileViewModel : ViewModel() {
         } else {
             profileRepository.observeProfile(uid)
         }
+    }.asLiveData()
+
+    val isBlocked: LiveData<Boolean> = combine(uidFlow, profileRepository.observeBlockedUids()) { uid, blockedUids ->
+        uid != null && blockedUids.contains(uid)
     }.asLiveData()
 
     private val _saveResult = MutableLiveData<ActionResult>(ActionResult.Idle)
@@ -71,11 +76,15 @@ class ProfileViewModel : ViewModel() {
      * Home: sessions whose member list contains them are greyed out (§7.2).
      */
     fun blockUser(uid: String) {
-        TODO("§7.7")
+        viewModelScope.launch {
+            profileRepository.blockUser(uid)
+        }
     }
 
     fun unblockUser(uid: String) {
-        TODO("§7.7")
+        viewModelScope.launch {
+            profileRepository.unblockUser(uid)
+        }
     }
 
     fun resendVerificationEmail() {
@@ -83,6 +92,8 @@ class ProfileViewModel : ViewModel() {
     }
 
     fun signOut() {
-        TODO("§7.0")
+        viewModelScope.launch {
+            authRepository.signOut()
+        }
     }
 }

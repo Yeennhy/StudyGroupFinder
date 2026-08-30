@@ -1,14 +1,20 @@
 package com.studyfinder.app.ui.profile
 
+import android.Manifest
+import android.content.pm.PackageManager
+import android.content.res.ColorStateList
 import android.net.Uri
 import android.os.Bundle
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
+import android.widget.ImageView
 import androidx.activity.result.PickVisualMediaRequest
 import androidx.activity.result.contract.ActivityResultContracts
+import androidx.core.content.ContextCompat
 import androidx.core.content.FileProvider
 import androidx.core.view.isVisible
+import androidx.core.view.setPadding
 import androidx.fragment.app.Fragment
 import androidx.fragment.app.viewModels
 import androidx.navigation.fragment.findNavController
@@ -60,6 +66,14 @@ class ProfileFragment : Fragment() {
         }
     }
 
+    private val requestCameraPermission = registerForActivityResult(ActivityResultContracts.RequestPermission()) { isGranted ->
+        if (isGranted) {
+            launchCamera()
+        } else {
+            Toast.makeText(requireContext(), "Camera permission is required to take photos", Toast.LENGTH_SHORT).show()
+        }
+    }
+
     override fun onCreateView(
         inflater: LayoutInflater,
         container: ViewGroup?,
@@ -72,19 +86,7 @@ class ProfileFragment : Fragment() {
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
         setupNavbar(binding.navBar)
-        setupHeader(
-            binding.appHeader,
-            "Profile",
-            showBackBtn = !isSelfView,
-            showAvatar = false,
-            rightBtnIcon = if (isSelfView) R.drawable.ic_signout else R.drawable.ic_block,
-            onRightBtnClick = {
-                if (isSelfView) {
-                    signOut()
-                }
-            }
-        )
-
+        
         viewModel.start(args.uid)
 
         binding.btnCommunityArrow.setOnClickListener {
@@ -101,6 +103,10 @@ class ProfileFragment : Fragment() {
 
         binding.btnEditAvatar.setOnClickListener {
             showAvatarSourceDialog()
+        }
+
+        binding.btnUnblock.setOnClickListener {
+            args.uid?.let { viewModel.unblockUser(it) }
         }
 
         observeViewModel()
@@ -125,6 +131,10 @@ class ProfileFragment : Fragment() {
                 }
                 else -> {}
             }
+        }
+
+        viewModel.isBlocked.observe(viewLifecycleOwner) { isBlocked ->
+            updateBlockUi(isBlocked)
         }
 
         viewModel.saveResult.observe(viewLifecycleOwner) { result ->
@@ -154,10 +164,13 @@ class ProfileFragment : Fragment() {
         binding.tvAdmissionYearValue.text = profile.admissionYear
 
         if (profile.photoUrl.isNotBlank()) {
+            applyAvatarStyle(true)
             Glide.with(this)
                 .load(profile.photoUrl)
                 .circleCrop()
                 .into(binding.ivAvatar)
+        } else {
+            applyAvatarStyle(false)
         }
     }
 
@@ -174,20 +187,77 @@ class ProfileFragment : Fragment() {
     }
 
     private fun launchCamera() {
-        val tempFile = File(requireContext().cacheDir, "images").apply { mkdirs() }
-            .let { File(it, "temp_avatar_${System.currentTimeMillis()}.jpg") }
-        
-        val authority = "${requireContext().packageName}.fileprovider"
-        tempCameraUri = FileProvider.getUriForFile(requireContext(), authority, tempFile)
-        takePicture.launch(tempCameraUri)
+        if (ContextCompat.checkSelfPermission(requireContext(), Manifest.permission.CAMERA) != PackageManager.PERMISSION_GRANTED) {
+            requestCameraPermission.launch(Manifest.permission.CAMERA)
+            return
+        }
+
+        try {
+            val tempFile = File(requireContext().cacheDir, "images").apply { mkdirs() }
+                .let { File(it, "temp_avatar_${System.currentTimeMillis()}.jpg") }
+            
+            val authority = "${requireContext().packageName}.fileprovider"
+            tempCameraUri = FileProvider.getUriForFile(requireContext(), authority, tempFile)
+            takePicture.launch(tempCameraUri)
+        } catch (e: Exception) {
+            Toast.makeText(requireContext(), "Failed to open camera: ${e.message}", Toast.LENGTH_SHORT).show()
+        }
     }
 
     private fun updateAvatarUi(uri: Uri) {
         pendingAvatarUri = uri
+        applyAvatarStyle(true)
         Glide.with(this)
             .load(uri)
             .circleCrop()
             .into(binding.ivAvatar)
+    }
+
+    private fun updateBlockUi(isBlocked: Boolean) {
+        val showBlockInfo = !isSelfView && isBlocked
+        
+        binding.divAvatarCard.isVisible = showBlockInfo
+        binding.blockmsg.isVisible = showBlockInfo
+        binding.btnUnblock.isVisible = showBlockInfo
+
+        // Re-setup header to show/hide block button
+        setupHeader(
+            binding.appHeader,
+            "Profile",
+            showBackBtn = !isSelfView,
+            showAvatar = false,
+            rightBtnIcon = when {
+                isSelfView -> R.drawable.ic_signout
+                !isBlocked -> R.drawable.ic_block
+                else -> null
+            },
+            onRightBtnClick = {
+                if (isSelfView) {
+                    showSignOutConfirmationDialog()
+                } else if (!isBlocked) {
+                    args.uid?.let { viewModel.blockUser(it) }
+                }
+            }
+        )
+    }
+
+    private fun applyAvatarStyle(hasPhoto: Boolean) {
+        binding.ivAvatar.apply {
+            if (hasPhoto) {
+                val paddingPx = (8 * resources.displayMetrics.density).toInt()
+                setPadding(paddingPx)
+                scaleType = ImageView.ScaleType.CENTER_CROP
+                imageTintList = null
+            } else {
+                val paddingPx = (35 * resources.displayMetrics.density).toInt()
+                setPadding(paddingPx)
+                scaleType = ImageView.ScaleType.FIT_CENTER
+                imageTintList = ColorStateList.valueOf(
+                    ContextCompat.getColor(requireContext(), R.color.graphite)
+                )
+                setImageResource(R.drawable.ic_profile)
+            }
+        }
     }
 
     private fun toggleEditMode() {
@@ -208,7 +278,9 @@ class ProfileFragment : Fragment() {
         binding.cardSessionActivity.isVisible = !enabled
 
         // Toggle visibility of editing views
+        binding.tvEditName.isVisible = enabled
         binding.etProfileName.isVisible = enabled
+        binding.tvEditBio.isVisible = enabled
         binding.etProfileBio.isVisible = enabled
         binding.etDepartmentValue.isVisible = enabled
         binding.etMajorValue.isVisible = enabled
@@ -253,8 +325,20 @@ class ProfileFragment : Fragment() {
         )
     }
 
+    private fun showSignOutConfirmationDialog() {
+        MaterialAlertDialogBuilder(requireContext())
+            .setTitle("Sign Out")
+            .setMessage("Are you sure you want to sign out?")
+            .setNegativeButton("Cancel", null)
+            .setPositiveButton("Sign Out") { _, _ ->
+                signOut()
+            }
+            .show()
+    }
+
     /** Sign-out clears the Room cache, then pops the whole stack (§7.0). */
     private fun signOut() {
+        viewModel.signOut()
         findNavController().navigate(
             ProfileFragmentDirections.actionProfileFragmentToLoginFragment()
         )

@@ -115,7 +115,7 @@
             android:drawableStart="@drawable/ic_lock"
             android:drawablePadding="12dp"
             android:paddingStart="16dp"
-            android:paddingEnd="16dp"
+            android:paddingEnd="48dp"
             android:gravity="center_vertical"
             android:fontFamily="@font/bricolagegrotesque_regular"
             android:textSize="16sp"
@@ -123,6 +123,20 @@
             app:layout_constraintTop_toBottomOf="@id/tvEmailError"
             app:layout_constraintStart_toStartOf="parent"
             app:layout_constraintEnd_toEndOf="parent" />
+
+        <ImageButton
+            android:id="@+id/btnTogglePassword"
+            android:layout_width="24dp"
+            android:layout_height="24dp"
+            android:layout_marginEnd="16dp"
+            android:background="?attr/selectableItemBackgroundBorderless"
+            android:src="@drawable/ic_eye"
+            app:tint="@color/graphite"
+            android:scaleType="fitCenter"
+            app:layout_constraintTop_toTopOf="@id/etPassword"
+            app:layout_constraintBottom_toBottomOf="@id/etPassword"
+            app:layout_constraintEnd_toEndOf="@id/etPassword"
+            android:contentDescription="Toggle password visibility" />
 
         <!-- Password error -->
         <TextView
