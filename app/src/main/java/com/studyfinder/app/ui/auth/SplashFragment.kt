@@ -5,20 +5,17 @@ import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
 import androidx.fragment.app.Fragment
-import androidx.lifecycle.lifecycleScope
+import androidx.fragment.app.viewModels
 import androidx.navigation.fragment.findNavController
-import com.studyfinder.app.ServiceLocator
 import com.studyfinder.app.databinding.FragmentSplashBinding
-import com.studyfinder.app.util.UiState
-import kotlinx.coroutines.flow.first
-import kotlinx.coroutines.launch
 
 /**
  * Decides where the app actually starts (§7.0).
  *
  * Firebase persists the auth session across restarts, so the start
- * destination cannot be a static value in nav_graph.xml. This fragment routes
- * three ways and pops itself off the back stack either way:
+ * destination cannot be a static value in nav_graph.xml. The routing decision
+ * lives in [AuthViewModel.resolveStartRoute]; this fragment only navigates and
+ * pops itself off the back stack.
  *
  *  - no signed-in user                    -> Login
  *  - signed in, but no communityId set    -> Community Selection
@@ -28,6 +25,8 @@ class SplashFragment : Fragment() {
 
     private var _binding: FragmentSplashBinding? = null
     private val binding get() = _binding!!
+
+    private val authViewModel: AuthViewModel by viewModels()
 
     override fun onCreateView(
         inflater: LayoutInflater,
@@ -40,33 +39,14 @@ class SplashFragment : Fragment() {
 
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
-        
-        val authRepository = ServiceLocator.authRepository
-        val profileRepository = ServiceLocator.profileRepository
 
-        lifecycleScope.launch {
-            val uid = authRepository.currentUid
-            if (uid == null) {
-                goToLogin()
-            } else {
-                // Check communityId in profile
-                profileRepository.observeCurrentProfile().first { state ->
-                    state !is UiState.Loading
-                }.let { state ->
-                    when (state) {
-                        is UiState.Success -> {
-                            if (state.data.hasCommunity) {
-                                goToHome()
-                            } else {
-                                goToCommunitySelection()
-                            }
-                        }
-                        else -> {
-                            // If profile fetch fails or is empty, assume no community yet
-                            goToCommunitySelection()
-                        }
-                    }
-                }
+        authViewModel.resolveStartRoute { route ->
+            // The callback can arrive after the view is torn down.
+            if (_binding == null || !isAdded) return@resolveStartRoute
+            when (route) {
+                AuthViewModel.StartRoute.LOGIN -> goToLogin()
+                AuthViewModel.StartRoute.COMMUNITY_SELECTION -> goToCommunitySelection()
+                AuthViewModel.StartRoute.HOME -> goToHome()
             }
         }
     }
