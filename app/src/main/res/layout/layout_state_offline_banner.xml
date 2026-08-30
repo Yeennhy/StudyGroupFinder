@@ -1,0 +1,12 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Reusable offline banner (§2.1) — shown alongside cached content. -->
+<TextView xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content"
+    android:background="@color/theme_gray"
+    android:gravity="center"
+    android:padding="6dp"
+    android:text="@string/state_offline_banner"
+    android:textColor="@color/graphite"
+    android:textSize="12sp"
+    android:fontFamily="@font/pjsans_bold" />

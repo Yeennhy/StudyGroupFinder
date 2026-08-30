@@ -12,6 +12,7 @@ import androidx.recyclerview.widget.LinearLayoutManager
 import com.studyfinder.app.R
 import com.studyfinder.app.databinding.FragmentHistoryBinding
 import com.studyfinder.app.model.SessionViewMode
+import com.studyfinder.app.ui.common.StateRenderer
 import com.studyfinder.app.util.ActionResult
 import com.studyfinder.app.util.UiState
 import com.studyfinder.app.util.setupHeader
@@ -58,12 +59,26 @@ class HistoryFragment : Fragment() {
         binding.rvHistory.layoutManager = LinearLayoutManager(context)
         binding.rvHistory.adapter = adapter
 
+        binding.stateEmpty.tvStateEmptyMessage.setText(R.string.empty_history)
+        binding.stateError.btnStateRetry.setOnClickListener { activity?.recreate() }
+
         viewLifecycleOwner.lifecycleScope.launch {
             launch {
                 viewModel.historySessions.collectLatest { state ->
-                    if (state is UiState.Success) {
-                        adapter.submitList(state.data)
+                    StateRenderer.render(
+                        state = state,
+                        loadingView = binding.stateLoading.root,
+                        emptyView = binding.stateEmpty.root,
+                        errorView = binding.stateError.root,
+                        offlineView = binding.stateOfflineBanner.root,
+                        contentView = binding.rvHistory,
+                    )
+                    val items = when (state) {
+                        is UiState.Success -> state.data
+                        is UiState.Offline -> state.cached
+                        else -> emptyList()
                     }
+                    adapter.submitList(items)
                 }
             }
             launch {

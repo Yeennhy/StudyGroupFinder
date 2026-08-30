@@ -48,4 +48,13 @@
     <string name="inbox_details">Details</string>
     <string name="inbox_date_today">Today</string>
     <string name="inbox_date_yesterday">Yesterday</string>
+
+    <!-- Reusable UI-state partials (§2.1 / Branch feature/ui-states) -->
+    <string name="state_empty_generic">Nothing here yet.</string>
+    <string name="state_error_generic">Something went wrong</string>
+    <string name="empty_session_detail">This session is no longer available.</string>
+    <string name="empty_my_sessions">You haven\'t joined any sessions yet. Find one on the Home tab.</string>
+    <string name="empty_history">No past sessions to show — your finished sessions will appear here.</string>
+    <string name="empty_profile">We couldn\'t load this profile.</string>
+    <string name="empty_session_members">No members have joined yet.</string>
 </resources>
