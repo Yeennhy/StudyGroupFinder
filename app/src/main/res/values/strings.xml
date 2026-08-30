@@ -19,4 +19,20 @@
     <string name="attendees_count_format">Attendees (%1$d/%2$d)</string>
     <string name="host_name_format">%1$s (Host)</string>
     <string name="pick_up_session">Pick up Session</string>
+
+    <!-- Home session card notices (§7.2) -->
+    <string name="notice_session_full">Session full</string>
+    <string name="notice_contains_blocked_user">Contains a blocked user</string>
+    <string name="notice_overlaps_schedule">Overlaps your schedule</string>
+
+    <!-- Home UI states (§7.2 / §2.1) -->
+    <string name="home_sort_label">Sort</string>
+    <string name="home_sort_time">Soonest first</string>
+    <string name="home_sort_expectation">Effort level</string>
+    <string name="home_sort_distance">Nearest first</string>
+    <string name="home_empty">No sessions match your filters yet. Try clearing a chip or check back later.</string>
+    <string name="home_error">Couldn\'t load sessions. Check your connection and retry.</string>
+    <string name="state_retry">Retry</string>
+    <string name="state_offline_banner">Showing saved data — you\'re offline</string>
+    <string name="cd_category_filter">Course type filter</string>
 </resources>
