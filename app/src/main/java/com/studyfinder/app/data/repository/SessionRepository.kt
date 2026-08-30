@@ -122,7 +122,15 @@ class SessionRepository {
                 }
                 if (snapshot != null) {
                     val members = snapshot.documents.mapNotNull { FirestoreMappers.toSessionMember(it) }
-                    trySend(UiState.Success(members))
+                    
+                    // Fetch profiles for each member
+                    scope.launch {
+                        val membersWithProfiles = members.map { member ->
+                            val profileDoc = FirestoreRefs.user(member.uid).get().await()
+                            member.copy(profile = FirestoreMappers.toUserProfile(profileDoc))
+                        }
+                        trySend(UiState.Success(membersWithProfiles))
+                    }
                 }
             }
         awaitClose { listener.remove() }
@@ -310,11 +318,17 @@ class SessionRepository {
         val isSelf = uid == auth.currentUser?.uid
 
         db.runTransaction { transaction ->
-            transaction.update(sessionRef, 
-                Field.JOINED_COUNT, FieldValue.increment(-1),
-                Field.MEMBER_UIDS, FieldValue.arrayRemove(uid),
-                Field.UPDATED_AT, FieldValue.serverTimestamp()
-            )
+            val memberDoc = transaction.get(memberRef)
+            val status = memberDoc.getString(Field.STATUS)
+            
+            // Only decrement if they were actually a member (Accepted or Admin)
+            if (status == MemberStatus.ACCEPTED.wire || status == MemberStatus.ADMIN.wire) {
+                transaction.update(sessionRef, 
+                    Field.JOINED_COUNT, FieldValue.increment(-1),
+                    Field.MEMBER_UIDS, FieldValue.arrayRemove(uid),
+                    Field.UPDATED_AT, FieldValue.serverTimestamp()
+                )
+            }
             transaction.delete(memberRef)
         }.await()
 

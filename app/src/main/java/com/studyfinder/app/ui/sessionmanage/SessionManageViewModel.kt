@@ -38,6 +38,9 @@ class SessionManageViewModel : ViewModel() {
     private val _members = MutableStateFlow<UiState<List<SessionMember>>>(UiState.Loading)
     val members: StateFlow<UiState<List<SessionMember>>> = _members
 
+    private val _removedMemberUids = MutableStateFlow<Set<String>>(emptySet())
+    val removedMemberUids: StateFlow<Set<String>> = _removedMemberUids
+
     private val _locations = MutableStateFlow<List<CampusLocation>>(emptyList())
     val locations: StateFlow<List<CampusLocation>> = _locations
 
@@ -105,20 +108,40 @@ class SessionManageViewModel : ViewModel() {
     }
 
     fun removeMember(uid: String) {
-        val sid = currentSessionId ?: return
-        viewModelScope.launch {
-            _actionResult.value = sessionRepository.leaveOrRemove(sid, uid)
-        }
+        _removedMemberUids.value = _removedMemberUids.value + uid
     }
 
     fun saveEdits(session: Session) {
         _pendingSession.value = session
     }
 
+    fun hasUnsavedChanges(): Boolean {
+        return _pendingSession.value != null || _removedMemberUids.value.isNotEmpty()
+    }
+
     fun submitChanges() {
+        val sid = currentSessionId ?: return
         val sessionToSave = _pendingSession.value ?: (_session.value as? UiState.Success)?.data ?: return
+        val toRemove = _removedMemberUids.value
+
         viewModelScope.launch {
-            _actionResult.value = sessionRepository.editSession(sessionToSave)
+            try {
+                // 1. Save session edits
+                if (_pendingSession.value != null) {
+                    sessionRepository.editSession(sessionToSave)
+                }
+
+                // 2. Remove members
+                toRemove.forEach { uid ->
+                    sessionRepository.leaveOrRemove(sid, uid)
+                }
+
+                _actionResult.value = ActionResult.Success
+                _pendingSession.value = null
+                _removedMemberUids.value = emptySet()
+            } catch (e: Exception) {
+                _actionResult.value = ActionResult.Failure(e.message ?: "Update failed")
+            }
         }
     }
 

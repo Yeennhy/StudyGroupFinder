@@ -6,90 +6,113 @@
     android:layout_height="match_parent"
     android:background="@drawable/bg_dotted_paper">
 
-    <!-- Page title block, scrolls under header -->
-    <TextView
-        android:id="@+id/tv_page_title"
-        android:layout_width="0dp"
-        android:layout_height="wrap_content"
-        android:layout_marginTop="88dp"
-        android:layout_marginStart="20dp"
-        android:text="Past Sessions"
-        android:textSize="32sp"
-        android:textStyle="bold"
-        android:textColor="@color/graphite"
-        android:fontFamily="@font/bricolagegrotesque_bold"
-        app:layout_constraintTop_toTopOf="parent"
-        app:layout_constraintStart_toStartOf="parent" />
-
-    <TextView
-        android:id="@+id/tv_page_subtitle"
-        android:layout_width="0dp"
-        android:layout_height="wrap_content"
-        android:layout_marginTop="4dp"
-        android:layout_marginStart="20dp"
-        android:text="Your past study gatherings."
-        android:textSize="16sp"
-        android:textColor="@color/graphite"
-        android:fontFamily="@font/pjsans_medium"
-        app:layout_constraintTop_toBottomOf="@id/tv_page_title"
-        app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintEnd_toStartOf="@id/btn_export" />
-
-    <TextView
-        android:id="@+id/btn_export"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:layout_marginTop="88dp"
-        android:layout_marginEnd="20dp"
-        android:background="@drawable/bg_bluebox_dropsd"
-        android:text="EXPORT"
-        android:textColor="@color/graphite"
-        android:textStyle="bold"
-        android:textSize="14sp"
-        android:paddingHorizontal="12dp"
-        android:paddingTop="8dp"
-        android:paddingBottom="10dp"
-        android:drawableStart="@drawable/ic_download"
-        android:drawablePadding="6dp"
-        android:fontFamily="@font/pjsans_bold"
-        app:layout_constraintBottom_toBottomOf="@id/tv_page_subtitle"
-        app:layout_constraintEnd_toEndOf="parent" />
-
-    <!-- Session history list -->
-    <androidx.recyclerview.widget.RecyclerView
-        android:id="@+id/rvHistory"
-        android:layout_width="0dp"
-        android:layout_height="wrap_content"
-        android:layout_marginTop="24dp"
+    <!-- ===== Scrollable content (sits BEHIND the header) ===== -->
+    <androidx.core.widget.NestedScrollView
+        android:id="@+id/scrollContent"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
         android:clipToPadding="false"
-        android:paddingStart="20dp"
-        android:paddingEnd="20dp"
-        android:paddingBottom="20dp"
-        android:scrollbars="none"
-        tools:itemCount="4"
-        app:layout_constraintTop_toBottomOf="@id/tv_page_subtitle"
-
+        android:clipChildren="false"
+        android:fillViewport="true"
+        app:layout_constraintTop_toTopOf="parent"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintEnd_toEndOf="parent"
-        tools:listitem="@layout/item_session_history" />
+        app:layout_constraintBottom_toBottomOf="parent">
 
-    <TextView
-        android:id="@+id/btn_expand"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:layout_marginTop="8dp"
-        android:background="@drawable/bg_yellow_btn"
-        android:text="View More"
-        android:textColor="@color/graphite"
-        android:textStyle="bold"
-        android:textSize="16sp"
-        android:paddingHorizontal="32dp"
-        android:paddingTop="12dp"
-        android:paddingBottom="16dp"
-        android:fontFamily="@font/pjsans_bold"
-        app:layout_constraintTop_toBottomOf="@id/rvHistory"
-        app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintEnd_toEndOf="parent" />
+        <androidx.constraintlayout.widget.ConstraintLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:clipChildren="false"
+            android:clipToPadding="false">
+
+            <!-- Page title block, scrolls under header -->
+            <TextView
+                android:id="@+id/tv_page_title"
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="88dp"
+                android:layout_marginStart="20dp"
+                android:text="Past Sessions"
+                android:textSize="32sp"
+                android:textStyle="bold"
+                android:textColor="@color/graphite"
+                android:fontFamily="@font/bricolagegrotesque_bold"
+                app:layout_constraintTop_toTopOf="parent"
+                app:layout_constraintStart_toStartOf="parent" />
+
+            <TextView
+                android:id="@+id/tv_page_subtitle"
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="4dp"
+                android:layout_marginStart="20dp"
+                android:text="Your past study gatherings."
+                android:textSize="16sp"
+                android:textColor="@color/graphite"
+                android:fontFamily="@font/pjsans_medium"
+                app:layout_constraintTop_toBottomOf="@id/tv_page_title"
+                app:layout_constraintStart_toStartOf="parent"
+                app:layout_constraintEnd_toStartOf="@id/btn_export" />
+
+            <TextView
+                android:id="@+id/btn_export"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="88dp"
+                android:layout_marginEnd="20dp"
+                android:background="@drawable/bg_bluebox_dropsd"
+                android:text="EXPORT"
+                android:textColor="@color/graphite"
+                android:textStyle="bold"
+                android:textSize="14sp"
+                android:paddingHorizontal="12dp"
+                android:paddingTop="8dp"
+                android:paddingBottom="10dp"
+                android:drawableStart="@drawable/ic_download"
+                android:drawablePadding="6dp"
+                android:fontFamily="@font/pjsans_bold"
+                app:layout_constraintBottom_toBottomOf="@id/tv_page_subtitle"
+                app:layout_constraintEnd_toEndOf="parent" />
+
+            <!-- Session history list -->
+            <androidx.recyclerview.widget.RecyclerView
+                android:id="@+id/rvHistory"
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="24dp"
+                android:clipToPadding="false"
+                android:paddingStart="20dp"
+                android:paddingEnd="20dp"
+                android:paddingBottom="20dp"
+                android:nestedScrollingEnabled="false"
+                tools:itemCount="4"
+                app:layout_constraintTop_toBottomOf="@id/tv_page_subtitle"
+                app:layout_constraintStart_toStartOf="parent"
+                app:layout_constraintEnd_toEndOf="parent"
+                tools:listitem="@layout/item_history_row" />
+
+            <TextView
+                android:id="@+id/btn_expand"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="8dp"
+                android:layout_marginBottom="24dp"
+                android:background="@drawable/bg_yellow_btn"
+                android:text="View More"
+                android:textColor="@color/graphite"
+                android:textStyle="bold"
+                android:textSize="16sp"
+                android:paddingHorizontal="32dp"
+                android:paddingTop="12dp"
+                android:paddingBottom="16dp"
+                android:fontFamily="@font/pjsans_bold"
+                app:layout_constraintTop_toBottomOf="@id/rvHistory"
+                app:layout_constraintStart_toStartOf="parent"
+                app:layout_constraintEnd_toEndOf="parent"
+                app:layout_constraintBottom_toBottomOf="parent" />
+
+        </androidx.constraintlayout.widget.ConstraintLayout>
+    </androidx.core.widget.NestedScrollView>
 
     <!-- Reused header (yellow bar, back arrow, title) — drawn last, floats above scroll content -->
     <include

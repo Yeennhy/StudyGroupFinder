@@ -83,12 +83,20 @@ class SessionDetailFragment : Fragment() {
             launch {
                 ServiceLocator.sessionRepository.observeMembers(args.sessionId).collectLatest { state ->
                     if (state is UiState.Success<List<SessionMember>>) {
-                        val hostUid = (viewModel.session.value as? UiState.Success)?.data?.hostUid
-                        val attendees = state.data.filter { it.uid != hostUid }
+                        val sessionState = viewModel.session.value
+                        val hostUid = (sessionState as? UiState.Success)?.data?.hostUid
+                        val attendees = state.data.filter { 
+                            it.uid != hostUid && (it.status == com.studyfinder.app.model.MemberStatus.ACCEPTED || it.status == com.studyfinder.app.model.MemberStatus.ADMIN)
+                        }
                         attendeeAdapter.submitList(attendees)
                         
                         val host = state.data.find { it.uid == hostUid }
                         host?.let { bindHost(it) }
+
+                        if (sessionState is UiState.Success) {
+                            val totalAccepted = state.data.count { it.status == com.studyfinder.app.model.MemberStatus.ACCEPTED || it.status == com.studyfinder.app.model.MemberStatus.ADMIN }
+                            updateAttendeeCount(totalAccepted, sessionState.data.capacity)
+                        }
                     }
                 }
             }
@@ -143,12 +151,15 @@ class SessionDetailFragment : Fragment() {
             tvAgenda.text = session.goals
             
             materialAdapter.submitList(session.materialUrls)
-            tvAttendeesCount.text = getString(R.string.attendees_count_format, session.joinedCount, session.capacity)
 
             val isHost = session.hostUid == auth.currentUser?.uid
             uploadBtnContainer.isVisible = isHost
             rowInviteStudents.isVisible = isHost
         }
+    }
+
+    private fun updateAttendeeCount(acceptedCount: Int, capacity: Int) {
+        binding.tvAttendeesCount.text = getString(R.string.attendees_count_format, acceptedCount, capacity)
     }
 
     private fun bindHost(member: SessionMember) {

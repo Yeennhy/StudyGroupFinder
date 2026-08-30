@@ -16,9 +16,12 @@ class ConfirmationDialogFragment : DialogFragment() {
     private val binding get() = _binding!!
 
     private var onConfirm: (() -> Unit)? = null
+    private var onGoBack: (() -> Unit)? = null
+    
     private var title: String = ""
     private var subtitle: String = ""
     private var buttonText: String = ""
+    private var goBackText: String = "Go Back"
     private var iconRes: Int = R.drawable.ic_tick
     private var iconBgColor: Int = Color.parseColor("#AAD6A7") // theme_green
     private var confirmBtnBgRes: Int = R.drawable.bg_yellow_btn
@@ -29,6 +32,7 @@ class ConfirmationDialogFragment : DialogFragment() {
             title: String,
             subtitle: String,
             buttonText: String,
+            goBackText: String = "Go Back",
             iconRes: Int = R.drawable.ic_tick,
             iconBgColor: Int = Color.parseColor("#AAD6A7"),
             confirmBtnBgRes: Int = R.drawable.bg_yellow_btn,
@@ -38,6 +42,7 @@ class ConfirmationDialogFragment : DialogFragment() {
                 this.title = title
                 this.subtitle = subtitle
                 this.buttonText = buttonText
+                this.goBackText = goBackText
                 this.iconRes = iconRes
                 this.iconBgColor = iconBgColor
                 this.confirmBtnBgRes = confirmBtnBgRes
@@ -48,6 +53,10 @@ class ConfirmationDialogFragment : DialogFragment() {
 
     fun setOnConfirmListener(listener: () -> Unit) {
         this.onConfirm = listener
+    }
+
+    fun setOnGoBackListener(listener: () -> Unit) {
+        this.onGoBack = listener
     }
 
     override fun onCreateView(
@@ -75,13 +84,17 @@ class ConfirmationDialogFragment : DialogFragment() {
         binding.tvTitle.text = title
         binding.tvSubtitle.text = subtitle
         binding.btnConfirm.text = buttonText
+        binding.btnGoBack.text = goBackText
         binding.ivIcon.setImageResource(iconRes)
         binding.iconContainer.setCardBackgroundColor(iconBgColor)
         
         binding.btnConfirm.setBackgroundResource(confirmBtnBgRes)
         binding.btnGoBack.setBackgroundResource(goBackBtnBgRes)
 
-        binding.btnGoBack.setOnClickListener { dismiss() }
+        binding.btnGoBack.setOnClickListener {
+            onGoBack?.invoke()
+            dismiss()
+        }
         binding.btnConfirm.setOnClickListener {
             onConfirm?.invoke()
             dismiss()
