@@ -1,6 +1,7 @@
 package com.studyfinder.app.data.repository
 
 import com.google.firebase.auth.FirebaseAuth
+import com.google.firebase.auth.FirebaseAuthException
 import com.studyfinder.app.ServiceLocator
 import com.studyfinder.app.data.remote.firestore.FirestoreMappers
 import com.studyfinder.app.data.remote.firestore.FirestoreRefs
@@ -30,7 +31,7 @@ class AuthRepository {
             auth.signInWithEmailAndPassword(email, password).await()
             ActionResult.Success
         } catch (e: Exception) {
-            ActionResult.Failure(e.message ?: "Authentication failed", e)
+            handleException(e, "Authentication failed")
         }
     }
 
@@ -63,7 +64,7 @@ class AuthRepository {
 
             ActionResult.Success
         } catch (e: Exception) {
-            ActionResult.Failure(e.message ?: "Registration failed", e)
+            handleException(e, "Registration failed")
         }
     }
 
@@ -72,7 +73,7 @@ class AuthRepository {
             auth.sendPasswordResetEmail(email).await()
             ActionResult.Success
         } catch (e: Exception) {
-            ActionResult.Failure(e.message ?: "Failed to send reset email", e)
+            handleException(e, "Failed to send reset email")
         }
     }
 
@@ -81,7 +82,19 @@ class AuthRepository {
             auth.currentUser?.sendEmailVerification()?.await()
             ActionResult.Success
         } catch (e: Exception) {
-            ActionResult.Failure(e.message ?: "Failed to resend verification email", e)
+            handleException(e, "Failed to resend verification email")
+        }
+    }
+
+    private fun handleException(e: Exception, defaultMsg: String): ActionResult {
+        return if (e is FirebaseAuthException) {
+            ActionResult.Failure(
+                message = e.message ?: defaultMsg,
+                cause = e,
+                errorCode = e.errorCode
+            )
+        } else {
+            ActionResult.Failure(message = e.message ?: defaultMsg, cause = e)
         }
     }
 

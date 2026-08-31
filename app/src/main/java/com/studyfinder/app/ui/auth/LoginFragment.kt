@@ -88,25 +88,32 @@ class LoginFragment : Fragment() {
                     goToHome()
                 }
                 is ActionResult.Failure -> {
-                    handleAuthError(result.message)
+                    handleAuthError(result)
                 }
             }
         }
     }
 
-    private fun handleAuthError(message: String) {
-        // Simple heuristic to show error in the right field
-        val lowerMessage = message.lowercase()
-        when {
-            lowerMessage.contains("password") -> {
-                binding.tvPasswordError.text = message
-                binding.tvPasswordError.isVisible = true
-                binding.tvEmailError.isVisible = false
-            }
-            else -> {
-                binding.tvEmailError.text = message
+    private fun handleAuthError(failure: ActionResult.Failure) {
+        val personalizedMessage = when (failure.errorCode) {
+            "ERROR_WRONG_PASSWORD" -> "The password you entered is incorrect."
+            "ERROR_USER_NOT_FOUND" -> "Account currently unavailable or does not exist."
+            "ERROR_INVALID_EMAIL" -> "Please enter a valid email address."
+            "ERROR_USER_DISABLED" -> "This account has been disabled."
+            "ERROR_TOO_MANY_REQUESTS" -> "Too many failed attempts. Please try again later."
+            else -> failure.message
+        }
+
+        when (failure.errorCode) {
+            "ERROR_INVALID_EMAIL", "ERROR_USER_DISABLED", "ERROR_USER_NOT_FOUND", "ERROR_TOO_MANY_REQUESTS" -> { 
+                binding.tvEmailError.text = personalizedMessage
                 binding.tvEmailError.isVisible = true
                 binding.tvPasswordError.isVisible = false
+            }
+            else -> {
+                binding.tvPasswordError.text = personalizedMessage
+                binding.tvPasswordError.isVisible = true
+                binding.tvEmailError.isVisible = false
             }
         }
     }
