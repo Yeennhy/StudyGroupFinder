@@ -78,6 +78,7 @@ class SessionRepository {
             }
             if (snapshot != null) {
                 val sessions = snapshot.documents.mapNotNull { FirestoreMappers.toSession(it) }
+                    .filter { it.status == SessionStatus.UPCOMING } // Only show active sessions on Home
                 
                 // Cache to Room
                 val now = System.currentTimeMillis()

@@ -5,67 +5,57 @@
     xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    android:clipChildren="false"
-    android:clipToPadding="false"
     android:background="@drawable/bg_dotted_paper">
 
-    <include
-        android:id="@+id/appHeader"
-        layout="@layout/layout_app_header"
+    <!-- LinearLayout strictly partitions the screen into Header/Search and List -->
+    <LinearLayout
         android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:elevation="8dp"
-        app:layout_constraintTop_toTopOf="parent"
-        app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintEnd_toEndOf="parent" />
+        android:layout_height="match_parent"
+        android:orientation="vertical">
 
+        <include
+            android:id="@+id/appHeader"
+            layout="@layout/layout_app_header"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content" />
 
-    <!-- Search bar -->
-    <EditText
-        android:id="@+id/etSearch"
-        android:layout_width="0dp"
-        android:layout_height="52dp"
-        android:layout_marginStart="20dp"
-        android:layout_marginTop="20dp"
-        android:layout_marginEnd="20dp"
-        android:background="@drawable/bg_whitebox_dropsd"
-        android:hint="Search for a student"
-        android:textColor="@color/graphite"
-        android:paddingBottom="2dp"
-        android:drawableStart="@drawable/ic_search"
-        android:drawablePadding="12dp"
-        android:paddingStart="16dp"
-        android:paddingEnd="16dp"
-        android:gravity="center_vertical"
-        android:textSize="16sp"
-        android:singleLine="true"
-        android:fontFamily="@font/bricolagegrotesque_regular"
-        app:layout_constraintTop_toBottomOf="@id/appHeader"
-        app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintEnd_toEndOf="parent" />
+        <EditText
+            android:id="@+id/etSearch"
+            android:layout_width="match_parent"
+            android:layout_height="52dp"
+            android:layout_marginStart="20dp"
+            android:layout_marginTop="20dp"
+            android:layout_marginEnd="20dp"
+            android:background="@drawable/bg_whitebox_dropsd"
+            android:hint="Search for a student"
+            android:textColor="@color/graphite"
+            android:paddingBottom="2dp"
+            android:drawableStart="@drawable/ic_search"
+            android:drawablePadding="12dp"
+            android:paddingStart="16dp"
+            android:paddingEnd="16dp"
+            android:gravity="center_vertical"
+            android:textSize="16sp"
+            android:singleLine="true"
+            android:fontFamily="@font/bricolagegrotesque_regular" />
 
-    <!-- Community cards grid -->
-    <androidx.recyclerview.widget.RecyclerView
-        android:id="@+id/rvStudents"
-        android:layout_width="0dp"
-        android:layout_height="0dp"
-        android:layout_marginTop="8dp"
-        android:clipChildren="false"
-        android:clipToOutline="false"
-        android:clipToPadding="false"
-        android:paddingStart="10dp"
-        android:paddingEnd="10dp"
-        android:paddingBottom="20dp"
-        app:layout_constraintBottom_toBottomOf="parent"
-        app:layout_constraintEnd_toEndOf="parent"
-        app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toBottomOf="@id/etSearch"
-        tools:listitem="@layout/item_attendee_row"
-        tools:itemCount="4"
-        tools:spanCount="2" />
+        <androidx.recyclerview.widget.RecyclerView
+            android:id="@+id/rvStudents"
+            android:layout_width="match_parent"
+            android:layout_height="0dp"
+            android:layout_weight="1"
+            android:layout_marginTop="8dp"
+            android:paddingStart="10dp"
+            android:paddingEnd="10dp"
+            android:paddingBottom="20dp"
+            android:clipToPadding="false"
+            tools:listitem="@layout/item_attendee_row"
+            tools:itemCount="4"
+            tools:spanCount="2" />
 
+    </LinearLayout>
 
-    <!-- ===== Reusable UI-state overlays (feature/ui-states) ===== -->
+    <!-- UI-state overlays float on top of the main layout area -->
     <include
         android:id="@+id/stateOfflineBanner"
         layout="@layout/layout_state_offline_banner"

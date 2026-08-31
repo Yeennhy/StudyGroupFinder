@@ -141,6 +141,14 @@ class ProfileRepository {
         return snapshot.documents.mapNotNull { FirestoreMappers.toUserProfile(it) }
     }
 
+    suspend fun findByCommunity(communityId: String): List<UserProfile> {
+        val snapshot = FirestoreRefs.users()
+            .whereEqualTo(Field.COMMUNITY_ID, communityId)
+            .get()
+            .await()
+        return snapshot.documents.mapNotNull { FirestoreMappers.toUserProfile(it) }
+    }
+
     fun observeActivityByDate(): Flow<Map<LocalDate, Int>> {
         return ServiceLocator.sessionRepository.observeMySessions().map { state ->
             if (state is UiState.Success) {

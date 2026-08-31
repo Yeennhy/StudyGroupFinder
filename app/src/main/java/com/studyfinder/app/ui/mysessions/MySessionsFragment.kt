@@ -98,17 +98,15 @@ class MySessionsFragment : Fragment() {
 
         viewLifecycleOwner.lifecycleScope.launch {
             viewModel.listItems.collect { state ->
-                // Only drive the shared state overlays from the list view.
-                if (viewModel.viewType.value == MySessionsViewModel.ViewType.LIST) {
-                    StateRenderer.render(
-                        state = state,
-                        loadingView = binding.stateLoading.root,
-                        emptyView = binding.stateEmpty.root,
-                        errorView = binding.stateError.root,
-                        offlineView = binding.stateOfflineBanner.root,
-                        contentView = null,
-                    )
-                }
+                StateRenderer.render(
+                    state = state,
+                    loadingView = binding.stateLoading.root,
+                    emptyView = binding.stateEmpty.root,
+                    errorView = binding.stateError.root,
+                    offlineView = binding.stateOfflineBanner.root,
+                    contentView = binding.mainScrollView,
+                )
+
                 val items = when (state) {
                     is UiState.Success -> state.data
                     is UiState.Offline -> state.cached
