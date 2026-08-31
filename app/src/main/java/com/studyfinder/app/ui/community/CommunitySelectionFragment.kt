@@ -10,6 +10,7 @@ import android.view.ViewGroup
 import android.widget.TextView
 import android.widget.Toast
 import androidx.core.content.ContextCompat
+import androidx.core.content.res.ResourcesCompat
 import androidx.core.view.setPadding
 import androidx.fragment.app.Fragment
 import androidx.fragment.app.viewModels
@@ -113,11 +114,19 @@ class CommunitySelectionFragment : Fragment() {
             row.addView(TextView(requireContext()).apply {
                 text = label
                 setBackgroundResource(
-                    if (selected) R.drawable.bg_pill_selected else R.drawable.bg_pill_unselected
+                    if (selected) R.drawable.bg_pill_selected else R.drawable.bg_pill_unselected_offset
                 )
                 setTextColor(ContextCompat.getColor(requireContext(), R.color.graphite))
+                typeface = ResourcesCompat.getFont(requireContext(), R.font.pjsans_bold)
                 gravity = Gravity.CENTER
-                setPadding(32)
+                
+                val d = resources.displayMetrics.density
+                setPadding(
+                    (16 * d).toInt(),
+                    (8 * d).toInt(),
+                    (19 * d).toInt(),
+                    (11 * d).toInt()
+                )
                 val lp = ViewGroup.MarginLayoutParams(
                     ViewGroup.LayoutParams.WRAP_CONTENT, ViewGroup.LayoutParams.WRAP_CONTENT,
                 )

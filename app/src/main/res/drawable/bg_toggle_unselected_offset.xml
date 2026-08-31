@@ -1,0 +1,27 @@
+<?xml version="1.0" encoding="utf-8"?>
+<ripple xmlns:android="http://schemas.android.com/apk/res/android"
+    android:color="?attr/colorControlHighlight">
+    <!-- Mask to bound the ripple to the foreground shape (matching the foreground offset) -->
+    <item android:id="@android:id/mask"
+        android:bottom="3dp"
+        android:right="3dp">
+        <shape android:shape="rectangle">
+            <solid android:color="@android:color/white" />
+        </shape>
+    </item>
+    <item>
+        <layer-list>
+            <!-- Foreground layer with transparent offset to match selected state -->
+            <item
+                android:bottom="3dp"
+                android:right="3dp">
+                <shape android:shape="rectangle">
+                    <solid android:color="@color/white" />
+                    <stroke
+                        android:width="2dp"
+                        android:color="@color/graphite" />
+                </shape>
+            </item>
+        </layer-list>
+    </item>
+</ripple>
