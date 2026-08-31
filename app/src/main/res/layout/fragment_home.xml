@@ -60,7 +60,7 @@
                 android:textStyle="bold"
                 android:gravity="center"
                 android:paddingStart="16dp"
-                android:paddingEnd="16dp"
+                android:paddingEnd="19dp"
                 android:paddingTop="8dp"
                 android:paddingBottom="11dp"
                 android:fontFamily="@font/pjsans_bold" />
@@ -75,9 +75,9 @@
                 android:textColor="@color/graphite"
                 android:gravity="center"
                 android:paddingStart="16dp"
-                android:paddingEnd="16dp"
+                android:paddingEnd="19dp"
                 android:paddingTop="8dp"
-                android:paddingBottom="8dp"
+                android:paddingBottom="11dp"
                 android:fontFamily="@font/pjsans_bold" />
 
             <TextView
@@ -90,9 +90,9 @@
                 android:textColor="@color/graphite"
                 android:gravity="center"
                 android:paddingStart="16dp"
-                android:paddingEnd="16dp"
+                android:paddingEnd="19dp"
                 android:paddingTop="8dp"
-                android:paddingBottom="8dp"
+                android:paddingBottom="11dp"
                 android:fontFamily="@font/pjsans_bold" />
 
             <TextView
@@ -105,9 +105,9 @@
                 android:textColor="@color/graphite"
                 android:gravity="center"
                 android:paddingStart="16dp"
-                android:paddingEnd="16dp"
+                android:paddingEnd="19dp"
                 android:paddingTop="8dp"
-                android:paddingBottom="8dp"
+                android:paddingBottom="11dp"
                 android:fontFamily="@font/pjsans_bold" />
 
         </LinearLayout>
@@ -178,9 +178,9 @@
                 android:drawableEnd="@drawable/ic_timer"
                 android:drawablePadding="6dp"
                 android:paddingStart="16dp"
-                android:paddingEnd="16dp"
+                android:paddingEnd="19dp"
                 android:paddingTop="8dp"
-                android:paddingBottom="8dp"
+                android:paddingBottom="11dp"
                 android:fontFamily="@font/pjsans_bold" />
 
             <TextView
@@ -188,12 +188,12 @@
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 android:background="@drawable/bg_toggle_unselected"
-                android:text="Conflicting sessions"
+                android:text="Hide Conflicts"
                 android:textColor="@color/graphite"
                 android:textStyle="bold"
                 android:gravity="center"
                 android:paddingStart="16dp"
-                android:paddingEnd="16dp"
+                android:paddingEnd="19dp"
                 android:paddingTop="8dp"
                 android:paddingBottom="11dp"
                 android:fontFamily="@font/pjsans_bold" />
@@ -211,7 +211,8 @@
                 android:paddingEnd="16dp"
                 android:paddingTop="8dp"
                 android:paddingBottom="8dp"
-                android:fontFamily="@font/pjsans_bold" />
+                android:fontFamily="@font/pjsans_bold"
+                android:visibility="gone"/>
 
             <TextView
                 android:id="@+id/toggleCasual"
@@ -226,7 +227,8 @@
                 android:paddingEnd="16dp"
                 android:paddingTop="8dp"
                 android:paddingBottom="8dp"
-                android:fontFamily="@font/pjsans_bold" />
+                android:fontFamily="@font/pjsans_bold"
+                android:visibility="gone"/>
 
         </LinearLayout>
 
@@ -321,9 +323,9 @@
             android:textColor="@color/graphite"
             android:textStyle="bold"
             android:paddingStart="20dp"
-            android:paddingEnd="20dp"
+            android:paddingEnd="23dp"
             android:paddingTop="8dp"
-            android:paddingBottom="10dp"
+            android:paddingBottom="11dp"
             android:fontFamily="@font/pjsans_bold" />
 
     </LinearLayout>

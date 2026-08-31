@@ -327,9 +327,13 @@ class ProfileFragment : Fragment() {
         binding.btnEditAvatar.isVisible = enabled
         binding.btnSaveChanges.isVisible = enabled
 
-        // Hide edit triggers while editing or if not self-view
-        binding.btnEditDetails.isVisible = isSelfView && !enabled
+        // Keep edit button visible if self-view, toggle its icon
+        binding.btnEditDetails.isVisible = isSelfView
         binding.btnCommunityArrow.isVisible = isSelfView && !enabled
+
+        binding.ivEditDetailsIcon.setImageResource(
+            if (enabled) R.drawable.ic_x else R.drawable.ic_edit_pencil
+        )
 
         if (enabled) {
             // Copy data to EditTexts

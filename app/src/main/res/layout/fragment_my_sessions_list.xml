@@ -104,7 +104,6 @@
         android:id="@+id/scrollSessions"
         android:layout_width="0dp"
         android:layout_height="0dp"
-        android:layout_marginTop="16dp"
         android:clipToPadding="false"
         android:clipChildren="false"
         android:fillViewport="true"

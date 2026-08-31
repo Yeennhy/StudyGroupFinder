@@ -54,14 +54,14 @@
 
         <ImageView
             android:id="@+id/ivLogo"
-            android:layout_width="80dp"
-            android:layout_height="80dp"
+            android:layout_width="100dp"
+            android:layout_height="100dp"
             app:layout_constraintTop_toBottomOf="@id/tvTagline"
             app:layout_constraintStart_toStartOf="parent"
             app:layout_constraintEnd_toEndOf="parent"
             android:layout_marginTop="24dp"
             android:src="@drawable/ic_gradhat"
-            app:tint="@color/theme_blue"
+            app:tint="@color/graphite"
             />
 
         <ProgressBar

@@ -125,9 +125,9 @@
                     android:background="@drawable/bg_whitebox_dropsd">
 
                     <RelativeLayout android:layout_width="match_parent" android:layout_height="wrap_content" android:background="@drawable/bg_card_header_clay" android:padding="12dp">
-                        <ImageButton android:id="@+id/btnPrevMonth" android:layout_width="32dp" android:layout_height="32dp" android:layout_alignParentStart="true" android:src="@drawable/ic_chevron_right" android:scaleX="-1" android:background="@android:color/transparent" app:tint="@color/graphite" android:contentDescription="Prev month" />
+                        <ImageButton android:id="@+id/btnPrevMonth" android:layout_width="32dp" android:layout_height="32dp" android:layout_alignParentStart="true" android:src="@drawable/ic_chevron_right" android:scaleX="-1" android:background="?attr/selectableItemBackgroundBorderless" app:tint="@color/graphite" android:contentDescription="Prev month" />
                         <TextView android:id="@+id/tvMonthYear" android:layout_width="wrap_content" android:layout_height="wrap_content" android:layout_centerInParent="true" android:textStyle="bold" android:textSize="20sp" android:textColor="@color/graphite" android:fontFamily="@font/bricolagegrotesque_bold" tools:text="October 2023" />
-                        <ImageButton android:id="@+id/btnNextMonth" android:layout_width="32dp" android:layout_height="32dp" android:layout_alignParentEnd="true" android:src="@drawable/ic_chevron_right" android:background="@android:color/transparent" app:tint="@color/graphite" android:contentDescription="Next month" />
+                        <ImageButton android:id="@+id/btnNextMonth" android:layout_width="32dp" android:layout_height="32dp" android:layout_alignParentEnd="true" android:src="@drawable/ic_chevron_right" android:background="?attr/selectableItemBackgroundBorderless" app:tint="@color/graphite" android:contentDescription="Next month" />
                     </RelativeLayout>
 
                     <View android:layout_width="match_parent" android:layout_height="2dp" android:background="@color/graphite" />
