@@ -23,6 +23,7 @@ import com.studyfinder.app.model.Session
 import com.studyfinder.app.model.SessionMember
 import com.studyfinder.app.model.SessionViewMode
 import com.studyfinder.app.ui.sessiondetail.SessionDetailViewModel.ActionState
+import com.studyfinder.app.ui.sessionmanage.ConfirmationDialogFragment
 import com.studyfinder.app.util.ActionResult
 import com.studyfinder.app.util.DateTimeUtils
 import com.studyfinder.app.util.UiState
@@ -282,10 +283,20 @@ class SessionDetailFragment : Fragment() {
     }
 
     private fun continueFromThisSession() {
-        findNavController().navigate(
-            SessionDetailFragmentDirections
-                .actionSessionDetailFragmentToCreateSessionFragment(args.sessionId)
-        )
+        ConfirmationDialogFragment.newInstance(
+            title = "Pick up Session?",
+            subtitle = "A new session will be created with the same details. All previous members will be automatically invited.",
+            buttonText = "Continue",
+            iconRes = R.drawable.ic_history,
+            iconBgColor = requireContext().getColor(R.color.ginkgo_yellow)
+        ).apply {
+            setOnConfirmListener {
+                findNavController().navigate(
+                    SessionDetailFragmentDirections
+                        .actionSessionDetailFragmentToCreateSessionFragment(args.sessionId)
+                )
+            }
+        }.show(parentFragmentManager, "PickUpConfirmation")
     }
 
     override fun onDestroyView() {
