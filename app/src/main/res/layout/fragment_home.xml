@@ -5,9 +5,31 @@
     xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    android:clipChildren="false"
-    android:clipToPadding="false"
+    android:clipChildren="true"
+    android:clipToPadding="true"
     android:background="@drawable/bg_dotted_paper">
+
+    <!-- Session cards list - moved to top for lowest Z-order (drawn first) -->
+    <androidx.recyclerview.widget.RecyclerView
+        android:id="@+id/rvSessions"
+        android:layoutAnimation="@anim/layout_animation_slide_up"
+        android:layout_width="0dp"
+        android:layout_height="0dp"
+        android:layout_marginTop="20dp"
+        android:clipChildren="true"
+        android:clipToOutline="false"
+        android:clipToPadding="true"
+        android:paddingStart="20dp"
+        android:paddingEnd="20dp"
+        android:paddingTop="4dp"
+        android:paddingBottom="20dp"
+        app:layout_constraintBottom_toTopOf="@id/navBar"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintHorizontal_bias="0.0"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toBottomOf="@id/scrollToggleFilters"
+        app:layout_constraintVertical_bias="0.0"
+        tools:listitem="@layout/item_home_session" />
 
     <!-- Search bar -->
     <EditText
@@ -233,30 +255,6 @@
         </LinearLayout>
 
     </HorizontalScrollView>
-
-    <!-- Session cards list -->
-
-    <!-- FAB -->
-
-    <androidx.recyclerview.widget.RecyclerView
-        android:id="@+id/rvSessions"
-        android:layoutAnimation="@anim/layout_animation_slide_up"
-        android:layout_width="0dp"
-        android:layout_height="0dp"
-        android:layout_marginTop="20dp"
-        android:clipChildren="false"
-        android:clipToOutline="false"
-        android:clipToPadding="false"
-        android:paddingStart="20dp"
-        android:paddingEnd="20dp"
-        android:paddingBottom="20dp"
-        app:layout_constraintBottom_toTopOf="@id/navBar"
-        app:layout_constraintEnd_toEndOf="parent"
-        app:layout_constraintHorizontal_bias="0.0"
-        app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toBottomOf="@id/scrollToggleFilters"
-        app:layout_constraintVertical_bias="0.0"
-        tools:listitem="@layout/item_home_session" />
 
     <!-- ===================== UI states (§7.2 / §2.1) ===================== -->
 
