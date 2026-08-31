@@ -15,6 +15,7 @@
         android:layout_width="match_parent"
         android:layout_height="0dp"
         android:clipToPadding="false"
+        android:paddingBottom="40dp"
         android:clipChildren="false"
         android:fillViewport="true"
         app:layout_constraintTop_toTopOf="parent"
@@ -114,11 +115,24 @@
                     android:textColor="@color/graphite"
                     android:fontFamily="@font/bricolagegrotesque_bold" />
 
+                <TextView
+                    android:id="@+id/tvEditName"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="8dp"
+                    android:layout_gravity="start"
+                    android:text="Profile Name"
+                    android:textStyle="bold"
+                    android:textSize="12sp"
+                    android:textColor="@color/graphite"
+                    android:fontFamily="@font/bricolagegrotesque_bold"
+                    android:visibility="gone"
+                    />
                 <EditText
                     android:id="@+id/etProfileName"
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
-                    android:layout_marginTop="8dp"
+                    android:layout_marginTop="6dp"
                     android:background="@drawable/bg_input_field"
                     android:padding="12dp"
                     android:textSize="18sp"
@@ -131,7 +145,7 @@
                     android:id="@+id/tvProfileId"
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
-                    android:layout_marginTop="6dp"
+                    android:layout_marginTop="12dp"
                     android:background="@drawable/bg_pill_dark"
                     android:text="ID: 24125060"
                     android:textStyle="bold"
@@ -167,21 +181,73 @@
                     android:textColor="@color/graphite"
                     android:fontFamily="@font/pjsans_medium" />
 
+                <TextView
+                    android:id="@+id/tvEditBio"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="12dp"
+                    android:layout_gravity="start"
+                    android:text="Bio"
+                    android:textStyle="bold"
+                    android:textSize="12sp"
+                    android:textColor="@color/graphite"
+                    android:fontFamily="@font/bricolagegrotesque_bold"
+                    android:visibility="gone"
+                    />
                 <EditText
                     android:id="@+id/etProfileBio"
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
-                    android:layout_marginTop="12dp"
+                    android:layout_marginTop="6dp"
                     android:background="@drawable/bg_input_field"
                     android:padding="12dp"
-                    android:textSize="14sp"
+                    android:textSize="12sp"
                     android:textColor="@color/graphite"
                     android:fontFamily="@font/pjsans_medium"
-                    android:minLines="2"
+                    android:minLines="3"
                     android:gravity="top"
                     android:visibility="gone" />
 
+                <View
+                    android:id="@+id/divAvatarCard"
+                    android:layout_width="match_parent"
+                    android:layout_height="2dp"
+                    android:layout_marginTop="16dp"
+                    android:background="@color/graphite"/>
+                <TextView
+                    android:id="@+id/blockmsg"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="12dp"
+                    android:text="You blocked this user"
+                    android:textColor="@color/deep_red"
+                    android:fontFamily="@font/pjsans_bold"
+                    />
+
+                <com.google.android.material.button.MaterialButton
+                    android:id="@+id/btnUnblock"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:background="@drawable/bg_red_btn"
+                    app:backgroundTint="@null"
+                    android:insetTop="0dp"
+                    android:insetBottom="0dp"
+                    android:minHeight="0dp"
+                    android:text="Unblock"
+                    android:textAllCaps="false"
+                    android:textStyle="bold"
+                    android:textSize="16sp"
+                    android:textColor="@color/white"
+                    android:gravity="center"
+                    android:layout_marginTop="8dp"
+                    android:paddingTop="12dp"
+                    android:paddingBottom="12dp"
+                    android:includeFontPadding="false"
+                    android:fontFamily="@font/bricolagegrotesque_bold" />
+
             </LinearLayout>
+
+
 
             <!-- ===== Card 2: Community (teal header, segmented) ===== -->
             <LinearLayout
@@ -403,7 +469,7 @@
                             android:layout_alignParentEnd="true"
                             android:layout_centerVertical="true"
                             android:text="Computer Science"
-                            android:textSize="14sp"
+                            android:textSize="16sp"
                             android:textColor="@color/graphite"
                             android:fontFamily="@font/bricolagegrotesque_medium" />
 
@@ -415,7 +481,7 @@
                             android:layout_centerVertical="true"
                             android:background="@drawable/bg_input_field"
                             android:padding="8dp"
-                            android:textSize="13sp"
+                            android:textSize="16sp"
                             android:textColor="@color/graphite"
                             android:fontFamily="@font/bricolagegrotesque_medium"
                             android:singleLine="true"
@@ -455,7 +521,7 @@
                             android:layout_alignParentEnd="true"
                             android:layout_centerVertical="true"
                             android:text="Software Engineering"
-                            android:textSize="14sp"
+                            android:textSize="16sp"
                             android:textColor="@color/graphite"
                             android:fontFamily="@font/bricolagegrotesque_medium" />
 
@@ -467,7 +533,7 @@
                             android:layout_centerVertical="true"
                             android:background="@drawable/bg_input_field"
                             android:padding="8dp"
-                            android:textSize="13sp"
+                            android:textSize="16sp"
                             android:textColor="@color/graphite"
                             android:fontFamily="@font/bricolagegrotesque_medium"
                             android:singleLine="true"
@@ -506,7 +572,7 @@
                             android:layout_alignParentEnd="true"
                             android:layout_centerVertical="true"
                             android:text="2024"
-                            android:textSize="14sp"
+                            android:textSize="16sp"
                             android:textColor="@color/graphite"
                             android:fontFamily="@font/bricolagegrotesque_medium" />
 
@@ -518,7 +584,7 @@
                             android:layout_centerVertical="true"
                             android:background="@drawable/bg_input_field"
                             android:padding="8dp"
-                            android:textSize="14sp"
+                            android:textSize="16sp"
                             android:textColor="@color/graphite"
                             android:fontFamily="@font/bricolagegrotesque_medium"
                             android:inputType="number"
@@ -537,8 +603,8 @@
                 android:layout_width="0dp"
                 android:layout_height="wrap_content"
                 android:layout_marginTop="24dp"
-                android:layout_marginStart="20dp"
-                android:layout_marginEnd="20dp"
+                android:layout_marginStart="16dp"
+                android:layout_marginEnd="16dp"
                 android:paddingStart="4dp"
                 android:paddingTop="4dp"
                 android:paddingEnd="6dp"
@@ -609,15 +675,12 @@
                     android:background="@color/white"
                     android:padding="16dp">
 
-                    <!-- Placeholder image for the contribution/commit graph -->
-                    <ImageView
-                        android:id="@+id/ivActivityGraph"
+                    <!-- Custom Activity Graph -->
+                    <com.studyfinder.app.ui.profile.ActivityGraphView
+                        android:id="@+id/activityGraph"
                         android:layout_width="match_parent"
-                        android:layout_height="110dp"
-
-                        android:src="@drawable/img_activity_placeholder"
-                        android:contentDescription="Session activity graph"
-                        tools:ignore="ContentDescription" />
+                        android:layout_height="wrap_content"
+                        app:cellGap="4dp" />
 
                     <!-- Legend -->
                     <LinearLayout
@@ -732,5 +795,50 @@
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintEnd_toEndOf="parent" />
 
+
+
+    <!-- ===== Reusable UI-state overlays (feature/ui-states) ===== -->
+    <include
+        android:id="@+id/stateOfflineBanner"
+        layout="@layout/layout_state_offline_banner"
+        android:layout_width="0dp"
+        android:layout_height="wrap_content"
+        android:visibility="gone"
+        app:layout_constraintTop_toTopOf="parent"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintEnd_toEndOf="parent" />
+
+    <include
+        android:id="@+id/stateLoading"
+        layout="@layout/layout_state_loading"
+        android:layout_width="0dp"
+        android:layout_height="0dp"
+        android:visibility="gone"
+        app:layout_constraintTop_toTopOf="parent"
+        app:layout_constraintBottom_toBottomOf="parent"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintEnd_toEndOf="parent" />
+
+    <include
+        android:id="@+id/stateEmpty"
+        layout="@layout/layout_state_empty"
+        android:layout_width="0dp"
+        android:layout_height="0dp"
+        android:visibility="gone"
+        app:layout_constraintTop_toTopOf="parent"
+        app:layout_constraintBottom_toBottomOf="parent"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintEnd_toEndOf="parent" />
+
+    <include
+        android:id="@+id/stateError"
+        layout="@layout/layout_state_error"
+        android:layout_width="0dp"
+        android:layout_height="0dp"
+        android:visibility="gone"
+        app:layout_constraintTop_toTopOf="parent"
+        app:layout_constraintBottom_toBottomOf="parent"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintEnd_toEndOf="parent" />
 
 </androidx.constraintlayout.widget.ConstraintLayout>

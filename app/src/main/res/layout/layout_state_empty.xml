@@ -1,0 +1,28 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Reusable empty state (§2.1). Set the message in code via tvStateEmptyMessage. -->
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:gravity="center"
+    android:orientation="vertical"
+    android:paddingHorizontal="40dp">
+
+    <ImageView
+        android:layout_width="64dp"
+        android:layout_height="64dp"
+        android:alpha="0.5"
+        android:contentDescription="@null"
+        android:src="@drawable/ic_mail" />
+
+    <TextView
+        android:id="@+id/tvStateEmptyMessage"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="16dp"
+        android:gravity="center"
+        android:text="@string/state_empty_generic"
+        android:textColor="@color/graphite"
+        android:textSize="15sp"
+        android:fontFamily="@font/pjsans_regular" />
+
+</LinearLayout>

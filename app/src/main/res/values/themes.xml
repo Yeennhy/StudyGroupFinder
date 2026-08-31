@@ -8,4 +8,9 @@
     -->
     <style name="Theme.StudyFinder" parent="Theme.MaterialComponents.Light.NoActionBar" />
 
+    <style name="TransparentDialog" parent="Theme.AppCompat.Light.Dialog">
+        <item name="android:windowBackground">@android:color/transparent</item>
+        <item name="android:windowNoTitle">true</item>
+    </style>
+
 </resources>

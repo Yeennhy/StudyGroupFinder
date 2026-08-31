@@ -114,13 +114,14 @@
 
     </HorizontalScrollView>
 
-    <!-- Toggle row (Conflicting sessions / Grind / Casual) -->
+    <!-- Course-type filter row (CourseCategory, §7.2) -->
     <HorizontalScrollView
-        android:id="@+id/scrollToggleFilters"
+        android:id="@+id/scrollCourseTypeFilters"
         android:layout_width="0dp"
         android:layout_height="wrap_content"
-        android:layout_marginTop="12dp"
+        android:layout_marginTop="10dp"
         android:scrollbars="none"
+        android:contentDescription="@string/cd_category_filter"
         app:layout_constraintTop_toBottomOf="@id/scrollCategoryFilters"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintEnd_toEndOf="parent">
@@ -132,11 +133,61 @@
             android:paddingStart="20dp"
             android:paddingEnd="20dp">
 
+            <TextView android:id="@+id/chipTypeAll" style="@style/HomeFilterPillSelected" android:text="All Types" />
+            <TextView android:id="@+id/chipTypePhysics" style="@style/HomeFilterPill" android:text="Physics" />
+            <TextView android:id="@+id/chipTypeCalculus" style="@style/HomeFilterPill" android:text="Calculus" />
+            <TextView android:id="@+id/chipTypeDsa" style="@style/HomeFilterPill" android:text="DSA" />
+            <TextView android:id="@+id/chipTypeProgramming" style="@style/HomeFilterPill" android:text="Programming" />
+            <TextView android:id="@+id/chipTypeEnglish" style="@style/HomeFilterPill" android:text="English" />
+            <TextView android:id="@+id/chipTypeArts" style="@style/HomeFilterPill" android:text="Arts" />
+            <TextView android:id="@+id/chipTypeSocial" style="@style/HomeFilterPill" android:text="Social" />
+            <TextView android:id="@+id/chipTypeOther" style="@style/HomeFilterPill" android:text="Other" />
+
+        </LinearLayout>
+
+    </HorizontalScrollView>
+
+    <!-- Toggle + sort row (Conflicting sessions / Sort) -->
+    <HorizontalScrollView
+        android:id="@+id/scrollToggleFilters"
+        android:layout_width="0dp"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="12dp"
+        android:scrollbars="none"
+        app:layout_constraintTop_toBottomOf="@id/scrollCourseTypeFilters"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintEnd_toEndOf="parent">
+
+        <LinearLayout
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:orientation="horizontal"
+            android:paddingStart="20dp"
+            android:paddingEnd="20dp">
+
+            <TextView
+                android:id="@+id/tvSort"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_marginEnd="10dp"
+                android:background="@drawable/bg_toggle_unselected"
+                android:text="@string/home_sort_label"
+                android:textColor="@color/graphite"
+                android:textStyle="bold"
+                android:gravity="center"
+                android:drawableEnd="@drawable/ic_timer"
+                android:drawablePadding="6dp"
+                android:paddingStart="16dp"
+                android:paddingEnd="16dp"
+                android:paddingTop="8dp"
+                android:paddingBottom="8dp"
+                android:fontFamily="@font/pjsans_bold" />
+
             <TextView
                 android:id="@+id/toggleConflicting"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:background="@drawable/bg_toggle_selected"
+                android:background="@drawable/bg_toggle_unselected"
                 android:text="Conflicting sessions"
                 android:textColor="@color/graphite"
                 android:textStyle="bold"
@@ -187,6 +238,7 @@
 
     <androidx.recyclerview.widget.RecyclerView
         android:id="@+id/rvSessions"
+        android:layoutAnimation="@anim/layout_animation_slide_up"
         android:layout_width="0dp"
         android:layout_height="0dp"
         android:layout_marginTop="20dp"
@@ -203,6 +255,95 @@
         app:layout_constraintTop_toBottomOf="@id/scrollToggleFilters"
         app:layout_constraintVertical_bias="0.0"
         tools:listitem="@layout/item_home_session" />
+
+    <!-- ===================== UI states (§7.2 / §2.1) ===================== -->
+
+    <ProgressBar
+        android:id="@+id/progressHome"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:visibility="gone"
+        app:layout_constraintTop_toTopOf="@id/rvSessions"
+        app:layout_constraintBottom_toBottomOf="@id/rvSessions"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintEnd_toEndOf="parent"
+        tools:visibility="gone" />
+
+    <TextView
+        android:id="@+id/tvEmptyHome"
+        android:layout_width="0dp"
+        android:layout_height="wrap_content"
+        android:layout_marginStart="40dp"
+        android:layout_marginEnd="40dp"
+        android:gravity="center"
+        android:text="@string/home_empty"
+        android:textColor="@color/graphite"
+        android:textSize="15sp"
+        android:fontFamily="@font/pjsans_regular"
+        android:visibility="gone"
+        app:layout_constraintTop_toTopOf="@id/rvSessions"
+        app:layout_constraintBottom_toBottomOf="@id/rvSessions"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintEnd_toEndOf="parent"
+        tools:visibility="gone" />
+
+    <LinearLayout
+        android:id="@+id/layoutErrorHome"
+        android:layout_width="0dp"
+        android:layout_height="wrap_content"
+        android:layout_marginStart="40dp"
+        android:layout_marginEnd="40dp"
+        android:gravity="center"
+        android:orientation="vertical"
+        android:visibility="gone"
+        app:layout_constraintTop_toTopOf="@id/rvSessions"
+        app:layout_constraintBottom_toBottomOf="@id/rvSessions"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintEnd_toEndOf="parent"
+        tools:visibility="gone">
+
+        <TextView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:gravity="center"
+            android:text="@string/home_error"
+            android:textColor="@color/graphite"
+            android:textSize="15sp"
+            android:fontFamily="@font/pjsans_regular" />
+
+        <TextView
+            android:id="@+id/btnRetryHome"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="12dp"
+            android:background="@drawable/bg_pill_selected"
+            android:text="@string/state_retry"
+            android:textColor="@color/graphite"
+            android:textStyle="bold"
+            android:paddingStart="20dp"
+            android:paddingEnd="20dp"
+            android:paddingTop="8dp"
+            android:paddingBottom="10dp"
+            android:fontFamily="@font/pjsans_bold" />
+
+    </LinearLayout>
+
+    <TextView
+        android:id="@+id/bannerOfflineHome"
+        android:layout_width="0dp"
+        android:layout_height="wrap_content"
+        android:background="@color/theme_gray"
+        android:gravity="center"
+        android:padding="6dp"
+        android:text="@string/state_offline_banner"
+        android:textColor="@color/graphite"
+        android:textSize="12sp"
+        android:fontFamily="@font/pjsans_bold"
+        android:visibility="gone"
+        app:layout_constraintTop_toBottomOf="@id/scrollToggleFilters"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintEnd_toEndOf="parent"
+        tools:visibility="gone" />
 
     <FrameLayout
         android:id="@+id/fabAdd"

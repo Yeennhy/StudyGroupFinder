@@ -5,6 +5,7 @@ import com.google.firebase.firestore.FieldValue
 import com.google.firebase.firestore.FirebaseFirestore
 import com.google.firebase.firestore.Query
 import com.studyfinder.app.ServiceLocator
+import com.studyfinder.app.StudyFinderApp
 import com.studyfinder.app.data.remote.firestore.FirestoreMappers
 import com.studyfinder.app.data.remote.firestore.FirestoreRefs
 import com.studyfinder.app.data.remote.firestore.FirestoreRefs.Field
@@ -15,6 +16,7 @@ import com.studyfinder.app.model.Session
 import com.studyfinder.app.model.SessionMember
 import com.studyfinder.app.model.SessionStatus
 import com.studyfinder.app.model.TagType
+import com.studyfinder.app.notification.ReminderWorker
 import com.studyfinder.app.util.ActionResult
 import com.studyfinder.app.util.Result
 import com.studyfinder.app.util.UiState
@@ -154,10 +156,9 @@ class SessionRepository {
         awaitClose { listener.remove() }
     }
 
-    fun observeMySessions(includeCancelled: Boolean = false): Flow<UiState<List<Session>>> = callbackFlow {
-        val uid = auth.currentUser?.uid
-        if (uid == null) {
-            trySend(UiState.Error("User not signed in"))
+    fun observeUserSessions(uid: String, includeCancelled: Boolean = false): Flow<UiState<List<Session>>> = callbackFlow {
+        if (uid.isBlank()) {
+            trySend(UiState.Success(emptyList()))
             close()
             return@callbackFlow
         }
@@ -176,10 +177,12 @@ class SessionRepository {
                         sessions = sessions.filter { it.status != SessionStatus.CANCELLED }
                     }
                     
-                    // Cache to Room
-                    val now = System.currentTimeMillis()
-                    scope.launch {
-                        mySessionDao.upsertAll(sessions.map { FirestoreMappers.toMySessionEntity(it, now) })
+                    // Cache to Room if it's current user
+                    if (uid == auth.currentUser?.uid) {
+                        val now = System.currentTimeMillis()
+                        scope.launch {
+                            mySessionDao.upsertAll(sessions.map { FirestoreMappers.toMySessionEntity(it, now) })
+                        }
                     }
                     
                     trySend(UiState.Success(sessions))
@@ -187,6 +190,11 @@ class SessionRepository {
             }
         awaitClose { listener.remove() }
     }.onStart { emit(UiState.Loading) }
+
+    fun observeMySessions(includeCancelled: Boolean = false): Flow<UiState<List<Session>>> {
+        val uid = auth.currentUser?.uid ?: return flow { emit(UiState.Error("User not signed in")) }
+        return observeUserSessions(uid, includeCancelled)
+    }
 
     fun observePendingRequests(sessionId: String): Flow<UiState<List<SessionMember>>> = callbackFlow {
         val listener = FirestoreRefs.members(sessionId)
@@ -215,6 +223,35 @@ class SessionRepository {
         }
     }
 
+    // ------------------------------------------------ reminder scheduling (§8)
+
+    /** Default lead time before a session's start — the dev plan leaves the
+     *  exact figure open (§8). */
+    private val reminderLeadMillis = 15 * 60 * 1000L
+
+    /**
+     * Best-effort: fetch the session, and if it starts more than the lead time
+     * from now, enqueue a unique WorkManager reminder. Failures are swallowed —
+     * a missing reminder must never fail the membership change that triggered it.
+     */
+    private suspend fun scheduleReminder(sessionId: String) {
+        try {
+            val snap = FirestoreRefs.session(sessionId).get().await()
+            val session = FirestoreMappers.toSession(snap) ?: return
+            if (session.status != SessionStatus.UPCOMING) return
+            val delay = session.startTimeMillis - reminderLeadMillis - System.currentTimeMillis()
+            ReminderWorker.schedule(StudyFinderApp.instance, sessionId, delay, session.title)
+        } catch (_: Exception) {
+        }
+    }
+
+    private fun cancelReminder(sessionId: String) {
+        try {
+            ReminderWorker.cancel(StudyFinderApp.instance, sessionId)
+        } catch (_: Exception) {
+        }
+    }
+
     // -------------------------------------------------------- transactions
 
     suspend fun joinOpenSession(sessionId: String): ActionResult = performMembershipChange(sessionId) {
@@ -236,6 +273,7 @@ class SessionRepository {
             )
             transaction.set(memberRef, FirestoreMappers.memberPayload(MemberStatus.ACCEPTED))
         }.await()
+        scheduleReminder(sessionId)
         ActionResult.Success
     }
 
@@ -275,6 +313,7 @@ class SessionRepository {
             )
             transaction.update(memberRef, Field.STATUS, MemberStatus.ACCEPTED.wire)
         }.await()
+        scheduleReminder(sessionId)
         ActionResult.Success
     }
 
@@ -299,7 +338,8 @@ class SessionRepository {
         
         // Notify user via inbox
         ServiceLocator.inboxRepository.fanOutSystemMessage(sessionId, listOf(uid), "Your request to join has been approved!")
-        
+        scheduleReminder(sessionId)
+
         ActionResult.Success
     } catch (e: Exception) {
         ActionResult.Failure(e.message ?: "Approval failed", e)
@@ -334,8 +374,11 @@ class SessionRepository {
 
         if (!isSelf) {
             ServiceLocator.inboxRepository.fanOutSystemMessage(sessionId, listOf(uid), "You have been removed from the session.")
+        } else {
+            // My own reminder is no longer wanted (§8).
+            cancelReminder(sessionId)
         }
-        
+
         ActionResult.Success
     } catch (e: Exception) {
         ActionResult.Failure(e.message ?: "Operation failed", e)
@@ -353,7 +396,8 @@ class SessionRepository {
                 set(sessionRef, FirestoreMappers.sessionCreatePayload(session, uid))
                 set(memberRef, FirestoreMappers.memberPayload(MemberStatus.ADMIN))
             }.commit().await()
-            
+
+            scheduleReminder(sessionRef.id)
             Result.Success(sessionRef.id)
         } catch (e: Exception) {
             Result.Error(e.message ?: "Creation failed", e)
@@ -381,7 +425,8 @@ class SessionRepository {
         val session = FirestoreMappers.toSession(snapshot) ?: throw Exception("Session not found")
         
         sessionRef.update(Field.STATUS, SessionStatus.CANCELLED.wire).await()
-        
+        cancelReminder(sessionId)
+
         // Notify members
         val memberUids = session.memberUids.filter { it != auth.currentUser?.uid }
         if (memberUids.isNotEmpty()) {

@@ -61,13 +61,53 @@
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintEnd_toEndOf="parent" />
 
-    <!-- Category filter row (All / Universities / STEM / Arts / Social) -->
+    <!-- City filter chips (§7.1) — filled at runtime from the REST list.
+         Replaces the old category chips, which mapped to no Community field. -->
+    <HorizontalScrollView
+        android:id="@+id/scrollCityChips"
+        android:layout_width="0dp"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="16dp"
+        android:scrollbars="none"
+        app:layout_constraintTop_toBottomOf="@id/etSearch"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintEnd_toEndOf="parent">
+
+        <LinearLayout
+            android:id="@+id/rowCityChips"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:orientation="horizontal"
+            android:paddingStart="20dp"
+            android:paddingEnd="20dp" />
+
+    </HorizontalScrollView>
+
+    <TextView
+        android:id="@+id/bannerOfflineCommunities"
+        android:layout_width="0dp"
+        android:layout_height="wrap_content"
+        android:background="@color/theme_gray"
+        android:gravity="center"
+        android:padding="6dp"
+        android:text="@string/state_offline_banner"
+        android:textColor="@color/graphite"
+        android:textSize="12sp"
+        android:fontFamily="@font/pjsans_bold"
+        android:visibility="gone"
+        app:layout_constraintTop_toBottomOf="@id/scrollCityChips"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintEnd_toEndOf="parent"
+        tools:visibility="gone" />
+
+    <!-- Legacy category filter row — kept in tree but hidden (§7.1 decision). -->
     <HorizontalScrollView
         android:id="@+id/scrollCategoryFilters"
         android:layout_width="0dp"
         android:layout_height="wrap_content"
         android:layout_marginTop="24dp"
         android:scrollbars="none"
+        android:visibility="gone"
         app:layout_constraintTop_toBottomOf="@id/etSearch"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintEnd_toEndOf="parent">
@@ -156,6 +196,7 @@
     <!-- Community cards grid -->
     <androidx.recyclerview.widget.RecyclerView
         android:id="@+id/rvCommunities"
+        android:layoutAnimation="@anim/layout_animation_slide_up"
         android:layout_width="0dp"
         android:layout_height="0dp"
         android:layout_marginTop="20dp"
@@ -170,9 +211,81 @@
         app:layout_constraintBottom_toBottomOf="parent"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toBottomOf="@id/scrollCategoryFilters"
+        app:layout_constraintTop_toBottomOf="@id/scrollCityChips"
         tools:listitem="@layout/item_community"
         tools:itemCount="4"
         tools:spanCount="2" />
+
+    <!-- ===================== UI states (§7.1 / §2.1) ===================== -->
+
+    <ProgressBar
+        android:id="@+id/progressCommunities"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:visibility="gone"
+        app:layout_constraintTop_toTopOf="@id/rvCommunities"
+        app:layout_constraintBottom_toBottomOf="@id/rvCommunities"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintEnd_toEndOf="parent"
+        tools:visibility="gone" />
+
+    <TextView
+        android:id="@+id/tvEmptyCommunities"
+        android:layout_width="0dp"
+        android:layout_height="wrap_content"
+        android:layout_marginStart="40dp"
+        android:layout_marginEnd="40dp"
+        android:gravity="center"
+        android:text="@string/communities_empty"
+        android:textColor="@color/graphite"
+        android:textSize="15sp"
+        android:fontFamily="@font/pjsans_regular"
+        android:visibility="gone"
+        app:layout_constraintTop_toTopOf="@id/rvCommunities"
+        app:layout_constraintBottom_toBottomOf="@id/rvCommunities"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintEnd_toEndOf="parent"
+        tools:visibility="gone" />
+
+    <LinearLayout
+        android:id="@+id/layoutErrorCommunities"
+        android:layout_width="0dp"
+        android:layout_height="wrap_content"
+        android:layout_marginStart="40dp"
+        android:layout_marginEnd="40dp"
+        android:gravity="center"
+        android:orientation="vertical"
+        android:visibility="gone"
+        app:layout_constraintTop_toTopOf="@id/rvCommunities"
+        app:layout_constraintBottom_toBottomOf="@id/rvCommunities"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintEnd_toEndOf="parent"
+        tools:visibility="gone">
+
+        <TextView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:gravity="center"
+            android:text="@string/communities_error"
+            android:textColor="@color/graphite"
+            android:textSize="15sp"
+            android:fontFamily="@font/pjsans_regular" />
+
+        <TextView
+            android:id="@+id/btnRetryCommunities"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="12dp"
+            android:background="@drawable/bg_pill_selected"
+            android:text="@string/state_retry"
+            android:textColor="@color/graphite"
+            android:textStyle="bold"
+            android:paddingStart="20dp"
+            android:paddingEnd="20dp"
+            android:paddingTop="8dp"
+            android:paddingBottom="10dp"
+            android:fontFamily="@font/pjsans_bold" />
+
+    </LinearLayout>
 
 </androidx.constraintlayout.widget.ConstraintLayout>

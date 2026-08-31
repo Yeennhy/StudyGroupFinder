@@ -168,7 +168,7 @@
             android:drawableStart="@drawable/ic_lock"
             android:drawablePadding="12dp"
             android:paddingStart="16dp"
-            android:paddingEnd="16dp"
+            android:paddingEnd="48dp"
             android:gravity="center_vertical"
             android:fontFamily="@font/bricolagegrotesque_regular"
             android:textSize="16sp"
@@ -177,6 +177,19 @@
             app:layout_constraintStart_toStartOf="parent"
             app:layout_constraintEnd_toEndOf="parent" />
 
+        <ImageButton
+            android:id="@+id/btnTogglePassword"
+            android:layout_width="24dp"
+            android:layout_height="24dp"
+            android:scaleType="fitCenter"
+            android:layout_marginEnd="16dp"
+            android:background="?attr/selectableItemBackgroundBorderless"
+            android:src="@drawable/ic_eye"
+            app:tint="@color/graphite"
+            app:layout_constraintTop_toTopOf="@id/etPassword"
+            app:layout_constraintBottom_toBottomOf="@id/etPassword"
+            app:layout_constraintEnd_toEndOf="@id/etPassword"
+            android:contentDescription="Toggle password visibility" />
 
         <!-- Confirm Password field -->
         <EditText
@@ -191,7 +204,7 @@
             android:drawableStart="@drawable/ic_lock"
             android:drawablePadding="12dp"
             android:paddingStart="16dp"
-            android:paddingEnd="16dp"
+            android:paddingEnd="48dp"
             android:gravity="center_vertical"
             android:fontFamily="@font/bricolagegrotesque_regular"
             android:textSize="16sp"
@@ -199,6 +212,20 @@
             app:layout_constraintTop_toBottomOf="@id/etPassword"
             app:layout_constraintStart_toStartOf="parent"
             app:layout_constraintEnd_toEndOf="parent" />
+
+        <ImageButton
+            android:id="@+id/btnToggleCfPassword"
+            android:layout_width="24dp"
+            android:layout_height="24dp"
+            android:scaleType="fitCenter"
+            android:layout_marginEnd="16dp"
+            android:background="?attr/selectableItemBackgroundBorderless"
+            android:src="@drawable/ic_eye"
+            app:tint="@color/graphite"
+            app:layout_constraintTop_toTopOf="@id/etCfPassword"
+            app:layout_constraintBottom_toBottomOf="@id/etCfPassword"
+            app:layout_constraintEnd_toEndOf="@id/etCfPassword"
+            android:contentDescription="Toggle password visibility" />
 
         <!-- Password error -->
         <TextView
@@ -278,5 +305,50 @@
             app:layout_constraintBottom_toBottomOf="@id/tvSignUpPrompt" />
 
     </androidx.constraintlayout.widget.ConstraintLayout>
+
+
+    <!-- ===== Reusable UI-state overlays (feature/ui-states) ===== -->
+    <include
+        android:id="@+id/stateOfflineBanner"
+        layout="@layout/layout_state_offline_banner"
+        android:layout_width="0dp"
+        android:layout_height="wrap_content"
+        android:visibility="gone"
+        app:layout_constraintTop_toTopOf="parent"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintEnd_toEndOf="parent" />
+
+    <include
+        android:id="@+id/stateLoading"
+        layout="@layout/layout_state_loading"
+        android:layout_width="0dp"
+        android:layout_height="0dp"
+        android:visibility="gone"
+        app:layout_constraintTop_toTopOf="parent"
+        app:layout_constraintBottom_toBottomOf="parent"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintEnd_toEndOf="parent" />
+
+    <include
+        android:id="@+id/stateEmpty"
+        layout="@layout/layout_state_empty"
+        android:layout_width="0dp"
+        android:layout_height="0dp"
+        android:visibility="gone"
+        app:layout_constraintTop_toTopOf="parent"
+        app:layout_constraintBottom_toBottomOf="parent"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintEnd_toEndOf="parent" />
+
+    <include
+        android:id="@+id/stateError"
+        layout="@layout/layout_state_error"
+        android:layout_width="0dp"
+        android:layout_height="0dp"
+        android:visibility="gone"
+        app:layout_constraintTop_toTopOf="parent"
+        app:layout_constraintBottom_toBottomOf="parent"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintEnd_toEndOf="parent" />
 
 </androidx.constraintlayout.widget.ConstraintLayout>

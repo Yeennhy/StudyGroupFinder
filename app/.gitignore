@@ -1,3 +1,5 @@
 /build
 /.artifacts/
 /.idea/
+CloudinaryConfig.kt
+google-services.json

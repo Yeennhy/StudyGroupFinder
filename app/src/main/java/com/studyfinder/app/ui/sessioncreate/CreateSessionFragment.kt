@@ -7,6 +7,7 @@ import android.view.ViewGroup
 import android.widget.ArrayAdapter
 import android.widget.SeekBar
 import android.widget.Toast
+import androidx.core.view.isVisible
 import androidx.fragment.app.Fragment
 import androidx.fragment.app.viewModels
 import androidx.lifecycle.lifecycleScope
@@ -196,6 +197,7 @@ class CreateSessionFragment : Fragment() {
                 return@setOnClickListener
             }
 
+            binding.stateLoading.root.isVisible = true
             viewModel.submit(
                 title = title,
                 description = binding.etDescription.text.toString(),
@@ -250,6 +252,7 @@ class CreateSessionFragment : Fragment() {
             }
             launch {
                 viewModel.createResult.collect { result ->
+                    if (result != null) binding.stateLoading.root.isVisible = false
                     if (result is ActionResult.Success) {
                         viewModel.resetResult()
                         findNavController().navigate(

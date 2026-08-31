@@ -7,13 +7,19 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.asLiveData
 import androidx.lifecycle.viewModelScope
 import com.studyfinder.app.ServiceLocator
+import com.studyfinder.app.model.ActivityCell
 import com.studyfinder.app.model.UserProfile
 import com.studyfinder.app.util.ActionResult
 import com.studyfinder.app.util.UiState
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.flatMapLatest
+import kotlinx.coroutines.flow.combine
+import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.launch
+import java.time.Instant
+import java.time.ZoneId
 
 /** §7.7. */
 @OptIn(ExperimentalCoroutinesApi::class)
@@ -30,6 +36,10 @@ class ProfileViewModel : ViewModel() {
         } else {
             profileRepository.observeProfile(uid)
         }
+    }.asLiveData()
+
+    val isBlocked: LiveData<Boolean> = combine(uidFlow, profileRepository.observeBlockedUids()) { uid, blockedUids ->
+        uid != null && blockedUids.contains(uid)
     }.asLiveData()
 
     private val _saveResult = MutableLiveData<ActionResult>(ActionResult.Idle)
@@ -61,9 +71,22 @@ class ProfileViewModel : ViewModel() {
      * Activity graph (§7.7). Reuses the My Sessions query result — NOT a
      * `collectionGroup("members")` query, which §4 does not permit.
      */
-    fun observeActivityByDate() {
-        TODO("§7.7")
-    }
+    val activityCells: LiveData<List<ActivityCell>> = uidFlow.flatMapLatest { uid ->
+        val targetUid = uid ?: authRepository.currentUid ?: ""
+        ServiceLocator.sessionRepository.observeUserSessions(targetUid)
+    }.map { state ->
+        if (state is UiState.Success) {
+            state.data.groupBy {
+                Instant.ofEpochMilli(it.startTimeMillis)
+                    .atZone(ZoneId.systemDefault())
+                    .toLocalDate()
+            }.map { (date, sessions) ->
+                ActivityCell(date, sessions.size)
+            }
+        } else {
+            emptyList()
+        }
+    }.asLiveData()
 
     /**
      * Writes `users/{myUid}/blocked/{theirUid}` — a private subcollection, so
@@ -71,11 +94,15 @@ class ProfileViewModel : ViewModel() {
      * Home: sessions whose member list contains them are greyed out (§7.2).
      */
     fun blockUser(uid: String) {
-        TODO("§7.7")
+        viewModelScope.launch {
+            profileRepository.blockUser(uid)
+        }
     }
 
     fun unblockUser(uid: String) {
-        TODO("§7.7")
+        viewModelScope.launch {
+            profileRepository.unblockUser(uid)
+        }
     }
 
     fun resendVerificationEmail() {
@@ -83,6 +110,8 @@ class ProfileViewModel : ViewModel() {
     }
 
     fun signOut() {
-        TODO("§7.0")
+        viewModelScope.launch {
+            authRepository.signOut()
+        }
     }
 }

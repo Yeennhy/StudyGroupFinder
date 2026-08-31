@@ -65,12 +65,25 @@ class SessionDetailFragment : Fragment() {
         setupListeners()
         viewModel.start(args.sessionId, args.viewMode)
 
+        binding.stateEmpty.tvStateEmptyMessage.setText(R.string.empty_session_detail)
+        binding.stateError.btnStateRetry.setOnClickListener {
+            viewModel.start(args.sessionId, args.viewMode)
+        }
+
         viewLifecycleOwner.lifecycleScope.launch {
             launch {
                 viewModel.session.collectLatest { state ->
+                    com.studyfinder.app.ui.common.StateRenderer.render(
+                        state = state,
+                        loadingView = binding.stateLoading.root,
+                        emptyView = binding.stateEmpty.root,
+                        errorView = binding.stateError.root,
+                        offlineView = binding.stateOfflineBanner.root,
+                        contentView = binding.scrollContent,
+                    )
                     when (state) {
                         is UiState.Success -> bindSession(state.data)
-                        is UiState.Error -> Toast.makeText(context, state.message, Toast.LENGTH_SHORT).show()
+                        is UiState.Offline -> bindSession(state.cached)
                         else -> {}
                     }
                 }

@@ -12,8 +12,17 @@ import com.studyfinder.app.util.CloudinaryConfig
  */
 class StudyFinderApp : Application() {
 
+    companion object {
+        /** Set in onCreate before anything else runs; used by non-UI code
+         *  (e.g. WorkManager scheduling in SessionRepository) that needs a
+         *  Context but isn't handed one. */
+        lateinit var instance: StudyFinderApp
+            private set
+    }
+
     override fun onCreate() {
         super.onCreate()
+        instance = this
         FirebaseApp.initializeApp(this)
         ServiceLocator.init(this)
         NotificationHelper.createChannel(this)

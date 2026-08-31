@@ -1,0 +1,25 @@
+<resources>
+
+    <!-- Home filter pills (§7.2). Mirrors the inline pill TextViews already in
+         fragment_home.xml so the course-type row matches the session-type row. -->
+    <style name="HomeFilterPill">
+        <item name="android:layout_width">wrap_content</item>
+        <item name="android:layout_height">wrap_content</item>
+        <item name="android:layout_marginStart">8dp</item>
+        <item name="android:background">@drawable/bg_pill_unselected</item>
+        <item name="android:textColor">@color/graphite</item>
+        <item name="android:gravity">center</item>
+        <item name="android:paddingStart">16dp</item>
+        <item name="android:paddingEnd">16dp</item>
+        <item name="android:paddingTop">8dp</item>
+        <item name="android:paddingBottom">8dp</item>
+        <item name="android:fontFamily">@font/pjsans_bold</item>
+    </style>
+
+    <style name="HomeFilterPillSelected" parent="HomeFilterPill">
+        <item name="android:layout_marginStart">0dp</item>
+        <item name="android:background">@drawable/bg_pill_selected</item>
+        <item name="android:textStyle">bold</item>
+    </style>
+
+</resources>

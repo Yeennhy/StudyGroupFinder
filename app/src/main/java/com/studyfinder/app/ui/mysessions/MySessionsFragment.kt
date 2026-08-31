@@ -17,6 +17,7 @@ import com.studyfinder.app.R
 import com.studyfinder.app.databinding.FragmentMySessionsBinding
 import com.studyfinder.app.model.Session
 import com.studyfinder.app.model.SessionViewMode
+import com.studyfinder.app.ui.common.StateRenderer
 import com.studyfinder.app.util.UiState
 import com.studyfinder.app.util.setupHeader
 import com.studyfinder.app.util.setupNavbar
@@ -92,11 +93,28 @@ class MySessionsFragment : Fragment() {
             adapter = listAdapter
         }
 
+        binding.stateEmpty.tvStateEmptyMessage.setText(R.string.empty_my_sessions)
+        binding.stateError.btnStateRetry.setOnClickListener { activity?.recreate() }
+
         viewLifecycleOwner.lifecycleScope.launch {
             viewModel.listItems.collect { state ->
-                if (state is UiState.Success) {
-                    listAdapter.submitList(state.data)
+                // Only drive the shared state overlays from the list view.
+                if (viewModel.viewType.value == MySessionsViewModel.ViewType.LIST) {
+                    StateRenderer.render(
+                        state = state,
+                        loadingView = binding.stateLoading.root,
+                        emptyView = binding.stateEmpty.root,
+                        errorView = binding.stateError.root,
+                        offlineView = binding.stateOfflineBanner.root,
+                        contentView = null,
+                    )
                 }
+                val items = when (state) {
+                    is UiState.Success -> state.data
+                    is UiState.Offline -> state.cached
+                    else -> emptyList()
+                }
+                listAdapter.submitList(items)
             }
         }
     }

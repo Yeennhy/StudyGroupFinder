@@ -52,6 +52,7 @@ class ForgotPasswordFragment : Fragment() {
                 binding.tvEmailError.isVisible = true
             } else {
                 binding.tvEmailError.isVisible = false
+                binding.stateLoading.root.isVisible = true
                 viewModel.sendPasswordReset(email)
             }
         }
@@ -62,6 +63,7 @@ class ForgotPasswordFragment : Fragment() {
 
         // Observe results
         viewModel.result.observe(viewLifecycleOwner) { result ->
+            if (result !is ActionResult.Idle) binding.stateLoading.root.isVisible = false
             when (result) {
                 is ActionResult.Idle -> {
                     binding.tvEmailError.isVisible = false

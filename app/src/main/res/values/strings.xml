@@ -19,4 +19,44 @@
     <string name="attendees_count_format">Attendees (%1$d/%2$d)</string>
     <string name="host_name_format">%1$s (Host)</string>
     <string name="pick_up_session">Pick up Session</string>
+
+    <!-- Home session card notices (§7.2) -->
+    <string name="notice_session_full">Session full</string>
+    <string name="notice_contains_blocked_user">Contains a blocked user</string>
+    <string name="notice_overlaps_schedule">Overlaps your schedule</string>
+
+    <!-- Home UI states (§7.2 / §2.1) -->
+    <string name="home_sort_label">Sort</string>
+    <string name="home_sort_time">Soonest time</string>
+    <string name="home_sort_name_asc">Name (A–Z)</string>
+    <string name="home_sort_name_desc">Name (Z–A)</string>
+    <string name="home_sort_distance">Nearest location</string>
+    <string name="home_empty">No sessions match your filters yet. Try clearing a chip or check back later.</string>
+    <string name="home_error">Couldn\'t load sessions. Check your connection and retry.</string>
+    <string name="state_retry">Retry</string>
+    <string name="state_offline_banner">Showing saved data — you\'re offline</string>
+    <string name="cd_category_filter">Course type filter</string>
+
+    <!-- Community selection UI states (§7.1) -->
+    <string name="communities_empty">No communities match. Try another name or city.</string>
+    <string name="communities_error">Couldn\'t load communities. Check your connection and retry.</string>
+    <string name="city_all">All cities</string>
+
+    <!-- Inbox (§7.8) -->
+    <string name="inbox_empty">Nothing here yet. Invites and session updates will show up on this screen.</string>
+    <string name="inbox_error">Couldn\'t load your inbox. Check your connection and retry.</string>
+    <string name="inbox_accept">Accept</string>
+    <string name="inbox_details">Details</string>
+    <string name="inbox_date_today">Today</string>
+    <string name="inbox_date_yesterday">Yesterday</string>
+
+    <!-- Reusable UI-state partials (§2.1 / Branch feature/ui-states) -->
+    <string name="state_empty_generic">Nothing here yet.</string>
+    <string name="state_error_generic">Something went wrong</string>
+    <string name="empty_session_detail">This session is no longer available.</string>
+    <string name="empty_my_sessions">You haven\'t joined any sessions yet. Find one on the Home tab.</string>
+    <string name="empty_history">No past sessions to show — your finished sessions will appear here.</string>
+    <string name="empty_profile">We couldn\'t load this profile.</string>
+    <string name="empty_session_members">No members have joined yet.</string>
+    <string name="empty_student_search">No student found with that ID.</string>
 </resources>
