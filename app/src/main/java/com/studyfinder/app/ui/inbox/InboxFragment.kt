@@ -67,7 +67,7 @@ class InboxFragment : Fragment() {
 
         binding.rvInbox.layoutManager = LinearLayoutManager(requireContext())
         binding.rvInbox.adapter = adapter
-        binding.btnRetryInbox.setOnClickListener { viewModel.observeInbox() }
+        binding.stateError.btnStateRetry.setOnClickListener { viewModel.observeInbox() }
 
         maybeRequestNotificationPermission()
 
@@ -76,10 +76,10 @@ class InboxFragment : Fragment() {
                 viewModel.state.collect { state ->
                     StateRenderer.render(
                         state = state,
-                        loadingView = binding.progressInbox,
-                        emptyView = binding.tvEmptyInbox,
-                        errorView = binding.layoutErrorInbox,
-                        offlineView = binding.bannerOfflineInbox,
+                        loadingView = binding.stateLoading.root,
+                        emptyView = binding.stateEmpty.root,
+                        errorView = binding.stateError.root,
+                        offlineView = binding.stateOfflineBanner.root,
                         contentView = binding.rvInbox,
                     )
                     val rows = when (state) {

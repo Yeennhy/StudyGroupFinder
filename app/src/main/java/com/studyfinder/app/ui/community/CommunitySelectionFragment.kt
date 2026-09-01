@@ -73,7 +73,7 @@ class CommunitySelectionFragment : Fragment() {
 
         binding.rvCommunities.layoutManager = GridLayoutManager(requireContext(), 2)
         binding.rvCommunities.adapter = adapter
-        binding.btnRetryCommunities.setOnClickListener { viewModel.loadAllViaRest() }
+        binding.stateError.btnStateRetry.setOnClickListener { viewModel.loadAllViaRest() }
 
         wireSearch()
         observeState()
@@ -155,12 +155,19 @@ class CommunitySelectionFragment : Fragment() {
                 viewModel.state.collect { state ->
                     StateRenderer.render(
                         state = state,
-                        loadingView = binding.progressCommunities,
-                        emptyView = binding.tvEmptyCommunities,
-                        errorView = binding.layoutErrorCommunities,
-                        offlineView = binding.bannerOfflineCommunities,
+                        loadingView = binding.stateLoading.root,
+                        emptyView = binding.stateEmpty.root,
+                        errorView = binding.stateError.root,
+                        offlineView = binding.stateOfflineBanner.root,
                         contentView = binding.rvCommunities,
+                        transitionContainer = binding.layoutCommunityListContainer
                     )
+                    
+                    if (state is UiState.Error) {
+                        binding.stateError.tvStateErrorDetail.visibility = View.VISIBLE
+                        binding.stateError.tvStateErrorDetail.text = state.message
+                    }
+
                     val list = when (state) {
                         is UiState.Success -> state.data
                         is UiState.Offline -> state.cached

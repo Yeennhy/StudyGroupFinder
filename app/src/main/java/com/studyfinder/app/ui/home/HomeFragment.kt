@@ -14,6 +14,7 @@ import android.widget.PopupMenu
 import android.widget.TextView
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.core.content.ContextCompat
+import androidx.core.view.isVisible
 import androidx.fragment.app.Fragment
 import com.studyfinder.app.util.applyFadeThroughTransitions
 import androidx.fragment.app.viewModels
@@ -27,6 +28,7 @@ import com.google.android.gms.location.Priority
 import com.studyfinder.app.R
 import com.studyfinder.app.databinding.FragmentHomeBinding
 import com.studyfinder.app.model.CourseCategory
+import com.studyfinder.app.model.ExpectationLevel
 import com.studyfinder.app.model.SessionSort
 import com.studyfinder.app.model.SessionViewMode
 import com.studyfinder.app.model.TagType
@@ -78,11 +80,12 @@ class HomeFragment : Fragment() {
         binding.rvSessions.adapter = adapter
 
         binding.fabAdd.setOnClickListener { openCreateSession() }
-        binding.btnRetryHome.setOnClickListener { viewModel.retry() }
+        binding.stateError.btnStateRetry.setOnClickListener { viewModel.retry() }
 
         wireSearch()
         wireSessionTypeChips()
         wireCourseTypeChips()
+        wireExpectationLevelChips()
         wireToggleAndSort()
         observeState()
     }
@@ -140,12 +143,27 @@ class HomeFragment : Fragment() {
         }
     }
 
+    private fun wireExpectationLevelChips() {
+        val row = listOf(
+            binding.chipExpAll to null,
+            binding.chipExpPass to ExpectationLevel.PASS,
+            binding.chipExpCasual to ExpectationLevel.CASUAL,
+            binding.chipExpGrind to ExpectationLevel.OVERACHIEVING,
+        )
+        row.forEach { (chip, level) ->
+            chip.setOnClickListener {
+                selectInRow(row.map { it.first }, chip)
+                viewModel.setExpectationLevel(level)
+            }
+        }
+    }
+
     private fun wireToggleAndSort() {
         binding.toggleConflicting.setOnClickListener {
             val next = binding.toggleConflicting.tag != true
             binding.toggleConflicting.tag = next
             binding.toggleConflicting.setBackgroundResource(
-                if (next) R.drawable.bg_toggle_selected else R.drawable.bg_toggle_unselected
+                if (next) R.drawable.bg_toggle_selected else R.drawable.bg_toggle_unselected_offset
             )
             viewModel.setHideOverlapping(next)
         }
@@ -240,12 +258,21 @@ class HomeFragment : Fragment() {
                 viewModel.state.collect { state ->
                     StateRenderer.render(
                         state = state,
-                        loadingView = binding.progressHome,
-                        emptyView = binding.tvEmptyHome,
-                        errorView = binding.layoutErrorHome,
-                        offlineView = binding.bannerOfflineHome,
+                        loadingView = binding.stateLoading.root,
+                        emptyView = binding.stateEmpty.root,
+                        errorView = binding.stateError.root,
+                        offlineView = binding.stateOfflineBanner.root,
                         contentView = binding.rvSessions,
                     )
+                    
+                    if (state is UiState.Error) {
+                        android.util.Log.e("STUDY_FINDER_DEBUG", "Home load failed: ${state.message}", state.cause)
+                        
+                        binding.stateError.tvStateErrorMessage.setText(R.string.home_error)
+                        binding.stateError.tvStateErrorDetail.isVisible = true
+                        binding.stateError.tvStateErrorDetail.text = state.message
+                    }
+
                     val rows = when (state) {
                         is UiState.Success -> state.data
                         is UiState.Offline -> state.cached
@@ -263,7 +290,7 @@ class HomeFragment : Fragment() {
         all.forEach { chip ->
             val isSelected = chip === selected
             chip.setBackgroundResource(
-                if (isSelected) R.drawable.bg_pill_selected else R.drawable.bg_pill_unselected
+                if (isSelected) R.drawable.bg_pill_selected else R.drawable.bg_pill_unselected_offset
             )
         }
     }

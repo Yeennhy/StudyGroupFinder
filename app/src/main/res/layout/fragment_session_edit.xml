@@ -112,6 +112,81 @@
                 android:paddingBottom="20dp"
                 android:background="@color/theme_cream">
 
+                <!-- Course ID -->
+                <TextView
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="Course ID"
+                    android:textStyle="bold"
+                    android:textSize="12sp"
+                    android:textColor="@color/graphite"
+                    android:fontFamily="@font/bricolagegrotesque_bold" />
+
+                <EditText
+                    android:id="@+id/etDialogCourseId"
+                    android:layout_width="match_parent"
+                    android:layout_height="48dp"
+                    android:layout_marginTop="8dp"
+                    android:background="@drawable/bg_input_field"
+                    android:textColor="@color/graphite"
+                    android:paddingStart="14dp"
+                    android:paddingEnd="14dp"
+                    android:gravity="center_vertical"
+                    android:singleLine="true"
+                    android:textSize="15sp"
+                    android:fontFamily="@font/pjsans_medium" />
+
+                <!-- Course Name -->
+                <TextView
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="12dp"
+                    android:text="Course Name"
+                    android:textStyle="bold"
+                    android:textSize="12sp"
+                    android:textColor="@color/graphite"
+                    android:fontFamily="@font/bricolagegrotesque_bold" />
+
+                <EditText
+                    android:id="@+id/etDialogCourseName"
+                    android:layout_width="match_parent"
+                    android:layout_height="48dp"
+                    android:layout_marginTop="8dp"
+                    android:background="@drawable/bg_input_field"
+                    android:textColor="@color/graphite"
+                    android:paddingStart="14dp"
+                    android:paddingEnd="14dp"
+                    android:gravity="center_vertical"
+                    android:singleLine="true"
+                    android:textSize="15sp"
+                    android:fontFamily="@font/pjsans_medium" />
+
+                <!-- Course Category -->
+                <TextView
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="12dp"
+                    android:text="Course Category"
+                    android:textStyle="bold"
+                    android:textSize="12sp"
+                    android:textColor="@color/graphite"
+                    android:fontFamily="@font/bricolagegrotesque_bold" />
+
+                <Spinner
+                    android:id="@+id/spinnerDialogCourseCategory"
+                    android:layout_width="match_parent"
+                    android:layout_height="44dp"
+                    android:layout_marginTop="8dp"
+                    android:background="@drawable/bg_input_field"
+                    android:padding="8dp" />
+
+                <View
+                    android:layout_width="match_parent"
+                    android:layout_height="2dp"
+                    android:layout_marginTop="18dp"
+                    android:layout_marginBottom="18dp"
+                    android:background="@color/graphite" />
+
                 <!-- Session Title -->
                 <TextView
                     android:layout_width="wrap_content"
@@ -411,7 +486,7 @@
                     android:thumb="@drawable/bg_slider_thumb"
                     android:thumbOffset="0dp"
                     android:splitTrack="false"
-                    android:minHeight="32dp" />
+                    android:minHeight="8dp" />
 
                 <RelativeLayout
                     android:layout_width="match_parent"
@@ -432,7 +507,7 @@
                         android:layout_height="wrap_content"
                         android:layout_alignParentEnd="true"
                         android:layout_marginTop="4dp"
-                        android:text="2h"
+                        android:text="3h30"
                         android:textSize="12sp"
                         android:textColor="@color/light_graphite"
                         android:fontFamily="@font/bricolagegrotesque_bold" />

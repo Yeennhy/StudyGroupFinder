@@ -4,6 +4,7 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.studyfinder.app.ServiceLocator
 import com.studyfinder.app.model.CourseCategory
+import com.studyfinder.app.model.ExpectationLevel
 import com.studyfinder.app.model.SessionSort
 import com.studyfinder.app.model.TagType
 import com.studyfinder.app.model.BusyInterval
@@ -38,6 +39,7 @@ class HomeViewModel : ViewModel() {
         val courseIdQuery: String? = null,
         val tagType: TagType? = null,
         val courseCategory: CourseCategory? = null,
+        val expectationLevel: ExpectationLevel? = null,
         val sort: SessionSort = SessionSort.TIME,
         /** Grey out rather than hide, so the list never silently shrinks (§7.2). */
         val hideOverlapping: Boolean = false,
@@ -95,7 +97,7 @@ class HomeViewModel : ViewModel() {
                         // matches "Calculus 1..." and no extra composite index
                         // is needed — only the chips filter server-side.
                         sessionRepository.observeCommunitySessions(
-                            communityId, null, f.tagType, f.courseCategory,
+                            communityId, null, f.tagType, f.courseCategory, f.expectationLevel
                         ),
                         profileRepository.observeBlockedUids(),
                         _myLocation,
@@ -193,6 +195,11 @@ class HomeViewModel : ViewModel() {
     /** Spec: course type chips — physics / calculus / DSA / … */
     fun setCourseCategory(category: CourseCategory?) {
         _filters.value = _filters.value.copy(courseCategory = category)
+    }
+
+    /** Added: expectation level filter chips — pass / casual / overachieving */
+    fun setExpectationLevel(level: ExpectationLevel?) {
+        _filters.value = _filters.value.copy(expectationLevel = level)
     }
 
     fun setHideOverlapping(hide: Boolean) {

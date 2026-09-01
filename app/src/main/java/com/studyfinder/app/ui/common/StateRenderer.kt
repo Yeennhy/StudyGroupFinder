@@ -1,6 +1,9 @@
 package com.studyfinder.app.ui.common
 
 import android.view.View
+import android.view.ViewGroup
+import androidx.transition.AutoTransition
+import androidx.transition.TransitionManager
 import com.studyfinder.app.util.UiState
 import com.studyfinder.app.util.gone
 import com.studyfinder.app.util.visible
@@ -19,7 +22,22 @@ object StateRenderer {
         errorView: View? = null,
         offlineView: View? = null,
         contentView: View? = null,
+        transitionContainer: ViewGroup? = null,
     ) {
+        // Apply easing transition to the target container or fallback to common parent
+        val parent = transitionContainer
+            ?: loadingView?.parent as? ViewGroup
+            ?: emptyView?.parent as? ViewGroup
+            ?: errorView?.parent as? ViewGroup
+            ?: contentView?.parent as? ViewGroup
+
+        if (parent != null) {
+            val transition = AutoTransition().apply {
+                duration = 250L
+            }
+            TransitionManager.beginDelayedTransition(parent, transition)
+        }
+
         loadingView?.gone()
         emptyView?.gone()
         errorView?.gone()
@@ -27,21 +45,14 @@ object StateRenderer {
         contentView?.gone()
 
         when (state) {
-            is UiState.Loading -> loadingView.showFading()
-            is UiState.Empty -> emptyView.showFading()
-            is UiState.Error -> errorView.showFading()
+            is UiState.Loading -> loadingView?.visible()
+            is UiState.Empty -> emptyView?.visible()
+            is UiState.Error -> errorView?.visible()
             is UiState.Offline -> {
-                offlineView.showFading()
-                contentView.showFading()
+                offlineView?.visible()
+                contentView?.visible()
             }
-            is UiState.Success -> contentView.showFading()
+            is UiState.Success -> contentView?.visible()
         }
-    }
-
-    private fun View?.showFading() {
-        this ?: return
-        visible()
-        alpha = 0f
-        animate().alpha(1f).setDuration(180L).start()
     }
 }

@@ -1,5 +1,5 @@
 [versions]
-agp = "8.10.0"
+agp = "8.13.2"
 kotlin = "2.0.21"
 # KSP's version must track the Kotlin version exactly (kotlin-ksp).
 ksp = "2.0.21-1.0.28"
