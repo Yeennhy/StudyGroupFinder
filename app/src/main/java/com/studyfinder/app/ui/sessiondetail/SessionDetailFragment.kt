@@ -401,9 +401,10 @@ class SessionDetailFragment : Fragment() {
     private fun openMaterialUrl(url: String) {
         try {
             val intent = android.content.Intent(android.content.Intent.ACTION_VIEW, android.net.Uri.parse(url))
+            intent.addFlags(android.content.Intent.FLAG_ACTIVITY_NEW_TASK)
             startActivity(intent)
         } catch (e: Exception) {
-            Toast.makeText(context, "Could not open file", Toast.LENGTH_SHORT).show()
+            Toast.makeText(context, "No application found to open this file", Toast.LENGTH_SHORT).show()
         }
     }
 
