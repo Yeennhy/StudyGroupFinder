@@ -23,6 +23,24 @@
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintEnd_toEndOf="parent" />
 
+    <TextView
+        android:id="@+id/bannerOfflineInbox"
+        android:layout_width="0dp"
+        android:layout_height="wrap_content"
+        android:background="@color/theme_gray"
+        android:gravity="center"
+        android:padding="6dp"
+        android:text="@string/state_offline_banner"
+        android:textColor="@color/graphite"
+        android:textSize="12sp"
+        android:fontFamily="@font/pjsans_bold"
+        android:visibility="gone"
+        app:layout_constraintTop_toTopOf="parent"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintEnd_toEndOf="parent"
+        android:layout_marginTop="90dp"
+        tools:visibility="gone" />
+
     <ProgressBar
         android:id="@+id/progressInbox"
         android:layout_width="wrap_content"

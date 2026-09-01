@@ -10,6 +10,7 @@ import com.studyfinder.app.util.LocationUtils
 import com.studyfinder.app.util.OverlapUtils
 import com.studyfinder.app.util.UiState
 import kotlinx.coroutines.ExperimentalCoroutinesApi
+import kotlinx.coroutines.Job
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
@@ -48,6 +49,8 @@ class HomeViewModel : ViewModel() {
     private val _state = MutableStateFlow<UiState<List<SessionListAdapter.Row>>>(UiState.Loading)
     val state: StateFlow<UiState<List<SessionListAdapter.Row>>> = _state.asStateFlow()
 
+    private var pipeline: Job? = null
+
     init {
         start()
     }
@@ -56,8 +59,9 @@ class HomeViewModel : ViewModel() {
     fun retry() = start()
 
     private fun start() {
+        pipeline?.cancel()
         _state.value = UiState.Loading
-        viewModelScope.launch {
+        pipeline = viewModelScope.launch {
             val profileState = profileRepository.observeCurrentProfile()
                 .first { it !is UiState.Loading }
             val communityId = (profileState as? UiState.Success)?.data?.communityId

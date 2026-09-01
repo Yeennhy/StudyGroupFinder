@@ -9,6 +9,7 @@ import com.studyfinder.app.util.UiState
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
+import kotlinx.coroutines.Job
 import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.launch
 import java.time.LocalDate
@@ -23,6 +24,8 @@ class InboxViewModel : ViewModel() {
     private val _state = MutableStateFlow<UiState<List<InboxRow>>>(UiState.Loading)
     val state: StateFlow<UiState<List<InboxRow>>> = _state.asStateFlow()
 
+    private var pipeline: Job? = null
+
     init {
         observeInbox()
     }
@@ -32,7 +35,8 @@ class InboxViewModel : ViewModel() {
      * bucketed by day with a [InboxRow.DatePill] before each group.
      */
     fun observeInbox() {
-        viewModelScope.launch {
+        pipeline?.cancel()
+        pipeline = viewModelScope.launch {
             combine(
                 inboxRepository.observeInbox(),
                 profileRepository.observeBlockedUids(),

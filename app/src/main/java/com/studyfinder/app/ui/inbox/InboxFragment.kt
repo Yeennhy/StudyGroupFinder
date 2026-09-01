@@ -73,7 +73,7 @@ class InboxFragment : Fragment() {
                         loadingView = binding.progressInbox,
                         emptyView = binding.tvEmptyInbox,
                         errorView = binding.layoutErrorInbox,
-                        offlineView = null,
+                        offlineView = binding.bannerOfflineInbox,
                         contentView = binding.rvInbox,
                     )
                     val rows = when (state) {
