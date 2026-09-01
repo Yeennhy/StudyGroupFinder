@@ -6,6 +6,8 @@ import com.studyfinder.app.ServiceLocator
 import com.studyfinder.app.model.CourseCategory
 import com.studyfinder.app.model.SessionSort
 import com.studyfinder.app.model.TagType
+import com.studyfinder.app.model.BusyInterval
+import com.studyfinder.app.model.Session
 import com.studyfinder.app.util.LocationUtils
 import com.studyfinder.app.util.OverlapUtils
 import com.studyfinder.app.util.UiState
@@ -17,6 +19,7 @@ import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.flatMapLatest
+import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.launch
 
 /**
@@ -70,9 +73,17 @@ class HomeViewModel : ViewModel() {
                 return@launch
             }
 
-            // Availability = the sessions the current user has already joined (§7.2).
-            val busy = sessionRepository.getBusyIntervals()
             val myUid = authRepository.currentUid
+
+            // Availability = the sessions the current user has already joined,
+            // observed live so joining/leaving updates the overlap greying
+            // without leaving Home (§7.2).
+            val busyFlow = sessionRepository.observeMySessions().map { st ->
+                val mine = (st as? UiState.Success)?.data
+                    ?: (st as? UiState.Offline)?.cached
+                    ?: emptyList()
+                mine.map { BusyInterval(it.startTimeMillis, it.endTimeMillis, it.title) }
+            }
 
             _filters
                 .flatMapLatest { f ->
@@ -82,7 +93,8 @@ class HomeViewModel : ViewModel() {
                         ),
                         profileRepository.observeBlockedUids(),
                         _myLocation,
-                    ) { sessions, blocked, loc ->
+                        busyFlow,
+                    ) { sessions, blocked, loc, busy ->
                         buildRows(sessions, blocked, loc, f, busy, myUid)
                     }
                 }
@@ -91,11 +103,11 @@ class HomeViewModel : ViewModel() {
     }
 
     private fun buildRows(
-        sessionsState: UiState<List<com.studyfinder.app.model.Session>>,
+        sessionsState: UiState<List<Session>>,
         blocked: Set<String>,
         loc: DoubleArray?,
         f: Filters,
-        busy: List<com.studyfinder.app.model.BusyInterval>,
+        busy: List<BusyInterval>,
         myUid: String?,
     ): UiState<List<SessionListAdapter.Row>> {
         val sessions = when (sessionsState) {
