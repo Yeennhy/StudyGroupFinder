@@ -273,8 +273,17 @@ class SessionManageFragment : Fragment() {
         
         member.profile?.photoUrl?.let { url ->
             if (url.isNotBlank()) {
+                binding.ivAvatar.setPadding(0, 0, 0, 0)
                 Glide.with(this).load(url).circleCrop().into(binding.ivAvatar)
+            } else {
+                val p = (10 * resources.displayMetrics.density).toInt()
+                binding.ivAvatar.setPadding(p, p, p, p)
+                binding.ivAvatar.setImageResource(R.drawable.ic_profile)
             }
+        } ?: run {
+            val p = (10 * resources.displayMetrics.density).toInt()
+            binding.ivAvatar.setPadding(p, p, p, p)
+            binding.ivAvatar.setImageResource(R.drawable.ic_profile)
         }
     }
 

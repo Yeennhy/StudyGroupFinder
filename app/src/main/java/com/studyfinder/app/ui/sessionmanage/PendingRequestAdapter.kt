@@ -5,6 +5,8 @@ import android.view.ViewGroup
 import androidx.recyclerview.widget.DiffUtil
 import androidx.recyclerview.widget.ListAdapter
 import androidx.recyclerview.widget.RecyclerView
+import com.bumptech.glide.Glide
+import com.studyfinder.app.R
 import com.studyfinder.app.databinding.ItemManageattendeeRowBinding
 import com.studyfinder.app.databinding.ItemRequestsRowBinding
 import com.studyfinder.app.model.SessionMember
@@ -28,6 +30,21 @@ class PendingRequestAdapter(
             tvName.text = member.profile?.name ?: "Unknown"
             tvId.text = member.profile?.studentId ?: member.uid
             
+            member.profile?.photoUrl?.let { url ->
+                if (url.isNotBlank()) {
+                    ivAvatar.setPadding(0, 0, 0, 0)
+                    Glide.with(root.context).load(url).circleCrop().into(ivAvatar)
+                } else {
+                    val p = (10 * root.resources.displayMetrics.density).toInt()
+                    ivAvatar.setPadding(p, p, p, p)
+                    ivAvatar.setImageResource(R.drawable.ic_profile)
+                }
+            } ?: run {
+                val p = (10 * root.resources.displayMetrics.density).toInt()
+                ivAvatar.setPadding(p, p, p, p)
+                ivAvatar.setImageResource(R.drawable.ic_profile)
+            }
+
             acceptBtn.setOnClickListener { onApprove(member) }
             rejectBtn.setOnClickListener { onReject(member) }
         }
@@ -63,6 +80,21 @@ class ManageMemberAdapter(
             tvName.text = member.profile?.name ?: "Unknown"
             tvId.text = member.profile?.studentId ?: member.uid
             
+            member.profile?.photoUrl?.let { url ->
+                if (url.isNotBlank()) {
+                    ivAvatar.setPadding(0, 0, 0, 0)
+                    Glide.with(root.context).load(url).circleCrop().into(ivAvatar)
+                } else {
+                    val p = (10 * root.resources.displayMetrics.density).toInt()
+                    ivAvatar.setPadding(p, p, p, p)
+                    ivAvatar.setImageResource(R.drawable.ic_profile)
+                }
+            } ?: run {
+                val p = (10 * root.resources.displayMetrics.density).toInt()
+                ivAvatar.setPadding(p, p, p, p)
+                ivAvatar.setImageResource(R.drawable.ic_profile)
+            }
+
             kickBtn.setOnClickListener { onRemove(member) }
             root.setOnClickListener { onClick(member) }
         }

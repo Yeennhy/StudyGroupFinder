@@ -18,6 +18,7 @@ import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
+import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.launch
@@ -51,6 +52,10 @@ class HistoryViewModel : ViewModel() {
 
         viewModelScope.launch {
             try {
+                // Fetch profile info first
+                val profileState = ServiceLocator.profileRepository.observeCurrentProfile().first { it !is UiState.Loading }
+                val profile = (profileState as? UiState.Success)?.data
+
                 withContext(Dispatchers.IO) {
                     val pdfDocument = PdfDocument()
                     
@@ -64,6 +69,11 @@ class HistoryViewModel : ViewModel() {
                     val subHeaderTextPaint = Paint().apply {
                         textSize = 14f
                         color = Color.parseColor("#666666")
+                    }
+                    val studierInfoPaint = Paint().apply {
+                        typeface = Typeface.create(Typeface.DEFAULT, Typeface.BOLD)
+                        textSize = 18f
+                        color = Color.parseColor("#222222")
                     }
                     val titlePaint = Paint().apply {
                         typeface = Typeface.create(Typeface.DEFAULT, Typeface.BOLD)
@@ -83,6 +93,10 @@ class HistoryViewModel : ViewModel() {
                         color = Color.LTGRAY
                         strokeWidth = 1f
                     }
+                    val thickDividerPaint = Paint().apply {
+                        color = Color.BLACK
+                        strokeWidth = 2f
+                    }
                     val statusBgPaint = Paint().apply { style = Paint.Style.FILL }
 
                     var pageNumber = 1
@@ -91,13 +105,20 @@ class HistoryViewModel : ViewModel() {
                     var canvas: Canvas = myPage.canvas
                     
                     fun drawPageHeader(canv: Canvas) {
-                        canv.drawRect(0f, 0f, 595f, 100f, headerBgPaint)
-                        canv.drawText("Study Session History", 40f, 60f, headerTextPaint)
-                        canv.drawText("Generated on: ${DateTimeUtils.formatDateTime(System.currentTimeMillis())}", 40f, 85f, subHeaderTextPaint)
+                        canv.drawRect(0f, 0f, 595f, 150f, headerBgPaint)
+                        canv.drawText("Study Session History", 40f, 55f, headerTextPaint)
+                        canv.drawText("Generated on: ${DateTimeUtils.formatDateTime(System.currentTimeMillis())}", 40f, 80f, subHeaderTextPaint)
+                        
+                        profile?.let {
+                            canv.drawText("${it.name} (${it.studentId})", 40f, 115f, studierInfoPaint)
+                            canv.drawText("Community: ${it.communityId}", 40f, 135f, subHeaderTextPaint)
+                        }
+                        
+                        canv.drawLine(0f, 150f, 595f, 150f, thickDividerPaint)
                     }
 
                     drawPageHeader(canvas)
-                    var y = 140f
+                    var y = 190f
 
                     sessionsState.data.forEach { session ->
                         // Check for page overflow
@@ -108,7 +129,7 @@ class HistoryViewModel : ViewModel() {
                             myPage = pdfDocument.startPage(myPageInfo)
                             canvas = myPage.canvas
                             drawPageHeader(canvas)
-                            y = 140f
+                            y = 190f
                         }
 
                         // Session Title

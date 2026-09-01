@@ -15,7 +15,6 @@ import androidx.activity.result.contract.ActivityResultContracts
 import androidx.core.content.ContextCompat
 import androidx.core.content.FileProvider
 import androidx.core.view.isVisible
-import androidx.core.view.setPadding
 import androidx.fragment.app.Fragment
 import androidx.fragment.app.viewModels
 import androidx.navigation.fragment.findNavController
@@ -282,13 +281,12 @@ class ProfileFragment : Fragment() {
     private fun applyAvatarStyle(hasPhoto: Boolean) {
         binding.ivAvatar.apply {
             if (hasPhoto) {
-                val paddingPx = (8 * resources.displayMetrics.density).toInt()
-                setPadding(paddingPx)
+                setPadding(0, 0, 0, 0)
                 scaleType = ImageView.ScaleType.CENTER_CROP
                 imageTintList = null
             } else {
                 val paddingPx = (35 * resources.displayMetrics.density).toInt()
-                setPadding(paddingPx)
+                setPadding(paddingPx, paddingPx, paddingPx, paddingPx)
                 scaleType = ImageView.ScaleType.FIT_CENTER
                 imageTintList = ColorStateList.valueOf(
                     ContextCompat.getColor(requireContext(), R.color.graphite)

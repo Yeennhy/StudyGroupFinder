@@ -237,11 +237,18 @@ class SessionDetailFragment : Fragment() {
             
             member.profile?.photoUrl?.let { url ->
                 if (url.isNotBlank()) {
+                    ivAvatar.setPadding(0, 0, 0, 0)
                     Glide.with(this@SessionDetailFragment).load(url).circleCrop().into(ivAvatar)
                 } else {
+                    val p = (10 * resources.displayMetrics.density).toInt()
+                    ivAvatar.setPadding(p, p, p, p)
                     ivAvatar.setImageResource(R.drawable.ic_profile)
                 }
-            } ?: ivAvatar.setImageResource(R.drawable.ic_profile)
+            } ?: run {
+                val p = (10 * resources.displayMetrics.density).toInt()
+                ivAvatar.setPadding(p, p, p, p)
+                ivAvatar.setImageResource(R.drawable.ic_profile)
+            }
 
             rowHost.setOnClickListener { openMemberProfile(member.uid) }
         }
