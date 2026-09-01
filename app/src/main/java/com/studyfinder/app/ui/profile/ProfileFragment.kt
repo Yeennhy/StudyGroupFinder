@@ -5,6 +5,8 @@ import android.content.pm.PackageManager
 import android.content.res.ColorStateList
 import android.net.Uri
 import android.os.Bundle
+import android.text.SpannableString
+import android.text.style.UnderlineSpan
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
@@ -17,8 +19,11 @@ import androidx.core.content.FileProvider
 import androidx.core.view.isVisible
 import androidx.core.view.setPadding
 import androidx.fragment.app.Fragment
+import androidx.lifecycle.Lifecycle
 import com.studyfinder.app.util.applyFadeThroughTransitions
 import androidx.fragment.app.viewModels
+import androidx.lifecycle.lifecycleScope
+import androidx.lifecycle.repeatOnLifecycle
 import androidx.navigation.fragment.findNavController
 import androidx.navigation.fragment.navArgs
 import com.bumptech.glide.Glide
@@ -31,6 +36,7 @@ import com.studyfinder.app.util.ActionResult
 import com.studyfinder.app.util.UiState
 import com.studyfinder.app.util.setupHeader
 import com.studyfinder.app.util.setupNavbar
+import kotlinx.coroutines.launch
 import java.io.File
 
 /**
@@ -157,6 +163,16 @@ class ProfileFragment : Fragment() {
 
         viewModel.isBlocked.observe(viewLifecycleOwner) { isBlocked ->
             updateBlockUi(isBlocked)
+            updateStatusDivider()
+        }
+
+        viewLifecycleOwner.lifecycleScope.launch {
+            viewLifecycleOwner.repeatOnLifecycle(Lifecycle.State.STARTED) {
+                viewModel.isEmailVerified.collect { isVerified ->
+                    updateVerificationUi(isVerified)
+                    updateStatusDivider()
+                }
+            }
         }
 
         viewModel.saveResult.observe(viewLifecycleOwner) { result ->
@@ -191,6 +207,8 @@ class ProfileFragment : Fragment() {
         binding.tvDepartmentValue.text = profile.department
         binding.tvMajorValue.text = profile.major
         binding.tvAdmissionYearValue.text = profile.admissionYear
+
+        updateStatusDivider()
 
         if (profile.photoUrl.isNotBlank()) {
             applyAvatarStyle(true)
@@ -244,6 +262,29 @@ class ProfileFragment : Fragment() {
             .load(uri)
             .circleCrop()
             .into(binding.ivAvatar)
+    }
+
+    private fun updateVerificationUi(isVerified: Boolean) {
+        val showVerification = isSelfView && !isVerified
+        binding.verifymsg.isVisible = showVerification
+        binding.verifymsg2.isVisible = showVerification
+        binding.tvResendVerification.isVisible = showVerification
+
+        if (showVerification) {
+            val content = SpannableString(binding.tvResendVerification.text)
+            content.setSpan(UnderlineSpan(), 0, content.length, 0)
+            binding.tvResendVerification.text = content
+            binding.tvResendVerification.setOnClickListener {
+                viewModel.resendVerificationEmail()
+            }
+        }
+    }
+
+    private fun updateStatusDivider() {
+        val isBlockedVisible = !isSelfView && (viewModel.isBlocked.value ?: false)
+        val isVerificationVisible = isSelfView && !viewModel.isEmailVerified.value
+        
+        binding.divAvatarCard.isVisible = isBlockedVisible || isVerificationVisible
     }
 
     private fun updateBlockUi(isBlocked: Boolean) {
