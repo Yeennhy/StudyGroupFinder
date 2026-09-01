@@ -29,6 +29,7 @@ import com.studyfinder.app.util.DateTimeUtils
 import com.studyfinder.app.util.UiState
 import com.studyfinder.app.util.setupHeader
 import kotlinx.coroutines.flow.collectLatest
+import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.launch
 
 /**
@@ -43,6 +44,7 @@ class SessionDetailFragment : Fragment() {
     private val auth = FirebaseAuth.getInstance()
 
     private val attendeeAdapter = AttendeeAdapter { openMemberProfile(it.uid) }
+    private val pendingRequestAdapter = AttendeeAdapter { openMemberProfile(it.uid) }
     private val materialAdapter = MaterialAdapter { /* TODO: Open URL */ }
 
     private val filePickerLauncher = registerForActivityResult(ActivityResultContracts.GetContent()) { uri ->
@@ -95,22 +97,36 @@ class SessionDetailFragment : Fragment() {
                 }
             }
             launch {
-                ServiceLocator.sessionRepository.observeMembers(args.sessionId).collectLatest { state ->
-                    if (state is UiState.Success<List<SessionMember>>) {
-                        val sessionState = viewModel.session.value
-                        val hostUid = (sessionState as? UiState.Success)?.data?.hostUid
-                        val attendees = state.data.filter { 
-                            it.uid != hostUid && (it.status == com.studyfinder.app.model.MemberStatus.ACCEPTED || it.status == com.studyfinder.app.model.MemberStatus.ADMIN)
+                combine(
+                    viewModel.session,
+                    viewModel.members
+                ) { sessionState, membersState ->
+                    Pair(sessionState, membersState)
+                }.collectLatest { (sessionState, membersState) ->
+                    val sessionData = when (sessionState) {
+                        is UiState.Success -> sessionState.data
+                        is UiState.Offline -> sessionState.cached
+                        else -> null
+                    }
+                    
+                    if (membersState is UiState.Success<List<SessionMember>> && sessionData != null) {
+                        val hostUid = sessionData.hostUid
+                        val attendees = membersState.data.filter { 
+                            it.uid != hostUid && it.uid in sessionData.memberUids
                         }
                         attendeeAdapter.submitList(attendees)
                         
-                        val host = state.data.find { it.uid == hostUid }
+                        val pending = membersState.data.filter { 
+                            it.status == com.studyfinder.app.model.MemberStatus.PENDING
+                        }
+                        pendingRequestAdapter.submitList(pending)
+                        binding.cardPendingRq.isVisible = pending.isNotEmpty()
+                        binding.tvPendingCount.text = "Pending Requests (${pending.size})"
+                        
+                        val host = membersState.data.find { it.uid == hostUid }
                         host?.let { bindHost(it) }
 
-                        if (sessionState is UiState.Success) {
-                            val totalAccepted = state.data.count { it.status == com.studyfinder.app.model.MemberStatus.ACCEPTED || it.status == com.studyfinder.app.model.MemberStatus.ADMIN }
-                            updateAttendeeCount(totalAccepted, sessionState.data.capacity)
-                        }
+                        updateAttendeeCount(sessionData.joinedCount, sessionData.capacity)
                     }
                 }
             }
@@ -128,6 +144,7 @@ class SessionDetailFragment : Fragment() {
             launch {
                 ServiceLocator.profileRepository.observeBlockedUids().collectLatest { blocked ->
                     attendeeAdapter.setBlockedUids(blocked)
+                    pendingRequestAdapter.setBlockedUids(blocked)
                 }
             }
         }
@@ -137,6 +154,10 @@ class SessionDetailFragment : Fragment() {
         binding.rvAttendees.apply {
             layoutManager = LinearLayoutManager(context)
             adapter = attendeeAdapter
+        }
+        binding.rvPendingRequests.apply {
+            layoutManager = LinearLayoutManager(context)
+            adapter = pendingRequestAdapter
         }
         binding.rvMaterials.apply {
             layoutManager = LinearLayoutManager(context)

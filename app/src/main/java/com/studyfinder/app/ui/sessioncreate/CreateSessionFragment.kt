@@ -242,6 +242,8 @@ class CreateSessionFragment : Fragment() {
             chipCornerRadius = 99f * resources.displayMetrics.density
             setTextColor(requireContext().getColor(R.color.graphite))
             typeface = androidx.core.content.res.ResourcesCompat.getFont(requireContext(), R.font.pjsans_bold)
+            chipMinHeight = 36f * resources.displayMetrics.density
+            setEnsureMinTouchTargetSize(false)
 
             setOnCloseIconClickListener {
                 selectedTags.remove(tag)

@@ -10,8 +10,10 @@ import android.view.ViewGroup
 import android.widget.ArrayAdapter
 import android.widget.SeekBar
 import android.widget.Toast
+import androidx.core.view.isVisible
 import androidx.fragment.app.DialogFragment
 import androidx.lifecycle.lifecycleScope
+import com.google.android.material.chip.Chip
 import com.google.android.material.datepicker.MaterialDatePicker
 import com.google.android.material.timepicker.MaterialTimePicker
 import com.google.android.material.timepicker.TimeFormat
@@ -34,6 +36,7 @@ class SessionEditFragment : DialogFragment() {
     private var selectedDate = Calendar.getInstance()
     private var durationMinutes = 90
     private var capacity = 4
+    private val selectedTags = mutableListOf<String>()
 
     companion object {
         private const val ARG_SESSION = "session"
@@ -58,6 +61,8 @@ class SessionEditFragment : DialogFragment() {
         selectedDate.timeInMillis = session.startTimeMillis
         durationMinutes = ((session.endTimeMillis - session.startTimeMillis) / 60000).toInt()
         capacity = session.capacity
+        selectedTags.clear()
+        selectedTags.addAll(session.tags)
     }
 
     override fun onCreateView(
@@ -122,6 +127,10 @@ class SessionEditFragment : DialogFragment() {
             seekDialogDuration.progress = (durationMinutes / 30) - 1
 
             tvDialogCapacity.text = capacity.toString()
+
+            tagContainerDialog.removeAllViews()
+            selectedTags.forEach { addTagToUi(it) }
+            tagContainerDialog.addView(btnAddTagDialog)
         }
     }
 
@@ -178,6 +187,10 @@ class SessionEditFragment : DialogFragment() {
                 override fun onStopTrackingTouch(seekBar: SeekBar?) {}
             })
 
+            btnAddTagDialog.setOnClickListener {
+                showAddTagDialog()
+            }
+
             btnSaveChanges.setOnClickListener {
                 val title = etDialogTitle.text.toString()
                 if (title.isBlank()) {
@@ -202,12 +215,53 @@ class SessionEditFragment : DialogFragment() {
                     lng = location?.lng ?: session.lng,
                     startTimeMillis = selectedDate.timeInMillis,
                     endTimeMillis = selectedDate.timeInMillis + (durationMinutes * 60000L),
-                    capacity = capacity
+                    capacity = capacity,
+                    tags = selectedTags
                 )
                 vm?.saveEdits(updatedSession)
                 dismiss()
             }
         }
+    }
+
+    private fun showAddTagDialog() {
+        val editText = android.widget.EditText(requireContext())
+        androidx.appcompat.app.AlertDialog.Builder(requireContext())
+            .setTitle("Add Tag")
+            .setView(editText)
+            .setPositiveButton("Add") { _, _ ->
+                val tag = editText.text.toString().trim()
+                if (tag.isNotBlank()) {
+                    addTagToUi(tag)
+                }
+            }
+            .setNegativeButton("Cancel", null)
+            .show()
+    }
+
+    private fun addTagToUi(tag: String) {
+        if (!selectedTags.contains(tag)) {
+            selectedTags.add(tag)
+        }
+        val chip = Chip(requireContext()).apply {
+            text = tag
+            isCloseIconVisible = true
+            setCloseIconTintResource(R.color.graphite)
+            setChipBackgroundColorResource(R.color.light_blue)
+            setChipStrokeColorResource(R.color.graphite)
+            chipStrokeWidth = 3.5f * resources.displayMetrics.density
+            chipCornerRadius = 99f * resources.displayMetrics.density
+            setTextColor(requireContext().getColor(R.color.graphite))
+            typeface = androidx.core.content.res.ResourcesCompat.getFont(requireContext(), R.font.pjsans_bold)
+            chipMinHeight = 36f * resources.displayMetrics.density
+            setEnsureMinTouchTargetSize(false)
+
+            setOnCloseIconClickListener {
+                selectedTags.remove(tag)
+                binding.tagContainerDialog.removeView(this)
+            }
+        }
+        binding.tagContainerDialog.addView(chip, binding.tagContainerDialog.childCount - 1)
     }
 
     private fun updateDateText() {

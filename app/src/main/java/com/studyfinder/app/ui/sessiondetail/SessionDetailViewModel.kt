@@ -29,6 +29,9 @@ class SessionDetailViewModel : ViewModel() {
     private val _session = MutableStateFlow<UiState<Session>>(UiState.Loading)
     val session: StateFlow<UiState<Session>> = _session
 
+    private val _members = MutableStateFlow<UiState<List<SessionMember>>>(UiState.Loading)
+    val members: StateFlow<UiState<List<SessionMember>>> = _members
+
     private val _myMembership = MutableStateFlow<SessionMember?>(null)
     val myMembership: StateFlow<SessionMember?> = _myMembership
 
@@ -41,8 +44,9 @@ class SessionDetailViewModel : ViewModel() {
     private var currentSessionId: String? = null
 
     val actionState: StateFlow<ActionState> = combine(_session, _myMembership, _blockedUids) { sessionState, membership, blocked ->
+        val currentUid = auth.currentUser?.uid ?: ""
         if (sessionState is UiState.Success) {
-            resolveActionState(sessionState.data, membership, viewMode, blocked)
+            resolveActionState(sessionState.data, membership, viewMode, blocked, currentUid)
         } else {
             ActionState.Join
         }
@@ -72,6 +76,12 @@ class SessionDetailViewModel : ViewModel() {
         }
         
         viewModelScope.launch {
+            sessionRepository.observeMembers(sessionId).collectLatest {
+                _members.value = it
+            }
+        }
+
+        viewModelScope.launch {
             sessionRepository.observeMyMembership(sessionId).collectLatest {
                 _myMembership.value = it
             }
@@ -88,10 +98,9 @@ class SessionDetailViewModel : ViewModel() {
         session: Session,
         myMembership: SessionMember?,
         viewMode: SessionViewMode,
-        blocked: Set<String>
+        blocked: Set<String>,
+        currentUid: String
     ): ActionState {
-        val currentUid = auth.currentUser?.uid ?: ""
-
         // Row 1: Past View
         if (viewMode == SessionViewMode.PAST) return ActionState.PastView
 
@@ -101,10 +110,14 @@ class SessionDetailViewModel : ViewModel() {
         // Row 3: Host
         if (session.hostUid == currentUid) return ActionState.Manage
 
+        // Definitively check if joined via memberUids roster (§3.1).
+        // This resolves cases where subcollection status might be stale or inconsistent.
+        if (currentUid in session.memberUids) return ActionState.Leave
+
         // Row 4: Invited
         if (myMembership?.status == MemberStatus.INVITED) return ActionState.AcceptInvite
 
-        // Row 5: Member
+        // Row 5: Member (redundant check for safety)
         if (myMembership?.status == MemberStatus.ACCEPTED || myMembership?.status == MemberStatus.ADMIN) return ActionState.Leave
 
         // Row 6: Pending

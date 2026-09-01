@@ -105,27 +105,31 @@ class SessionManageFragment : Fragment() {
                     if (state is UiState.Success) {
                         requestAdapter.submitList(state.data)
                         binding.cardPendingRq.isVisible = state.data.isNotEmpty()
+                        binding.tvPendingCount.text = "Pending Requests (${state.data.size})"
                     }
                 }
             }
             launch {
-                combine(viewModel.members, viewModel.removedMemberUids) { membersState, removedUids ->
-                    Pair(membersState, removedUids)
-                }.collectLatest { (membersState, removedUids) ->
-                    if (membersState is UiState.Success) {
-                        val sessionState = viewModel.session.value
-                        if (sessionState is UiState.Success) {
-                            val hostUid = sessionState.data.hostUid
-                            val acceptedMembers = membersState.data.filter { 
-                                it.uid != hostUid && 
-                                (it.status == MemberStatus.ACCEPTED || it.status == MemberStatus.ADMIN) &&
-                                !removedUids.contains(it.uid)
-                            }
-                            memberAdapter.submitList(acceptedMembers)
-                            
-                            val hostMember = membersState.data.find { it.uid == hostUid }
-                            hostMember?.let { bindHost(it) }
+                combine(viewModel.members, viewModel.removedMemberUids, viewModel.session) { membersState, removedUids, sessionState ->
+                    Triple(membersState, removedUids, sessionState)
+                }.collectLatest { (membersState, removedUids, sessionState) ->
+                    if (membersState is UiState.Success && sessionState is UiState.Success) {
+                        val hostUid = sessionState.data.hostUid
+                        val acceptedMembers = membersState.data.filter { 
+                            it.uid != hostUid && 
+                            (it.status == MemberStatus.ACCEPTED || it.status == MemberStatus.ADMIN) &&
+                            !removedUids.contains(it.uid)
                         }
+                        memberAdapter.submitList(acceptedMembers)
+                        
+                        val hostMember = membersState.data.find { it.uid == hostUid }
+                        hostMember?.let { bindHost(it) }
+
+                        val totalCount = membersState.data.count { 
+                            (it.status == MemberStatus.ACCEPTED || it.status == MemberStatus.ADMIN) &&
+                            !removedUids.contains(it.uid)
+                        }
+                        binding.tvAttendeesCount.text = getString(R.string.attendees_count_format, totalCount, sessionState.data.capacity)
                     }
                 }
             }
@@ -282,19 +286,6 @@ class SessionManageFragment : Fragment() {
             tagContainerInfo.removeAllViews()
             session.courseCategory.wire.let { addTag(it, R.color.ginkgo_yellow) }
             session.tagType.wire.let { addTag(it, R.color.light_blue) }
-            
-            // Calculate joined count based on actual accepted members list
-            val membersState = viewModel.members.value
-            val displayJoinedCount = if (membersState is UiState.Success) {
-                membersState.data.count { 
-                    (it.status == MemberStatus.ACCEPTED || it.status == MemberStatus.ADMIN) &&
-                    !viewModel.removedMemberUids.value.contains(it.uid)
-                }
-            } else {
-                session.joinedCount
-            }
-            
-            tvAttendeesCount.text = getString(R.string.attendees_count_format, displayJoinedCount, session.capacity)
             
             val isGated = session.mode == SessionMode.GATED
             toggleOpenToAll.setBackgroundResource(if (!isGated) R.drawable.bg_segment_manage_selected else android.R.color.transparent)

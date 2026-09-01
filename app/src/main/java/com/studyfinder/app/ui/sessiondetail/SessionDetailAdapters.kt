@@ -105,6 +105,7 @@ class InviteStudentAdapter(
         holder.binding.apply {
             tvName.text = user.name
             tvId.text = user.studentId
+            tvBlockedBadge.visibility = android.view.View.GONE
             
             if (user.photoUrl.isNotBlank()) {
                 Glide.with(root.context).load(user.photoUrl).circleCrop().into(ivAvatar)
