@@ -71,8 +71,26 @@ class AttendeeAdapter(
 }
 
 class MaterialAdapter(
-    private val onClick: (String) -> Unit
+    private val onClick: (String) -> Unit,
+    private val onDelete: ((String) -> Unit)? = null
 ) : ListAdapter<String, MaterialAdapter.ViewHolder>(DIFF) {
+
+    private var isHost: Boolean = false
+
+    fun setHost(host: Boolean) {
+        if (isHost != host) {
+            isHost = host
+            notifyDataSetChanged()
+        }
+    }
+
+    private val tagColors = listOf(
+        R.color.ginkgo_yellow, R.color.theme_blue, R.color.light_blue,
+        R.color.light_graphite, R.color.deep_red, R.color.theme_clay,
+        R.color.theme_red, R.color.theme_green, R.color.theme_gray,
+        R.color.theme_teal, R.color.theme_cream, R.color.gray_dot,
+        R.color.brown_dot, R.color.graphite_10, R.color.activity_mid
+    )
 
     class ViewHolder(val binding: ItemFileRowBinding) : RecyclerView.ViewHolder(binding.root)
 
@@ -85,6 +103,14 @@ class MaterialAdapter(
         val fileName = url.substringAfterLast("/").substringBefore("?").replace("%20", " ")
         holder.binding.apply {
             tvfileName.text = fileName
+            
+            // Random color for the icon frame
+            val randomColor = tagColors[kotlin.math.abs(url.hashCode()) % tagColors.size]
+            ivFileFrame.setCardBackgroundColor(root.context.getColor(randomColor))
+
+            btnDeleteContainer.visibility = if (isHost && onDelete != null) android.view.View.VISIBLE else android.view.View.GONE
+            btnDelete.setOnClickListener { onDelete?.invoke(url) }
+
             root.setOnClickListener { onClick(url) }
         }
     }

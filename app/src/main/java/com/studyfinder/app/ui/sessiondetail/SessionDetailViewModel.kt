@@ -37,6 +37,9 @@ class SessionDetailViewModel : ViewModel() {
 
     private val _blockedUids = MutableStateFlow<Set<String>>(emptySet())
 
+    private val _isLoading = MutableStateFlow(false)
+    val isLoading: StateFlow<Boolean> = _isLoading
+
     private val _actionResult = MutableStateFlow<ActionResult?>(null)
     val actionResult: StateFlow<ActionResult?> = _actionResult
 
@@ -137,28 +140,36 @@ class SessionDetailViewModel : ViewModel() {
     fun join() {
         val sid = currentSessionId ?: return
         viewModelScope.launch {
+            _isLoading.value = true
             _actionResult.value = sessionRepository.joinOpenSession(sid)
+            _isLoading.value = false
         }
     }
 
     fun requestToJoin() {
         val sid = currentSessionId ?: return
         viewModelScope.launch {
+            _isLoading.value = true
             _actionResult.value = sessionRepository.requestToJoin(sid)
+            _isLoading.value = false
         }
     }
 
     fun acceptInvite() {
         val sid = currentSessionId ?: return
         viewModelScope.launch {
+            _isLoading.value = true
             _actionResult.value = sessionRepository.acceptInvite(sid)
+            _isLoading.value = false
         }
     }
 
     fun cancelRequest() {
         val sid = currentSessionId ?: return
         viewModelScope.launch {
+            _isLoading.value = true
             _actionResult.value = sessionRepository.cancelJoinRequest(sid)
+            _isLoading.value = false
         }
     }
 
@@ -166,30 +177,49 @@ class SessionDetailViewModel : ViewModel() {
         val sid = currentSessionId ?: return
         val uid = auth.currentUser?.uid ?: return
         viewModelScope.launch {
+            _isLoading.value = true
             _actionResult.value = sessionRepository.leaveOrRemove(sid, uid)
+            _isLoading.value = false
         }
     }
 
     fun finishSession() {
         val sid = currentSessionId ?: return
         viewModelScope.launch {
+            _isLoading.value = true
             _actionResult.value = sessionRepository.finishSession(sid)
+            _isLoading.value = false
         }
     }
 
-    fun attachMaterial(uri: android.net.Uri) {
+    fun deleteMaterial(materialUrl: String) {
+        val sid = currentSessionId ?: return
+        viewModelScope.launch {
+            _isLoading.value = true
+            _actionResult.value = sessionRepository.deleteMaterial(sid, materialUrl)
+            _isLoading.value = false
+        }
+    }
+
+    fun attachMaterial(uri: android.net.Uri, context: android.content.Context) {
         val sid = currentSessionId ?: return
         viewModelScope.launch {
             try {
-                val storageRef = com.google.firebase.storage.FirebaseStorage.getInstance().reference
-                    .child("sessions/$sid/materials/${System.currentTimeMillis()}")
+                _isLoading.value = true
+                val bytes = context.contentResolver.openInputStream(uri)?.use { it.readBytes() }
+                    ?: throw Exception("Failed to read file")
                 
-                storageRef.putFile(uri).await()
-                val downloadUrl = storageRef.downloadUrl.await().toString()
-                
-                _actionResult.value = sessionRepository.attachMaterial(sid, downloadUrl)
+                val fileName = context.contentResolver.query(uri, null, null, null, null)?.use { cursor ->
+                    val nameIndex = cursor.getColumnIndex(android.provider.OpenableColumns.DISPLAY_NAME)
+                    cursor.moveToFirst()
+                    cursor.getString(nameIndex)
+                } ?: "${System.currentTimeMillis()}.pdf"
+
+                _actionResult.value = sessionRepository.uploadToSupabase(bytes, fileName, sid)
             } catch (e: Exception) {
                 _actionResult.value = ActionResult.Failure(e.message ?: "Upload failed")
+            } finally {
+                _isLoading.value = false
             }
         }
     }

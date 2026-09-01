@@ -9,6 +9,7 @@ import com.studyfinder.app.StudyFinderApp
 import com.studyfinder.app.data.remote.firestore.FirestoreMappers
 import com.studyfinder.app.data.remote.firestore.FirestoreRefs
 import com.studyfinder.app.data.remote.firestore.FirestoreRefs.Field
+import com.studyfinder.app.data.remote.supabase.SupabaseClientProvider
 import com.studyfinder.app.model.BusyInterval
 import com.studyfinder.app.model.CourseCategory
 import com.studyfinder.app.model.MemberStatus
@@ -20,6 +21,7 @@ import com.studyfinder.app.notification.ReminderWorker
 import com.studyfinder.app.util.ActionResult
 import com.studyfinder.app.util.Result
 import com.studyfinder.app.util.UiState
+import io.github.jan.supabase.storage.storage
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.SupervisorJob
@@ -492,6 +494,43 @@ class SessionRepository {
         ActionResult.Success
     } catch (e: Exception) {
         ActionResult.Failure(e.message ?: "Attachment failed", e)
+    }
+
+    suspend fun deleteMaterial(sessionId: String, materialUrl: String): ActionResult = try {
+        // 1. Remove from Firestore first so it vanishes from the UI immediately
+        FirestoreRefs.session(sessionId).update(
+            Field.MATERIAL_URLS, FieldValue.arrayRemove(materialUrl),
+            Field.UPDATED_AT, FieldValue.serverTimestamp()
+        ).await()
+
+        // 2. Attempt to delete from Supabase Storage
+        try {
+            val bucket = SupabaseClientProvider.client.storage.from("materials")
+            // Path is the part after "/public/materials/"
+            val path = materialUrl.substringAfter("/public/materials/")
+            if (path != materialUrl) {
+                bucket.delete(path)
+            }
+        } catch (e: Exception) {
+            // Log Supabase failure but don't fail the whole action since Firestore is already updated
+            android.util.Log.e("SessionRepo", "Supabase file delete failed: ${e.message}")
+        }
+
+        ActionResult.Success
+    } catch (e: Exception) {
+        ActionResult.Failure(e.message ?: "Deletion failed", e)
+    }
+
+    suspend fun uploadToSupabase(bytes: ByteArray, fileName: String, sessionId: String): ActionResult {
+        return try {
+            val bucket = SupabaseClientProvider.client.storage.from("materials")
+            val path = "$sessionId/$fileName"
+            bucket.upload(path, bytes)
+            val publicUrl = bucket.publicUrl(path)
+            attachMaterial(sessionId, publicUrl)
+        } catch (e: Exception) {
+            ActionResult.Failure(e.message ?: "Upload failed", e)
+        }
     }
 
     suspend fun inviteAllFrom(previousSessionId: String, newSessionId: String): ActionResult = try {

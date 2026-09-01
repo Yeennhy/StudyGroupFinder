@@ -177,8 +177,24 @@ class SessionManageViewModel : ViewModel() {
         }
     }
 
-    fun attachMaterial(uri: Uri) {
-        // TODO: Implementation for storage upload then db update
+    fun attachMaterial(uri: Uri, context: android.content.Context) {
+        val sid = currentSessionId ?: return
+        viewModelScope.launch {
+            try {
+                val bytes = context.contentResolver.openInputStream(uri)?.use { it.readBytes() }
+                    ?: throw Exception("Failed to read file")
+                
+                val fileName = context.contentResolver.query(uri, null, null, null, null)?.use { cursor ->
+                    val nameIndex = cursor.getColumnIndex(android.provider.OpenableColumns.DISPLAY_NAME)
+                    cursor.moveToFirst()
+                    cursor.getString(nameIndex)
+                } ?: "${System.currentTimeMillis()}.pdf"
+
+                _actionResult.value = sessionRepository.uploadToSupabase(bytes, fileName, sid)
+            } catch (e: Exception) {
+                _actionResult.value = ActionResult.Failure(e.message ?: "Upload failed")
+            }
+        }
     }
 
     fun searchUsers(query: String) {

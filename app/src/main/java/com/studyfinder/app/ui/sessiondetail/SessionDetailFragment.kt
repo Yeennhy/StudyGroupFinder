@@ -46,10 +46,10 @@ class SessionDetailFragment : Fragment() {
 
     private val attendeeAdapter = AttendeeAdapter { openMemberProfile(it.uid) }
     private val pendingRequestAdapter = AttendeeAdapter { openMemberProfile(it.uid) }
-    private val materialAdapter = MaterialAdapter { /* TODO: Open URL */ }
+    private lateinit var materialAdapter: MaterialAdapter
 
     private val filePickerLauncher = registerForActivityResult(ActivityResultContracts.GetContent()) { uri ->
-        uri?.let { viewModel.attachMaterial(it) }
+        uri?.let { viewModel.attachMaterial(it, requireContext()) }
     }
 
     override fun onCreate(savedInstanceState: android.os.Bundle?) {
@@ -69,6 +69,11 @@ class SessionDetailFragment : Fragment() {
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
         setupHeader(binding.appHeader, "Session Details", showHistory = false, showBackBtn = true, showAvatar = false)
+
+        materialAdapter = MaterialAdapter(
+            onClick = { openMaterialUrl(it) },
+            onDelete = { url -> showDeleteMaterialConfirmation(url) }
+        )
 
         setupRecyclerViews()
         setupListeners()
@@ -112,34 +117,48 @@ class SessionDetailFragment : Fragment() {
             }
             launch {
                 combine(
+                    viewModel.isLoading,
+                    viewModel.members
+                ) { loading, membersState ->
+                    loading || membersState is UiState.Loading
+                }.collectLatest { showOverlay ->
+                    binding.actionLoadingOverlay.isVisible = showOverlay
+                }
+            }
+            launch {
+                combine(
                     viewModel.session,
                     viewModel.members
                 ) { sessionState, membersState ->
                     Pair(sessionState, membersState)
                 }.collectLatest { (sessionState, membersState) ->
-                    binding.actionLoadingOverlay.isVisible = membersState is UiState.Loading
-                    
                     val sessionData = when (sessionState) {
                         is UiState.Success -> sessionState.data
                         is UiState.Offline -> sessionState.cached
                         else -> null
                     }
+
+                    val membersList = when (membersState) {
+                        is UiState.Success -> membersState.data
+                        is UiState.Offline -> membersState.cached
+                        else -> null
+                    }
                     
-                    if (membersState is UiState.Success<List<SessionMember>> && sessionData != null) {
+                    if (membersList != null && sessionData != null) {
                         val hostUid = sessionData.hostUid
-                        val attendees = membersState.data.filter { 
+                        val attendees = membersList.filter { 
                             it.uid != hostUid && it.uid in sessionData.memberUids
                         }
                         attendeeAdapter.submitList(attendees)
                         
-                        val pending = membersState.data.filter { 
+                        val pending = membersList.filter { 
                             it.status == com.studyfinder.app.model.MemberStatus.PENDING
                         }
                         pendingRequestAdapter.submitList(pending)
                         binding.cardPendingRq.isVisible = pending.isNotEmpty()
                         binding.tvPendingCount.text = "Pending Requests (${pending.size})"
                         
-                        val host = membersState.data.find { it.uid == hostUid }
+                        val host = membersList.find { it.uid == hostUid }
                         host?.let { bindHost(it) }
 
                         updateAttendeeCount(sessionData.joinedCount, sessionData.capacity)
@@ -205,6 +224,19 @@ class SessionDetailFragment : Fragment() {
         }.show(parentFragmentManager, "FinishConfirmation")
     }
 
+    private fun showDeleteMaterialConfirmation(url: String) {
+        ConfirmationDialogFragment.newInstance(
+            title = "Delete Material?",
+            subtitle = "Are you sure you want to remove this file from the session?",
+            buttonText = "Delete",
+            iconRes = R.drawable.ic_x,
+            iconBgColor = requireContext().getColor(R.color.theme_clay),
+            confirmBtnBgRes = R.drawable.bg_clay_btn
+        ).apply {
+            setOnConfirmListener { viewModel.deleteMaterial(url) }
+        }.show(parentFragmentManager, "DeleteMaterialConfirmation")
+    }
+
     private fun bindSession(session: Session) {
         binding.apply {
             tvSessionTitle.text = session.title
@@ -227,6 +259,7 @@ class SessionDetailFragment : Fragment() {
             val isHost = session.hostUid == auth.currentUser?.uid
             val isUpcoming = session.status == com.studyfinder.app.model.SessionStatus.UPCOMING
             
+            materialAdapter.setHost(isHost)
             cardMaterials.isVisible = session.materialUrls.isNotEmpty() || (isHost && isUpcoming)
             uploadBtnContainer.isVisible = isHost && isUpcoming
             rowInviteStudents.isVisible = isHost && isUpcoming
@@ -363,6 +396,15 @@ class SessionDetailFragment : Fragment() {
             SessionDetailFragmentDirections
                 .actionSessionDetailFragmentToProfileFragment(uid)
         )
+    }
+
+    private fun openMaterialUrl(url: String) {
+        try {
+            val intent = android.content.Intent(android.content.Intent.ACTION_VIEW, android.net.Uri.parse(url))
+            startActivity(intent)
+        } catch (e: Exception) {
+            Toast.makeText(context, "Could not open file", Toast.LENGTH_SHORT).show()
+        }
     }
 
     private fun redirectToHistory() {
