@@ -161,7 +161,9 @@ class HomeFragment : Fragment() {
                         3 -> viewModel.setSort(SessionSort.NAME_DESC)
                         4 -> requestDistanceSort()
                     }
-                    (anchor as TextView).text = item.title
+                    // Label follows the *actual* sort (see observeState) — a
+                    // failed GPS fetch silently reverts to time, so don't set
+                    // it optimistically here.
                     true
                 }
                 show()
@@ -198,6 +200,18 @@ class HomeFragment : Fragment() {
     private fun observeState() {
         viewLifecycleOwner.lifecycleScope.launch {
             viewLifecycleOwner.repeatOnLifecycle(Lifecycle.State.STARTED) {
+                launch {
+                    viewModel.filters.collect { f ->
+                        binding.tvSort.setText(
+                            when (f.sort) {
+                                SessionSort.TIME -> R.string.home_sort_time
+                                SessionSort.NAME_ASC -> R.string.home_sort_name_asc
+                                SessionSort.NAME_DESC -> R.string.home_sort_name_desc
+                                SessionSort.DISTANCE -> R.string.home_sort_distance
+                            }
+                        )
+                    }
+                }
                 viewModel.state.collect { state ->
                     StateRenderer.render(
                         state = state,
