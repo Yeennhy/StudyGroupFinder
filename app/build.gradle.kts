@@ -100,6 +100,11 @@ dependencies {
     implementation(libs.glide)
     implementation(libs.cloudinary.android)
 
+    // Supabase Storage
+    implementation(platform(libs.supabase.bom))
+    implementation(libs.supabase.storage)
+    implementation(libs.ktor.client.okhttp)
+
     testImplementation(libs.junit)
     androidTestImplementation(libs.androidx.junit)
     androidTestImplementation(libs.androidx.espresso.core)

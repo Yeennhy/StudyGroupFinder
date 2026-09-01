@@ -4,6 +4,7 @@
     android:layout_width="match_parent"
     android:layout_height="wrap_content"
     xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
     android:layout_marginBottom="8dp">
 
     <androidx.constraintlayout.widget.ConstraintLayout
@@ -25,8 +26,7 @@
             app:strokeWidth="2dp"
             app:strokeColor="@color/graphite"
             app:layout_constraintStart_toStartOf="parent"
-            app:layout_constraintTop_toTopOf="parent"
-            android:backgroundTint="@color/theme_red">
+            app:layout_constraintTop_toTopOf="parent">
 
             <ImageView
                 android:id="@+id/ivFile"
@@ -40,16 +40,52 @@
 
         <TextView
             android:id="@+id/tvfileName"
-            android:layout_width="wrap_content"
+            android:layout_width="0dp"
             android:layout_height="wrap_content"
             android:text="Practice_Exam.pdf"
             android:textSize="14sp"
             android:textColor="@color/graphite"
             android:fontFamily="@font/pjsans_regular"
             app:layout_constraintStart_toEndOf="@id/ivFileFrame"
+            app:layout_constraintEnd_toStartOf="@id/btnDeleteContainer"
             app:layout_constraintTop_toTopOf="parent"
             app:layout_constraintBottom_toBottomOf="parent"
-            android:layout_marginStart="12dp"/>
+            android:layout_marginStart="12dp"
+            android:layout_marginEnd="8dp"
+            android:ellipsize="middle"
+            android:singleLine="true"/>
+
+        <com.google.android.material.card.MaterialCardView
+            android:id="@+id/btnDeleteContainer"
+            android:layout_width="28dp"
+            android:layout_height="28dp"
+            app:cardCornerRadius="6dp"
+            app:cardElevation="0dp"
+            app:strokeWidth="1.5dp"
+            app:strokeColor="@color/graphite"
+            app:cardBackgroundColor="@color/deep_red"
+            android:clickable="true"
+            android:focusable="true"
+            android:foreground="?attr/selectableItemBackground"
+            app:layout_constraintEnd_toEndOf="parent"
+            app:layout_constraintTop_toTopOf="parent"
+            app:layout_constraintBottom_toBottomOf="parent"
+            android:visibility="gone"
+            tools:visibility="visible">
+
+            <ImageButton
+                android:id="@+id/btnDelete"
+                android:layout_width="match_parent"
+                android:layout_height="match_parent"
+                android:src="@drawable/ic_x"
+                android:scaleType="fitCenter"
+                android:padding="8dp"
+                app:tint="@color/white"
+                android:background="@android:color/transparent"
+                android:clickable="false"
+                android:focusable="false" />
+
+        </com.google.android.material.card.MaterialCardView>
 
 
 

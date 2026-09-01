@@ -304,8 +304,9 @@ class SessionManageFragment : Fragment() {
             tvSessionDuration.text = DateTimeUtils.formatDuration(durationMinutes)
 
             tagContainerInfo.removeAllViews()
-            session.courseCategory.wire.let { addTag(it, R.color.ginkgo_yellow) }
-            session.tagType.wire.let { addTag(it, R.color.light_blue) }
+            addTag(session.courseCategory.wire)
+            addTag(session.tagType.wire)
+            session.tags.forEach { addTag(it) }
             
             val isGated = session.mode == SessionMode.GATED
             toggleOpenToAll.setBackgroundResource(if (!isGated) R.drawable.bg_segment_manage_selected else android.R.color.transparent)
@@ -313,15 +314,27 @@ class SessionManageFragment : Fragment() {
         }
     }
 
-    private fun addTag(text: String, colorRes: Int) {
+    private fun addTag(text: String) {
+        val tagColors = listOf(
+            R.color.ginkgo_yellow, R.color.theme_blue, R.color.light_blue,
+            R.color.light_graphite, R.color.deep_red, R.color.theme_clay,
+            R.color.theme_red, R.color.theme_green, R.color.theme_gray,
+            R.color.theme_teal, R.color.theme_cream, R.color.gray_dot,
+            R.color.brown_dot, R.color.graphite_10, R.color.activity_mid
+        )
+        val randomColor = tagColors.random()
+
         val chip = Chip(requireContext()).apply {
             this.text = text
-            setChipBackgroundColorResource(colorRes)
+            setChipBackgroundColorResource(randomColor)
             setTextColor(requireContext().getColor(R.color.graphite))
-            chipStrokeWidth = 3.5f * resources.displayMetrics.density
+            chipStrokeWidth = 2.0f * resources.displayMetrics.density
             setChipStrokeColorResource(R.color.graphite)
             chipCornerRadius = 99f * resources.displayMetrics.density
             isCloseIconVisible = false
+            typeface = androidx.core.content.res.ResourcesCompat.getFont(requireContext(), R.font.pjsans_bold)
+            chipMinHeight = 36f * resources.displayMetrics.density
+            setEnsureMinTouchTargetSize(false)
         }
         binding.tagContainerInfo.addView(chip)
     }
