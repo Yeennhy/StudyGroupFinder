@@ -4,6 +4,8 @@ import android.os.Bundle
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
+import android.widget.Toast
+import androidx.activity.result.contract.ActivityResultContracts
 import androidx.fragment.app.Fragment
 import androidx.fragment.app.viewModels
 import androidx.lifecycle.lifecycleScope
@@ -32,6 +34,10 @@ class HistoryFragment : Fragment() {
         openPastSession(session.id)
     }
 
+    private val savePdfLauncher = registerForActivityResult(ActivityResultContracts.CreateDocument("application/pdf")) { uri ->
+        uri?.let { viewModel.exportPdfToUri(requireContext(), it) }
+    }
+
     override fun onCreateView(
         inflater: LayoutInflater,
         container: ViewGroup?,
@@ -53,7 +59,7 @@ class HistoryFragment : Fragment() {
         )
         
         binding.appHeader.rightmostBtn.setOnClickListener {
-            viewModel.exportPdf()
+            savePdfLauncher.launch("StudySessionHistory.pdf")
         }
 
         binding.rvHistory.layoutManager = LinearLayoutManager(context)

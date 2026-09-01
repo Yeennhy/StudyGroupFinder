@@ -85,7 +85,15 @@ class SessionDetailFragment : Fragment() {
                         contentView = binding.scrollContent,
                     )
                     when (state) {
-                        is UiState.Success -> bindSession(state.data)
+                        is UiState.Success -> {
+                            bindSession(state.data)
+                            // Only redirect to history if we are in LIVE mode and the session just finished.
+                            // If we are already in PAST mode (viewing history), don't redirect.
+                            if (args.viewMode == SessionViewMode.LIVE && 
+                                state.data.status == com.studyfinder.app.model.SessionStatus.FINISHED) {
+                                redirectToHistory()
+                            }
+                        }
                         is UiState.Offline -> bindSession(state.cached)
                         else -> {}
                     }
@@ -103,6 +111,8 @@ class SessionDetailFragment : Fragment() {
                 ) { sessionState, membersState ->
                     Pair(sessionState, membersState)
                 }.collectLatest { (sessionState, membersState) ->
+                    binding.actionLoadingOverlay.isVisible = membersState is UiState.Loading
+                    
                     val sessionData = when (sessionState) {
                         is UiState.Success -> sessionState.data
                         is UiState.Offline -> sessionState.cached
@@ -172,6 +182,21 @@ class SessionDetailFragment : Fragment() {
         binding.rowInviteStudents.setOnClickListener {
             openInviteByStudentId()
         }
+        binding.btnMarkFinished.setOnClickListener {
+            showFinishConfirmation()
+        }
+    }
+
+    private fun showFinishConfirmation() {
+        ConfirmationDialogFragment.newInstance(
+            title = "Finish Session?",
+            subtitle = "This will mark the session as completed for everyone.",
+            buttonText = "Finish",
+            iconRes = R.drawable.ic_tick,
+            iconBgColor = requireContext().getColor(R.color.theme_green)
+        ).apply {
+            setOnConfirmListener { viewModel.finishSession() }
+        }.show(parentFragmentManager, "FinishConfirmation")
     }
 
     private fun bindSession(session: Session) {
@@ -193,8 +218,11 @@ class SessionDetailFragment : Fragment() {
             materialAdapter.submitList(session.materialUrls)
 
             val isHost = session.hostUid == auth.currentUser?.uid
-            uploadBtnContainer.isVisible = isHost
-            rowInviteStudents.isVisible = isHost
+            val isUpcoming = session.status == com.studyfinder.app.model.SessionStatus.UPCOMING
+            
+            uploadBtnContainer.isVisible = isHost && isUpcoming
+            rowInviteStudents.isVisible = isHost && isUpcoming
+            btnMarkFinished.isVisible = isHost && isUpcoming
         }
     }
 
@@ -307,6 +335,16 @@ class SessionDetailFragment : Fragment() {
         findNavController().navigate(
             SessionDetailFragmentDirections
                 .actionSessionDetailFragmentToProfileFragment(uid)
+        )
+    }
+
+    private fun redirectToHistory() {
+        findNavController().navigate(
+            R.id.historyFragment,
+            null,
+            androidx.navigation.NavOptions.Builder()
+                .setPopUpTo(R.id.nav_graph, true)
+                .build()
         )
     }
 

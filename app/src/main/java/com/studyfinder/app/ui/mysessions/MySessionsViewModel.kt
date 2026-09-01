@@ -49,8 +49,9 @@ class MySessionsViewModel : ViewModel() {
         .map { state ->
             if (state is UiState.Success) {
                 val now = System.currentTimeMillis()
-                UiState.Success(state.data.filter { it.endTimeMillis > now }
-                    .sortedBy { it.startTimeMillis })
+                UiState.Success(state.data.filter { 
+                    it.endTimeMillis > now && it.status == com.studyfinder.app.model.SessionStatus.UPCOMING 
+                }.sortedBy { it.startTimeMillis })
             } else state
         }
         .stateIn(viewModelScope, SharingStarted.Lazily, UiState.Loading)

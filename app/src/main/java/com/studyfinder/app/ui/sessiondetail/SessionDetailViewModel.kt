@@ -101,8 +101,10 @@ class SessionDetailViewModel : ViewModel() {
         blocked: Set<String>,
         currentUid: String
     ): ActionState {
-        // Row 1: Past View
-        if (viewMode == SessionViewMode.PAST) return ActionState.PastView
+        // Row 1: Past View or Finished
+        if (viewMode == SessionViewMode.PAST || session.status == SessionStatus.FINISHED) {
+            return ActionState.PastView
+        }
 
         // Row 2: Cancelled
         if (session.status == SessionStatus.CANCELLED) return ActionState.Cancelled
@@ -162,6 +164,13 @@ class SessionDetailViewModel : ViewModel() {
         val uid = auth.currentUser?.uid ?: return
         viewModelScope.launch {
             _actionResult.value = sessionRepository.leaveOrRemove(sid, uid)
+        }
+    }
+
+    fun finishSession() {
+        val sid = currentSessionId ?: return
+        viewModelScope.launch {
+            _actionResult.value = sessionRepository.finishSession(sid)
         }
     }
 
