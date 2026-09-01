@@ -88,8 +88,12 @@ class HomeViewModel : ViewModel() {
             _filters
                 .flatMapLatest { f ->
                     combine(
+                        // Search is applied client-side over title/courseId/
+                        // courseName (substring, case-insensitive) so "calc"
+                        // matches "Calculus 1..." and no extra composite index
+                        // is needed — only the chips filter server-side.
                         sessionRepository.observeCommunitySessions(
-                            communityId, f.courseIdQuery, f.tagType, f.courseCategory,
+                            communityId, null, f.tagType, f.courseCategory,
                         ),
                         profileRepository.observeBlockedUids(),
                         _myLocation,
@@ -118,7 +122,14 @@ class HomeViewModel : ViewModel() {
             is UiState.Loading -> return UiState.Loading
         }
 
-        var rows = sessions.map { s ->
+        val query = f.courseIdQuery?.trim()?.lowercase()
+        val filtered = if (query.isNullOrEmpty()) sessions else sessions.filter { s ->
+            s.title.lowercase().contains(query) ||
+                s.courseId.lowercase().contains(query) ||
+                s.courseName.lowercase().contains(query)
+        }
+
+        var rows = filtered.map { s ->
             val distanceKm = if (
                 f.sort == SessionSort.DISTANCE && loc != null && s.lat != null && s.lng != null
             ) {
@@ -164,6 +175,8 @@ class HomeViewModel : ViewModel() {
         _filters.value = _filters.value.copy(sort = sort)
     }
 
+    /** Free-text search — matched client-side against title / courseId /
+     *  courseName (substring, case-insensitive). */
     fun setCourseIdQuery(query: String?) {
         val normalized = query?.trim()?.takeIf { it.isNotEmpty() }
         if (normalized == _filters.value.courseIdQuery) return
