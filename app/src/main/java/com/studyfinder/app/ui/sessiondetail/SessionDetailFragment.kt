@@ -226,6 +226,7 @@ class SessionDetailFragment : Fragment() {
             val isHost = session.hostUid == auth.currentUser?.uid
             val isUpcoming = session.status == com.studyfinder.app.model.SessionStatus.UPCOMING
             
+            cardMaterials.isVisible = session.materialUrls.isNotEmpty() || (isHost && isUpcoming)
             uploadBtnContainer.isVisible = isHost && isUpcoming
             rowInviteStudents.isVisible = isHost && isUpcoming
             btnMarkFinished.isVisible = isHost && isUpcoming
