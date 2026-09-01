@@ -249,7 +249,7 @@ class SessionEditFragment : DialogFragment() {
             setCloseIconTintResource(R.color.graphite)
             setChipBackgroundColorResource(R.color.light_blue)
             setChipStrokeColorResource(R.color.graphite)
-            chipStrokeWidth = 3.5f * resources.displayMetrics.density
+            chipStrokeWidth = 2.0f * resources.displayMetrics.density
             chipCornerRadius = 99f * resources.displayMetrics.density
             setTextColor(requireContext().getColor(R.color.graphite))
             typeface = androidx.core.content.res.ResourcesCompat.getFont(requireContext(), R.font.pjsans_bold)
