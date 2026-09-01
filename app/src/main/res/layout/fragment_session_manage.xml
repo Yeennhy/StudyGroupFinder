@@ -291,10 +291,11 @@
                             android:src="@drawable/ic_bell" />
 
                         <TextView
+                            android:id="@+id/tvPendingCount"
                             android:layout_width="wrap_content"
                             android:layout_height="wrap_content"
                             android:layout_marginStart="8dp"
-                            android:text="Pending Requests (2)"
+                            android:text="Pending Requests (0)"
                             android:textStyle="bold"
                             android:textSize="20sp"
                             android:textColor="@color/graphite"
@@ -381,8 +382,7 @@
                             android:id="@+id/ivAvatar"
                             android:layout_width="match_parent"
                             android:layout_height="match_parent"
-                            android:scaleType="fitCenter"
-                            android:padding="10dp"
+                            android:scaleType="centerCrop"
                             android:src="@drawable/ic_profile" />
 
                     </com.google.android.material.card.MaterialCardView>

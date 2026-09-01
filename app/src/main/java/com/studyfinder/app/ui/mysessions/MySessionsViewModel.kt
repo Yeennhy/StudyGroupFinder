@@ -48,8 +48,10 @@ class MySessionsViewModel : ViewModel() {
     val upcomingSessions = sessionRepository.observeMySessions()
         .map { state ->
             val now = System.currentTimeMillis()
-            fun future(list: List<Session>) =
-                list.filter { it.endTimeMillis > now }.sortedBy { it.startTimeMillis }
+            fun future(list: List<Session>) = list.filter { 
+                it.endTimeMillis > now && it.status == com.studyfinder.app.model.SessionStatus.UPCOMING 
+            }.sortedBy { it.startTimeMillis }
+            
             when (state) {
                 is UiState.Success -> UiState.Success(future(state.data))
                 is UiState.Offline -> UiState.Offline(future(state.cached))

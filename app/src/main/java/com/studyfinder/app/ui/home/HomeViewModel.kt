@@ -67,7 +67,9 @@ class HomeViewModel : ViewModel() {
         pipeline = viewModelScope.launch {
             val profileState = profileRepository.observeCurrentProfile()
                 .first { it !is UiState.Loading }
-            val communityId = (profileState as? UiState.Success)?.data?.communityId
+            val rawCommunityId = (profileState as? UiState.Success)?.data?.communityId
+            val communityId = rawCommunityId?.uppercase() // Force uppercase to match normalized data
+
             if (communityId.isNullOrBlank()) {
                 _state.value = UiState.Empty("Join a community to see sessions.")
                 return@launch

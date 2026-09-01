@@ -54,15 +54,51 @@
                 app:layout_constraintStart_toStartOf="parent"
                 app:layout_constraintEnd_toEndOf="parent">
 
-                <TextView
-                    android:id="@+id/tvSessionTitle"
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:text="Data Structures Review"
-                    android:textStyle="bold"
-                    android:textSize="22sp"
-                    android:textColor="@color/graphite"
-                    android:fontFamily="@font/bricolagegrotesque_bold" />
+                <androidx.constraintlayout.widget.ConstraintLayout
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content">
+
+                    <TextView
+                        android:id="@+id/tvSessionTitle"
+                        android:layout_width="0dp"
+                        android:layout_height="wrap_content"
+                        android:text="Data Structures Review"
+                        android:textStyle="bold"
+                        android:textSize="22sp"
+                        android:textColor="@color/graphite"
+                        android:fontFamily="@font/bricolagegrotesque_bold"
+                        app:layout_constraintStart_toStartOf="parent"
+                        app:layout_constraintTop_toTopOf="parent"
+                        app:layout_constraintEnd_toStartOf="@id/btnMarkFinished"
+                        android:layout_marginEnd="8dp" />
+
+                    <com.google.android.material.card.MaterialCardView
+                        android:id="@+id/btnMarkFinished"
+                        android:layout_width="38dp"
+                        android:layout_height="38dp"
+                        app:cardCornerRadius="8dp"
+                        app:cardElevation="0dp"
+                        app:strokeWidth="2dp"
+                        app:strokeColor="@color/graphite"
+                        android:clickable="true"
+                        android:focusable="true"
+                        android:foreground="?attr/selectableItemBackground"
+                        app:layout_constraintEnd_toEndOf="parent"
+                        app:layout_constraintTop_toTopOf="parent"
+                        android:visibility="gone"
+                        tools:visibility="visible">
+
+                        <ImageView
+                            android:layout_width="match_parent"
+                            android:layout_height="match_parent"
+                            android:src="@drawable/ic_tick"
+                            android:scaleType="fitCenter"
+                            android:padding="8dp"
+                            app:tint="@color/graphite" />
+
+                    </com.google.android.material.card.MaterialCardView>
+
+                </androidx.constraintlayout.widget.ConstraintLayout>
 
                 <LinearLayout
                     android:layout_width="wrap_content"
@@ -361,6 +397,60 @@
 
             </LinearLayout>
 
+            <!-- ===== Card 3.5: Pending Requests (yellow) ===== -->
+            <LinearLayout
+                android:id="@+id/cardPendingRq"
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="24dp"
+                android:layout_marginStart="20dp"
+                android:layout_marginEnd="20dp"
+                android:orientation="vertical"
+                android:paddingTop="16dp"
+                android:paddingBottom="16dp"
+                android:paddingStart="12dp"
+                android:paddingEnd="12dp"
+                android:background="@drawable/bg_yellowbox"
+                android:visibility="gone"
+                app:layout_constraintTop_toBottomOf="@id/cardMaterials"
+                app:layout_constraintStart_toStartOf="parent"
+                app:layout_constraintEnd_toEndOf="parent">
+
+                <LinearLayout
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:orientation="horizontal"
+                    android:gravity="center_vertical">
+
+                    <ImageView
+                        android:layout_width="22dp"
+                        android:layout_height="22dp"
+                        android:src="@drawable/ic_bell" />
+
+                    <TextView
+                        android:id="@+id/tvPendingCount"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:layout_marginStart="8dp"
+                        android:text="Pending Requests (0)"
+                        android:textStyle="bold"
+                        android:textSize="20sp"
+                        android:textColor="@color/graphite"
+                        android:fontFamily="@font/bricolagegrotesque_bold" />
+
+                </LinearLayout>
+
+                <androidx.recyclerview.widget.RecyclerView
+                    android:id="@+id/rvPendingRequests"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="12dp"
+                    android:nestedScrollingEnabled="false"
+                    tools:itemCount="2"
+                    tools:listitem="@layout/item_attendee_row" />
+
+            </LinearLayout>
+
             <!-- ===== Card 4: Attendees (gray) ===== -->
             <LinearLayout
                 android:id="@+id/cardAttendees"
@@ -372,7 +462,7 @@
                 android:orientation="vertical"
                 android:padding="20dp"
                 android:background="@drawable/bg_graybox"
-                app:layout_constraintTop_toBottomOf="@id/cardMaterials"
+                app:layout_constraintTop_toBottomOf="@id/cardPendingRq"
                 app:layout_constraintStart_toStartOf="parent"
                 app:layout_constraintEnd_toEndOf="parent">
 
@@ -428,8 +518,7 @@
                             android:id="@+id/ivAvatar"
                             android:layout_width="match_parent"
                             android:layout_height="match_parent"
-                            android:scaleType="fitCenter"
-                            android:padding="10dp"
+                            android:scaleType="centerCrop"
                             android:src="@drawable/ic_profile" />
 
                     </com.google.android.material.card.MaterialCardView>
@@ -612,5 +701,21 @@
         app:layout_constraintBottom_toBottomOf="parent"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintEnd_toEndOf="parent" />
+
+    <!-- Action Loading Overlay -->
+    <FrameLayout
+        android:id="@+id/actionLoadingOverlay"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:background="#80000000"
+        android:visibility="gone"
+        android:clickable="true"
+        android:focusable="true">
+        <ProgressBar
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_gravity="center"
+            android:indeterminate="true" />
+    </FrameLayout>
 
 </androidx.constraintlayout.widget.ConstraintLayout>

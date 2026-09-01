@@ -4,8 +4,9 @@ import android.os.Bundle
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
+import android.widget.Toast
+import androidx.activity.result.contract.ActivityResultContracts
 import androidx.fragment.app.Fragment
-import com.studyfinder.app.util.applyFadeThroughTransitions
 import androidx.fragment.app.viewModels
 import androidx.lifecycle.lifecycleScope
 import androidx.navigation.fragment.findNavController
@@ -17,6 +18,7 @@ import com.studyfinder.app.ui.common.StateRenderer
 import com.studyfinder.app.util.ActionResult
 import com.studyfinder.app.util.UiState
 import com.studyfinder.app.util.setupHeader
+import com.studyfinder.app.util.applyFadeThroughTransitions
 import kotlinx.coroutines.flow.collectLatest
 import kotlinx.coroutines.launch
 
@@ -33,7 +35,11 @@ class HistoryFragment : Fragment() {
         openPastSession(session.id)
     }
 
-    override fun onCreate(savedInstanceState: android.os.Bundle?) {
+    private val savePdfLauncher = registerForActivityResult(ActivityResultContracts.CreateDocument("application/pdf")) { uri ->
+        uri?.let { viewModel.exportPdfToUri(requireContext(), it) }
+    }
+
+    override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         applyFadeThroughTransitions()
     }
@@ -54,12 +60,11 @@ class HistoryFragment : Fragment() {
             title = "History",
             showHistory = false,
             showBackBtn = true,
-            showAvatar = false,
-            rightBtnIcon = R.drawable.ic_download // Use download icon for export
+            showAvatar = false
         )
         
-        binding.appHeader.rightmostBtn.setOnClickListener {
-            viewModel.exportPdf()
+        binding.btnExport.setOnClickListener {
+            savePdfLauncher.launch("StudySessionHistory.pdf")
         }
 
         binding.rvHistory.layoutManager = LinearLayoutManager(context)

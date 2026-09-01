@@ -39,11 +39,18 @@ class AttendeeAdapter(
             
             member.profile?.photoUrl?.let { url ->
                 if (url.isNotBlank()) {
+                    ivAvatar.setPadding(0, 0, 0, 0)
                     Glide.with(root.context).load(url).circleCrop().into(ivAvatar)
                 } else {
+                    val p = (10 * root.resources.displayMetrics.density).toInt()
+                    ivAvatar.setPadding(p, p, p, p)
                     ivAvatar.setImageResource(R.drawable.ic_profile)
                 }
-            } ?: ivAvatar.setImageResource(R.drawable.ic_profile)
+            } ?: run {
+                val p = (10 * root.resources.displayMetrics.density).toInt()
+                ivAvatar.setPadding(p, p, p, p)
+                ivAvatar.setImageResource(R.drawable.ic_profile)
+            }
 
             tvBlockedBadge.visibility = if (blockedUids.contains(member.uid)) {
                 android.view.View.VISIBLE
@@ -105,10 +112,14 @@ class InviteStudentAdapter(
         holder.binding.apply {
             tvName.text = user.name
             tvId.text = user.studentId
+            tvBlockedBadge.visibility = android.view.View.GONE
             
             if (user.photoUrl.isNotBlank()) {
+                ivAvatar.setPadding(0, 0, 0, 0)
                 Glide.with(root.context).load(user.photoUrl).circleCrop().into(ivAvatar)
             } else {
+                val p = (10 * root.resources.displayMetrics.density).toInt()
+                ivAvatar.setPadding(p, p, p, p)
                 ivAvatar.setImageResource(R.drawable.ic_profile)
             }
 

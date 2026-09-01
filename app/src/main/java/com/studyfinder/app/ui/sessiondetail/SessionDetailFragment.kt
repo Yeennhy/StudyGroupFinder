@@ -24,11 +24,13 @@ import com.studyfinder.app.model.Session
 import com.studyfinder.app.model.SessionMember
 import com.studyfinder.app.model.SessionViewMode
 import com.studyfinder.app.ui.sessiondetail.SessionDetailViewModel.ActionState
+import com.studyfinder.app.ui.sessionmanage.ConfirmationDialogFragment
 import com.studyfinder.app.util.ActionResult
 import com.studyfinder.app.util.DateTimeUtils
 import com.studyfinder.app.util.UiState
 import com.studyfinder.app.util.setupHeader
 import kotlinx.coroutines.flow.collectLatest
+import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.launch
 
 /**
@@ -43,6 +45,7 @@ class SessionDetailFragment : Fragment() {
     private val auth = FirebaseAuth.getInstance()
 
     private val attendeeAdapter = AttendeeAdapter { openMemberProfile(it.uid) }
+    private val pendingRequestAdapter = AttendeeAdapter { openMemberProfile(it.uid) }
     private val materialAdapter = MaterialAdapter { /* TODO: Open URL */ }
 
     private val filePickerLauncher = registerForActivityResult(ActivityResultContracts.GetContent()) { uri ->
@@ -88,7 +91,15 @@ class SessionDetailFragment : Fragment() {
                         contentView = binding.scrollContent,
                     )
                     when (state) {
-                        is UiState.Success -> bindSession(state.data)
+                        is UiState.Success -> {
+                            bindSession(state.data)
+                            // Only redirect to history if we are in LIVE mode and the session just finished.
+                            // If we are already in PAST mode (viewing history), don't redirect.
+                            if (args.viewMode == SessionViewMode.LIVE && 
+                                state.data.status == com.studyfinder.app.model.SessionStatus.FINISHED) {
+                                redirectToHistory()
+                            }
+                        }
                         is UiState.Offline -> bindSession(state.cached)
                         else -> {}
                     }
@@ -100,14 +111,38 @@ class SessionDetailFragment : Fragment() {
                 }
             }
             launch {
-                ServiceLocator.sessionRepository.observeMembers(args.sessionId).collectLatest { state ->
-                    if (state is UiState.Success<List<SessionMember>>) {
-                        val hostUid = (viewModel.session.value as? UiState.Success)?.data?.hostUid
-                        val attendees = state.data.filter { it.uid != hostUid }
+                combine(
+                    viewModel.session,
+                    viewModel.members
+                ) { sessionState, membersState ->
+                    Pair(sessionState, membersState)
+                }.collectLatest { (sessionState, membersState) ->
+                    binding.actionLoadingOverlay.isVisible = membersState is UiState.Loading
+                    
+                    val sessionData = when (sessionState) {
+                        is UiState.Success -> sessionState.data
+                        is UiState.Offline -> sessionState.cached
+                        else -> null
+                    }
+                    
+                    if (membersState is UiState.Success<List<SessionMember>> && sessionData != null) {
+                        val hostUid = sessionData.hostUid
+                        val attendees = membersState.data.filter { 
+                            it.uid != hostUid && it.uid in sessionData.memberUids
+                        }
                         attendeeAdapter.submitList(attendees)
                         
-                        val host = state.data.find { it.uid == hostUid }
+                        val pending = membersState.data.filter { 
+                            it.status == com.studyfinder.app.model.MemberStatus.PENDING
+                        }
+                        pendingRequestAdapter.submitList(pending)
+                        binding.cardPendingRq.isVisible = pending.isNotEmpty()
+                        binding.tvPendingCount.text = "Pending Requests (${pending.size})"
+                        
+                        val host = membersState.data.find { it.uid == hostUid }
                         host?.let { bindHost(it) }
+
+                        updateAttendeeCount(sessionData.joinedCount, sessionData.capacity)
                     }
                 }
             }
@@ -125,6 +160,7 @@ class SessionDetailFragment : Fragment() {
             launch {
                 ServiceLocator.profileRepository.observeBlockedUids().collectLatest { blocked ->
                     attendeeAdapter.setBlockedUids(blocked)
+                    pendingRequestAdapter.setBlockedUids(blocked)
                 }
             }
         }
@@ -134,6 +170,10 @@ class SessionDetailFragment : Fragment() {
         binding.rvAttendees.apply {
             layoutManager = LinearLayoutManager(context)
             adapter = attendeeAdapter
+        }
+        binding.rvPendingRequests.apply {
+            layoutManager = LinearLayoutManager(context)
+            adapter = pendingRequestAdapter
         }
         binding.rvMaterials.apply {
             layoutManager = LinearLayoutManager(context)
@@ -148,6 +188,21 @@ class SessionDetailFragment : Fragment() {
         binding.rowInviteStudents.setOnClickListener {
             openInviteByStudentId()
         }
+        binding.btnMarkFinished.setOnClickListener {
+            showFinishConfirmation()
+        }
+    }
+
+    private fun showFinishConfirmation() {
+        ConfirmationDialogFragment.newInstance(
+            title = "Finish Session?",
+            subtitle = "This will mark the session as completed for everyone.",
+            buttonText = "Finish",
+            iconRes = R.drawable.ic_tick,
+            iconBgColor = requireContext().getColor(R.color.theme_green)
+        ).apply {
+            setOnConfirmListener { viewModel.finishSession() }
+        }.show(parentFragmentManager, "FinishConfirmation")
     }
 
     private fun bindSession(session: Session) {
@@ -167,12 +222,19 @@ class SessionDetailFragment : Fragment() {
             tvAgenda.text = session.goals
             
             materialAdapter.submitList(session.materialUrls)
-            tvAttendeesCount.text = getString(R.string.attendees_count_format, session.joinedCount, session.capacity)
 
             val isHost = session.hostUid == auth.currentUser?.uid
-            uploadBtnContainer.isVisible = isHost
-            rowInviteStudents.isVisible = isHost
+            val isUpcoming = session.status == com.studyfinder.app.model.SessionStatus.UPCOMING
+            
+            cardMaterials.isVisible = session.materialUrls.isNotEmpty() || (isHost && isUpcoming)
+            uploadBtnContainer.isVisible = isHost && isUpcoming
+            rowInviteStudents.isVisible = isHost && isUpcoming
+            btnMarkFinished.isVisible = isHost && isUpcoming
         }
+    }
+
+    private fun updateAttendeeCount(acceptedCount: Int, capacity: Int) {
+        binding.tvAttendeesCount.text = getString(R.string.attendees_count_format, acceptedCount, capacity)
     }
 
     private fun bindHost(member: SessionMember) {
@@ -182,11 +244,20 @@ class SessionDetailFragment : Fragment() {
             
             member.profile?.photoUrl?.let { url ->
                 if (url.isNotBlank()) {
+                    ivAvatar.setPadding(0, 0, 0, 0)
                     Glide.with(this@SessionDetailFragment).load(url).circleCrop().into(ivAvatar)
                 } else {
+                    val p = (10 * resources.displayMetrics.density).toInt()
+                    ivAvatar.setPadding(p, p, p, p)
                     ivAvatar.setImageResource(R.drawable.ic_profile)
                 }
-            } ?: ivAvatar.setImageResource(R.drawable.ic_profile)
+            } ?: run {
+                val p = (10 * resources.displayMetrics.density).toInt()
+                ivAvatar.setPadding(p, p, p, p)
+                ivAvatar.setImageResource(R.drawable.ic_profile)
+            }
+
+            rowHost.setOnClickListener { openMemberProfile(member.uid) }
         }
     }
 
@@ -281,11 +352,31 @@ class SessionDetailFragment : Fragment() {
         )
     }
 
-    private fun continueFromThisSession() {
+    private fun redirectToHistory() {
         findNavController().navigate(
-            SessionDetailFragmentDirections
-                .actionSessionDetailFragmentToCreateSessionFragment(args.sessionId)
+            R.id.historyFragment,
+            null,
+            androidx.navigation.NavOptions.Builder()
+                .setPopUpTo(R.id.nav_graph, true)
+                .build()
         )
+    }
+
+    private fun continueFromThisSession() {
+        ConfirmationDialogFragment.newInstance(
+            title = "Pick up Session?",
+            subtitle = "A new session will be created with the same details. All previous members will be automatically invited.",
+            buttonText = "Continue",
+            iconRes = R.drawable.ic_history,
+            iconBgColor = requireContext().getColor(R.color.ginkgo_yellow)
+        ).apply {
+            setOnConfirmListener {
+                findNavController().navigate(
+                    SessionDetailFragmentDirections
+                        .actionSessionDetailFragmentToCreateSessionFragment(args.sessionId)
+                )
+            }
+        }.show(parentFragmentManager, "PickUpConfirmation")
     }
 
     override fun onDestroyView() {

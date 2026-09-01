@@ -78,8 +78,9 @@ class SessionRepository {
                 return@addSnapshotListener
             }
             if (snapshot != null) {
-                val sessions = snapshot.documents.mapNotNull { FirestoreMappers.toSession(it) }
-
+                var sessions = snapshot.documents.mapNotNull { FirestoreMappers.toSession(it) }
+                    .filter { it.status == SessionStatus.UPCOMING } // Only show active sessions on Home
+                
                 // Cache to Room
                 val now = System.currentTimeMillis()
                 scope.launch {
@@ -138,7 +139,15 @@ class SessionRepository {
                 }
                 if (snapshot != null) {
                     val members = snapshot.documents.mapNotNull { FirestoreMappers.toSessionMember(it) }
-                    trySend(UiState.Success(members))
+                    
+                    // Fetch profiles for each member
+                    scope.launch {
+                        val membersWithProfiles = members.map { member ->
+                            val profileDoc = FirestoreRefs.user(member.uid).get().await()
+                            member.copy(profile = FirestoreMappers.toUserProfile(profileDoc))
+                        }
+                        trySend(UiState.Success(membersWithProfiles))
+                    }
                 }
             }
         awaitClose { listener.remove() }
@@ -188,6 +197,7 @@ class SessionRepository {
                     if (uid == auth.currentUser?.uid) {
                         val now = System.currentTimeMillis()
                         scope.launch {
+                            mySessionDao.clear() // Clear old cache to remove "ghost" sessions
                             mySessionDao.upsertAll(sessions.map { FirestoreMappers.toMySessionEntity(it, now) })
                         }
                     }
@@ -216,7 +226,15 @@ class SessionRepository {
                 }
                 if (snapshot != null) {
                     val members = snapshot.documents.mapNotNull { FirestoreMappers.toSessionMember(it) }
-                    trySend(UiState.Success(members))
+                    
+                    // Fetch profiles so the names/avatars appear in the Manage list (§7.5)
+                    scope.launch {
+                        val membersWithProfiles = members.map { member ->
+                            val profileDoc = FirestoreRefs.user(member.uid).get().await()
+                            member.copy(profile = FirestoreMappers.toUserProfile(profileDoc))
+                        }
+                        trySend(UiState.Success(membersWithProfiles))
+                    }
                 }
             }
         awaitClose { listener.remove() }
@@ -271,16 +289,19 @@ class SessionRepository {
 
         db.runTransaction { transaction ->
             val sessionDoc = transaction.get(sessionRef)
+            val members = (sessionDoc.get(Field.MEMBER_UIDS) as? List<*>)?.mapNotNull { it as? String } ?: emptyList()
             val joinedCount = sessionDoc.getLong(Field.JOINED_COUNT) ?: 0
             val capacity = sessionDoc.getLong(Field.CAPACITY) ?: 0
             
-            if (joinedCount >= capacity) throw Exception("Session is full")
+            if (joinedCount >= capacity && !members.contains(uid)) throw Exception("Session is full")
             
-            transaction.update(sessionRef, 
-                Field.JOINED_COUNT, FieldValue.increment(1),
-                Field.MEMBER_UIDS, FieldValue.arrayUnion(uid),
-                Field.UPDATED_AT, FieldValue.serverTimestamp()
-            )
+            if (!members.contains(uid)) {
+                transaction.update(sessionRef, 
+                    Field.JOINED_COUNT, FieldValue.increment(1),
+                    Field.MEMBER_UIDS, FieldValue.arrayUnion(uid),
+                    Field.UPDATED_AT, FieldValue.serverTimestamp()
+                )
+            }
             transaction.set(memberRef, FirestoreMappers.memberPayload(MemberStatus.ACCEPTED))
         }.await()
         scheduleReminder(sessionId)
@@ -311,16 +332,19 @@ class SessionRepository {
 
         db.runTransaction { transaction ->
             val sessionDoc = transaction.get(sessionRef)
+            val members = (sessionDoc.get(Field.MEMBER_UIDS) as? List<*>)?.mapNotNull { it as? String } ?: emptyList()
             val joinedCount = sessionDoc.getLong(Field.JOINED_COUNT) ?: 0
             val capacity = sessionDoc.getLong(Field.CAPACITY) ?: 0
             
-            if (joinedCount >= capacity) throw Exception("Session is full")
+            if (joinedCount >= capacity && !members.contains(uid)) throw Exception("Session is full")
 
-            transaction.update(sessionRef, 
-                Field.JOINED_COUNT, FieldValue.increment(1),
-                Field.MEMBER_UIDS, FieldValue.arrayUnion(uid),
-                Field.UPDATED_AT, FieldValue.serverTimestamp()
-            )
+            if (!members.contains(uid)) {
+                transaction.update(sessionRef, 
+                    Field.JOINED_COUNT, FieldValue.increment(1),
+                    Field.MEMBER_UIDS, FieldValue.arrayUnion(uid),
+                    Field.UPDATED_AT, FieldValue.serverTimestamp()
+                )
+            }
             transaction.update(memberRef, Field.STATUS, MemberStatus.ACCEPTED.wire)
         }.await()
         scheduleReminder(sessionId)
@@ -333,16 +357,19 @@ class SessionRepository {
 
         db.runTransaction { transaction ->
             val sessionDoc = transaction.get(sessionRef)
+            val members = (sessionDoc.get(Field.MEMBER_UIDS) as? List<*>)?.mapNotNull { it as? String } ?: emptyList()
             val joinedCount = sessionDoc.getLong(Field.JOINED_COUNT) ?: 0
             val capacity = sessionDoc.getLong(Field.CAPACITY) ?: 0
             
-            if (joinedCount >= capacity) throw Exception("Session is full")
+            if (joinedCount >= capacity && !members.contains(uid)) throw Exception("Session is full")
 
-            transaction.update(sessionRef, 
-                Field.JOINED_COUNT, FieldValue.increment(1),
-                Field.MEMBER_UIDS, FieldValue.arrayUnion(uid),
-                Field.UPDATED_AT, FieldValue.serverTimestamp()
-            )
+            if (!members.contains(uid)) {
+                transaction.update(sessionRef, 
+                    Field.JOINED_COUNT, FieldValue.increment(1),
+                    Field.MEMBER_UIDS, FieldValue.arrayUnion(uid),
+                    Field.UPDATED_AT, FieldValue.serverTimestamp()
+                )
+            }
             transaction.update(memberRef, Field.STATUS, MemberStatus.ACCEPTED.wire)
         }.await()
         
@@ -368,11 +395,19 @@ class SessionRepository {
         val isSelf = uid == auth.currentUser?.uid
 
         db.runTransaction { transaction ->
-            transaction.update(sessionRef, 
-                Field.JOINED_COUNT, FieldValue.increment(-1),
-                Field.MEMBER_UIDS, FieldValue.arrayRemove(uid),
-                Field.UPDATED_AT, FieldValue.serverTimestamp()
-            )
+            val sessionDoc = transaction.get(sessionRef)
+            val members = (sessionDoc.get(Field.MEMBER_UIDS) as? List<*>)?.mapNotNull { it as? String } ?: emptyList()
+            val memberDoc = transaction.get(memberRef)
+            val status = memberDoc.getString(Field.STATUS)
+            
+            // Only decrement if they were actually in the roster
+            if (members.contains(uid)) {
+                transaction.update(sessionRef, 
+                    Field.JOINED_COUNT, FieldValue.increment(-1),
+                    Field.MEMBER_UIDS, FieldValue.arrayRemove(uid),
+                    Field.UPDATED_AT, FieldValue.serverTimestamp()
+                )
+            }
             transaction.delete(memberRef)
         }.await()
 

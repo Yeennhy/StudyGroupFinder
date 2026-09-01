@@ -29,6 +29,9 @@ class SessionDetailViewModel : ViewModel() {
     private val _session = MutableStateFlow<UiState<Session>>(UiState.Loading)
     val session: StateFlow<UiState<Session>> = _session
 
+    private val _members = MutableStateFlow<UiState<List<SessionMember>>>(UiState.Loading)
+    val members: StateFlow<UiState<List<SessionMember>>> = _members
+
     private val _myMembership = MutableStateFlow<SessionMember?>(null)
     val myMembership: StateFlow<SessionMember?> = _myMembership
 
@@ -41,10 +44,12 @@ class SessionDetailViewModel : ViewModel() {
     private var currentSessionId: String? = null
 
     val actionState: StateFlow<ActionState> = combine(_session, _myMembership, _blockedUids) { sessionState, membership, blocked ->
+        val currentUid = auth.currentUser?.uid ?: ""
         val session = (sessionState as? UiState.Success)?.data
             ?: (sessionState as? UiState.Offline)?.cached
+            
         if (session != null) {
-            resolveActionState(session, membership, viewMode, blocked)
+            resolveActionState(session, membership, viewMode, blocked, currentUid)
         } else {
             ActionState.Join
         }
@@ -74,6 +79,12 @@ class SessionDetailViewModel : ViewModel() {
         }
         
         viewModelScope.launch {
+            sessionRepository.observeMembers(sessionId).collectLatest {
+                _members.value = it
+            }
+        }
+
+        viewModelScope.launch {
             sessionRepository.observeMyMembership(sessionId).collectLatest {
                 _myMembership.value = it
             }
@@ -90,12 +101,13 @@ class SessionDetailViewModel : ViewModel() {
         session: Session,
         myMembership: SessionMember?,
         viewMode: SessionViewMode,
-        blocked: Set<String>
+        blocked: Set<String>,
+        currentUid: String
     ): ActionState {
-        val currentUid = auth.currentUser?.uid ?: ""
-
-        // Row 1: Past View
-        if (viewMode == SessionViewMode.PAST) return ActionState.PastView
+        // Row 1: Past View or Finished
+        if (viewMode == SessionViewMode.PAST || session.status == SessionStatus.FINISHED) {
+            return ActionState.PastView
+        }
 
         // Row 2: Cancelled
         if (session.status == SessionStatus.CANCELLED) return ActionState.Cancelled
@@ -103,20 +115,20 @@ class SessionDetailViewModel : ViewModel() {
         // Row 3: Host
         if (session.hostUid == currentUid) return ActionState.Manage
 
-        // Row 4: Invited
-        if (myMembership?.status == MemberStatus.INVITED) return ActionState.AcceptInvite
+        // Member check (highest priority join-state check)
+        if (currentUid in session.memberUids) return ActionState.Leave
 
-        // Row 5: Member
-        if (myMembership?.status == MemberStatus.ACCEPTED || myMembership?.status == MemberStatus.ADMIN) return ActionState.Leave
-
-        // Row 6: Pending
-        if (myMembership?.status == MemberStatus.PENDING) return ActionState.RequestPending
+        // Row 8: Full (Should block joining/accepting)
+        if (session.isFull) return ActionState.Full
 
         // Row 7: Blocked
         if (session.containsBlockedUser(blocked)) return ActionState.Blocked
-        
-        // Row 8: Full
-        if (session.isFull) return ActionState.Full
+
+        // Row 4: Invited
+        if (myMembership?.status == MemberStatus.INVITED) return ActionState.AcceptInvite
+
+        // Row 6: Pending
+        if (myMembership?.status == MemberStatus.PENDING) return ActionState.RequestPending
 
         // Rows 9 & 10: Join / Request
         return if (session.mode == SessionMode.OPEN) ActionState.Join else ActionState.RequestToJoin
@@ -155,6 +167,13 @@ class SessionDetailViewModel : ViewModel() {
         val uid = auth.currentUser?.uid ?: return
         viewModelScope.launch {
             _actionResult.value = sessionRepository.leaveOrRemove(sid, uid)
+        }
+    }
+
+    fun finishSession() {
+        val sid = currentSessionId ?: return
+        viewModelScope.launch {
+            _actionResult.value = sessionRepository.finishSession(sid)
         }
     }
 

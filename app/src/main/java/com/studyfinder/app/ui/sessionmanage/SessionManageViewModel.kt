@@ -13,13 +13,13 @@ import com.studyfinder.app.model.SessionMember
 import com.studyfinder.app.model.UserProfile
 import com.studyfinder.app.util.ActionResult
 import com.studyfinder.app.util.UiState
-import kotlinx.coroutines.flow.MutableStateFlow
-import kotlinx.coroutines.flow.StateFlow
-import kotlinx.coroutines.flow.collectLatest
+import kotlinx.coroutines.ExperimentalCoroutinesApi
+import kotlinx.coroutines.flow.*
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.tasks.await
 
 /** §7.5. */
+@OptIn(ExperimentalCoroutinesApi::class)
 class SessionManageViewModel : ViewModel() {
 
     private val sessionRepository = ServiceLocator.sessionRepository
@@ -38,11 +38,32 @@ class SessionManageViewModel : ViewModel() {
     private val _members = MutableStateFlow<UiState<List<SessionMember>>>(UiState.Loading)
     val members: StateFlow<UiState<List<SessionMember>>> = _members
 
+    private val _removedMemberUids = MutableStateFlow<Set<String>>(emptySet())
+    val removedMemberUids: StateFlow<Set<String>> = _removedMemberUids
+
     private val _locations = MutableStateFlow<List<CampusLocation>>(emptyList())
     val locations: StateFlow<List<CampusLocation>> = _locations
 
-    private val _searchResults = MutableStateFlow<List<UserProfile>>(emptyList())
-    val searchResults: StateFlow<List<UserProfile>> = _searchResults
+    private val _searchQuery = MutableStateFlow("")
+    
+    val searchResults: StateFlow<List<UserProfile>> = combine(_session, _searchQuery) { sessionState, query ->
+        Pair(sessionState, query)
+    }.flatMapLatest { (sessionState, query) ->
+        val communityId = (sessionState as? UiState.Success)?.data?.communityId
+        flow {
+            if (query.isBlank()) {
+                // When empty, show students from the same community as a recommendation
+                if (communityId != null) {
+                    emit(profileRepository.findByCommunity(communityId))
+                } else {
+                    emit(emptyList())
+                }
+            } else {
+                // When searching, look for anyone by ID or Name prefix
+                emit(profileRepository.searchUsers(query))
+            }
+        }
+    }.stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), emptyList())
 
     private val _actionResult = MutableStateFlow<ActionResult?>(null)
     val actionResult: StateFlow<ActionResult?> = _actionResult
@@ -105,20 +126,40 @@ class SessionManageViewModel : ViewModel() {
     }
 
     fun removeMember(uid: String) {
-        val sid = currentSessionId ?: return
-        viewModelScope.launch {
-            _actionResult.value = sessionRepository.leaveOrRemove(sid, uid)
-        }
+        _removedMemberUids.value = _removedMemberUids.value + uid
     }
 
     fun saveEdits(session: Session) {
         _pendingSession.value = session
     }
 
+    fun hasUnsavedChanges(): Boolean {
+        return _pendingSession.value != null || _removedMemberUids.value.isNotEmpty()
+    }
+
     fun submitChanges() {
+        val sid = currentSessionId ?: return
         val sessionToSave = _pendingSession.value ?: (_session.value as? UiState.Success)?.data ?: return
+        val toRemove = _removedMemberUids.value
+
         viewModelScope.launch {
-            _actionResult.value = sessionRepository.editSession(sessionToSave)
+            try {
+                // 1. Save session edits
+                if (_pendingSession.value != null) {
+                    sessionRepository.editSession(sessionToSave)
+                }
+
+                // 2. Remove members
+                toRemove.forEach { uid ->
+                    sessionRepository.leaveOrRemove(sid, uid)
+                }
+
+                _actionResult.value = ActionResult.Success
+                _pendingSession.value = null
+                _removedMemberUids.value = emptySet()
+            } catch (e: Exception) {
+                _actionResult.value = ActionResult.Failure(e.message ?: "Update failed")
+            }
         }
     }
 
@@ -141,13 +182,7 @@ class SessionManageViewModel : ViewModel() {
     }
 
     fun searchUsers(query: String) {
-        if (query.isBlank()) {
-            _searchResults.value = emptyList()
-            return
-        }
-        viewModelScope.launch {
-            _searchResults.value = profileRepository.findByStudentId(query)
-        }
+        _searchQuery.value = query
     }
 
     fun inviteUser(uid: String) {

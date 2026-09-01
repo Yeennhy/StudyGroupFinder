@@ -241,6 +241,16 @@ class CreateSessionFragment : Fragment() {
         val chip = Chip(requireContext()).apply {
             text = tag
             isCloseIconVisible = true
+            setCloseIconTintResource(R.color.graphite)
+            setChipBackgroundColorResource(R.color.light_blue)
+            setChipStrokeColorResource(R.color.graphite)
+            chipStrokeWidth = 3.5f * resources.displayMetrics.density
+            chipCornerRadius = 99f * resources.displayMetrics.density
+            setTextColor(requireContext().getColor(R.color.graphite))
+            typeface = androidx.core.content.res.ResourcesCompat.getFont(requireContext(), R.font.pjsans_bold)
+            chipMinHeight = 36f * resources.displayMetrics.density
+            setEnsureMinTouchTargetSize(false)
+
             setOnCloseIconClickListener {
                 selectedTags.remove(tag)
                 binding.tagContainer.removeView(this)

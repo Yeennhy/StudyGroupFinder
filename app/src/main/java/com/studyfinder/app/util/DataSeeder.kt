@@ -443,17 +443,21 @@ object DataSeeder {
 
         // invite -> also needs a members/{uid} row so "Accept Invite" works and
         // Details opens Session Detail.
-        writeMember("s-english-club", uid, MemberStatus.INVITED)
-        FirestoreRefs.inbox(uid).add(
-            mapOf(
-                "type" to InboxType.INVITE.wire,
-                "sessionId" to "s-english-club",
-                "fromUid" to U_D,
-                "message" to "You are invited to \"English Speaking Club\".",
-                "read" to false,
-                "createdAt" to Timestamp.now(),
-            )
-        ).await()
+        val engSession = FirestoreRefs.session("s-english-club").get().await()
+        val engMemberUids = engSession.get("memberUids") as? List<*>
+        if (engMemberUids == null || uid !in engMemberUids) {
+            writeMember("s-english-club", uid, MemberStatus.INVITED)
+            FirestoreRefs.inbox(uid).add(
+                mapOf(
+                    "type" to InboxType.INVITE.wire,
+                    "sessionId" to "s-english-club",
+                    "fromUid" to U_D,
+                    "message" to "You are invited to \"English Speaking Club\".",
+                    "read" to false,
+                    "createdAt" to Timestamp.now(),
+                )
+            ).await()
+        }
 
         // join_request -> host-facing. Make the signed-in user host of a fresh
         // session with a pending requester so "Details" opens Session Manage.

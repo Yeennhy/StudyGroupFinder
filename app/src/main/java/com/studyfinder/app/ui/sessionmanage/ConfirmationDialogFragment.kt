@@ -17,13 +17,15 @@ class ConfirmationDialogFragment : DialogFragment() {
     private val viewBinding get() = _binding!!
 
     private var onConfirm: (() -> Unit)? = null
-    private var onCancel: (() -> Unit)? = null
+    private var onGoBack: (() -> Unit)? = null
     private var onSecondary: (() -> Unit)? = null
+    
     private var title: String = ""
     private var subtitle: String = ""
     private var buttonText: String = ""
-    private var cancelText: String = "Go Back"
+    private var goBackText: String = "Go Back"
     private var secondaryButtonText: String? = null
+    
     private var iconRes: Int = R.drawable.ic_tick
     private var iconBgColor: Int = Color.parseColor("#AAD6A7") // theme_green
     private var iconTint: Int? = null
@@ -35,7 +37,8 @@ class ConfirmationDialogFragment : DialogFragment() {
             title: String,
             subtitle: String,
             buttonText: String,
-            cancelText: String = "Go Back",
+            goBackText: String = "Go Back",
+            cancelText: String? = null, // Alias for ProfileFragment
             secondaryButtonText: String? = null,
             iconRes: Int = R.drawable.ic_tick,
             iconBgColor: Int = Color.parseColor("#AAD6A7"),
@@ -47,7 +50,7 @@ class ConfirmationDialogFragment : DialogFragment() {
                 this.title = title
                 this.subtitle = subtitle
                 this.buttonText = buttonText
-                this.cancelText = cancelText
+                this.goBackText = cancelText ?: goBackText
                 this.secondaryButtonText = secondaryButtonText
                 this.iconRes = iconRes
                 this.iconBgColor = iconBgColor
@@ -62,8 +65,13 @@ class ConfirmationDialogFragment : DialogFragment() {
         this.onConfirm = listener
     }
 
+    fun setOnGoBackListener(listener: () -> Unit) {
+        this.onGoBack = listener
+    }
+
+    // Alias for ProfileFragment
     fun setOnCancelListener(listener: () -> Unit) {
-        this.onCancel = listener
+        this.onGoBack = listener
     }
 
     fun setOnSecondaryListener(listener: () -> Unit) {
@@ -96,7 +104,7 @@ class ConfirmationDialogFragment : DialogFragment() {
         viewBinding.tvTitle.text = title
         viewBinding.tvSubtitle.text = subtitle
         viewBinding.btnConfirm.text = buttonText
-        viewBinding.btnGoBack.text = cancelText
+        viewBinding.btnGoBack.text = goBackText
         viewBinding.ivIcon.setImageResource(iconRes)
         viewBinding.iconContainer.setCardBackgroundColor(iconBgColor)
         
@@ -115,7 +123,7 @@ class ConfirmationDialogFragment : DialogFragment() {
         viewBinding.btnGoBack.setBackgroundResource(goBackBtnBgRes)
 
         viewBinding.btnGoBack.setOnClickListener {
-            onCancel?.invoke()
+            onGoBack?.invoke()
             dismiss()
         }
         viewBinding.btnConfirm.setOnClickListener {

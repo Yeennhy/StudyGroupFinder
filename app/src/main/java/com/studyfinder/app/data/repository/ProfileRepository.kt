@@ -141,9 +141,45 @@ class ProfileRepository {
         }
     }
 
+    suspend fun searchUsers(query: String): List<UserProfile> {
+        if (query.isBlank()) return emptyList()
+        
+        // Firestore doesn't support OR queries across different fields easily with partial matches.
+        // We'll perform two prefix queries and merge them.
+        val byId = FirestoreRefs.users()
+            .orderBy(Field.STUDENT_ID)
+            .startAt(query)
+            .endAt(query + "\uf8ff")
+            .limit(10)
+            .get()
+            .await()
+
+        val byName = FirestoreRefs.users()
+            .orderBy(Field.NAME)
+            .startAt(query)
+            .endAt(query + "\uf8ff")
+            .limit(10)
+            .get()
+            .await()
+
+        val merged = (byId.documents + byName.documents)
+            .distinctBy { it.id }
+            .mapNotNull { FirestoreMappers.toUserProfile(it) }
+        
+        return merged
+    }
+
     suspend fun findByStudentId(studentId: String): List<UserProfile> {
         val snapshot = FirestoreRefs.users()
             .whereEqualTo(Field.STUDENT_ID, studentId)
+            .get()
+            .await()
+        return snapshot.documents.mapNotNull { FirestoreMappers.toUserProfile(it) }
+    }
+
+    suspend fun findByCommunity(communityId: String): List<UserProfile> {
+        val snapshot = FirestoreRefs.users()
+            .whereEqualTo(Field.COMMUNITY_ID, communityId)
             .get()
             .await()
         return snapshot.documents.mapNotNull { FirestoreMappers.toUserProfile(it) }

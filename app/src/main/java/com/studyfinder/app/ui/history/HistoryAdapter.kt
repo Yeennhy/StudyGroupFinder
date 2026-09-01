@@ -6,12 +6,13 @@ import android.view.ViewGroup
 import androidx.recyclerview.widget.DiffUtil
 import androidx.recyclerview.widget.ListAdapter
 import androidx.recyclerview.widget.RecyclerView
-import com.google.android.material.chip.Chip
 import com.studyfinder.app.R
 import com.studyfinder.app.databinding.ItemHistoryRowBinding
 import com.studyfinder.app.model.Session
 import com.studyfinder.app.model.SessionStatus
 import com.studyfinder.app.util.DateTimeUtils
+import java.text.SimpleDateFormat
+import java.util.Locale
 
 class HistoryAdapter(
     private val onClick: (Session) -> Unit
@@ -27,39 +28,28 @@ class HistoryAdapter(
         val session = getItem(position)
         holder.binding.apply {
             tvSessionTitle.text = session.title
-            tvSessionTime.text = DateTimeUtils.formatDateTime(session.startTimeMillis)
+            
+            val durationMinutes = ((session.endTimeMillis - session.startTimeMillis) / 60000).toInt()
+            val timeText = SimpleDateFormat("MMM d, h:mm a", Locale.getDefault()).format(session.startTimeMillis)
+            tvSessionTime.text = "$timeText • ${DateTimeUtils.formatDuration(durationMinutes)}"
+            
             tvSessionLocation.text = session.locationName
             
             val isCancelled = session.status == SessionStatus.CANCELLED
-            tvStatus.visibility = if (isCancelled) View.VISIBLE else View.GONE
-            
             if (isCancelled) {
+                tvStatus.text = "CANCELLED"
+                tvStatus.setBackgroundResource(R.drawable.bg_cancelled_pill)
                 row.setBackgroundResource(R.drawable.bg_dashed_card)
                 row.alpha = 0.5f
             } else {
+                tvStatus.text = "FINISHED"
+                tvStatus.setBackgroundResource(R.drawable.bg_finished_pill)
                 row.setBackgroundResource(R.drawable.bg_whitebox)
                 row.alpha = 1.0f
             }
 
-            tagContainer.removeAllViews()
-            addTag(tagContainer, session.courseCategory.wire, R.color.ginkgo_yellow)
-            addTag(tagContainer, session.tagType.wire, R.color.light_blue)
-
             root.setOnClickListener { onClick(session) }
         }
-    }
-
-    private fun addTag(group: ViewGroup, text: String, colorRes: Int) {
-        val chip = Chip(group.context).apply {
-            this.text = text
-            setChipBackgroundColorResource(colorRes)
-            setTextColor(group.context.getColor(R.color.graphite))
-            chipStrokeWidth = 2f
-            setChipStrokeColorResource(R.color.graphite)
-            chipCornerRadius = 20f
-            isCloseIconVisible = false
-        }
-        group.addView(chip)
     }
 
     companion object {

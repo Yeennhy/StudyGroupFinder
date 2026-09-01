@@ -5,6 +5,7 @@ import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
 import android.widget.Toast
+import androidx.activity.OnBackPressedCallback
 import androidx.core.view.isVisible
 import androidx.fragment.app.Fragment
 import com.studyfinder.app.util.applyFadeThroughTransitions
@@ -26,6 +27,7 @@ import com.studyfinder.app.util.DateTimeUtils
 import com.studyfinder.app.util.UiState
 import com.studyfinder.app.util.setupHeader
 import kotlinx.coroutines.flow.collectLatest
+import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.launch
 
 /**
@@ -44,7 +46,7 @@ class SessionManageFragment : Fragment() {
     )
 
     private val memberAdapter = ManageMemberAdapter(
-        onRemove = { viewModel.removeMember(it.uid) },
+        onRemove = { showRemoveMemberConfirmation(it) },
         onClick = { openMemberProfile(it.uid) }
     )
 
@@ -65,6 +67,17 @@ class SessionManageFragment : Fragment() {
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
         setupHeader(binding.appHeader, "Manage Session", showHistory = false, showBackBtn = true, showAvatar = false)
+        
+        // Custom back button logic
+        binding.appHeader.backBtnContainer.setOnClickListener {
+            handleBackNavigation()
+        }
+        
+        requireActivity().onBackPressedDispatcher.addCallback(viewLifecycleOwner, object : OnBackPressedCallback(true) {
+            override fun handleOnBackPressed() {
+                handleBackNavigation()
+            }
+        })
 
         setupRecyclerViews()
         viewModel.start(args.sessionId)
@@ -83,16 +96,19 @@ class SessionManageFragment : Fragment() {
                         offlineView = binding.stateOfflineBanner.root,
                         contentView = null,
                     )
-                    val loaded = (state as? UiState.Success)?.data
-                        ?: (state as? UiState.Offline)?.cached
-                    if (loaded != null && viewModel.pendingSession.value == null) {
-                        bindSession(loaded)
+                    
+                    val session = (state as? UiState.Success)?.data ?: (state as? UiState.Offline)?.cached
+                    if (session?.status == com.studyfinder.app.model.SessionStatus.CANCELLED) {
+                        onSessionCancelled()
                     }
                 }
             }
             launch {
-                viewModel.pendingSession.collectLatest { pending ->
-                    pending?.let { bindSession(it) }
+                combine(viewModel.session, viewModel.pendingSession, viewModel.removedMemberUids) { original, pending, removed ->
+                    Triple(original, pending, removed)
+                }.collectLatest { (original, pending, _) ->
+                    val sessionToBind = pending ?: (original as? UiState.Success)?.data
+                    sessionToBind?.let { bindSession(it) }
                 }
             }
             launch {
@@ -100,21 +116,31 @@ class SessionManageFragment : Fragment() {
                     if (state is UiState.Success) {
                         requestAdapter.submitList(state.data)
                         binding.cardPendingRq.isVisible = state.data.isNotEmpty()
+                        binding.tvPendingCount.text = "Pending Requests (${state.data.size})"
                     }
                 }
             }
             launch {
-                viewModel.members.collectLatest { state ->
-                    if (state is UiState.Success) {
-                        val sessionState = viewModel.session.value
-                        if (sessionState is UiState.Success) {
-                            val hostUid = sessionState.data.hostUid
-                            val nonHostMembers = state.data.filter { it.uid != hostUid }
-                            memberAdapter.submitList(nonHostMembers)
-                            
-                            val hostMember = state.data.find { it.uid == hostUid }
-                            hostMember?.let { bindHost(it) }
+                combine(viewModel.members, viewModel.removedMemberUids, viewModel.session) { membersState, removedUids, sessionState ->
+                    Triple(membersState, removedUids, sessionState)
+                }.collectLatest { (membersState, removedUids, sessionState) ->
+                    if (membersState is UiState.Success && sessionState is UiState.Success) {
+                        val hostUid = sessionState.data.hostUid
+                        val acceptedMembers = membersState.data.filter { 
+                            it.uid != hostUid && 
+                            (it.status == MemberStatus.ACCEPTED || it.status == MemberStatus.ADMIN) &&
+                            !removedUids.contains(it.uid)
                         }
+                        memberAdapter.submitList(acceptedMembers)
+                        
+                        val hostMember = membersState.data.find { it.uid == hostUid }
+                        hostMember?.let { bindHost(it) }
+
+                        val totalCount = membersState.data.count { 
+                            (it.status == MemberStatus.ACCEPTED || it.status == MemberStatus.ADMIN) &&
+                            !removedUids.contains(it.uid)
+                        }
+                        binding.tvAttendeesCount.text = getString(R.string.attendees_count_format, totalCount, sessionState.data.capacity)
                     }
                 }
             }
@@ -153,6 +179,47 @@ class SessionManageFragment : Fragment() {
 
         binding.toggleOnlyRequests.setOnClickListener {
             updateSessionMode(SessionMode.GATED)
+        }
+    }
+
+    private fun showRemoveMemberConfirmation(member: SessionMember) {
+        val dialog = ConfirmationDialogFragment.newInstance(
+            title = "Remove Member?",
+            subtitle = "Are you sure you want to remove ${member.profile?.name ?: "this student"}? They will be notified.",
+            buttonText = "Remove",
+            iconRes = R.drawable.ic_x,
+            iconBgColor = requireContext().getColor(R.color.theme_clay),
+            confirmBtnBgRes = R.drawable.bg_clay_btn,
+            goBackBtnBgRes = R.drawable.bg_yellow_btn
+        )
+        dialog.setOnConfirmListener {
+            viewModel.removeMember(member.uid)
+        }
+        dialog.show(childFragmentManager, "RemoveMember")
+    }
+
+    private fun handleBackNavigation() {
+        if (viewModel.hasUnsavedChanges()) {
+            val dialog = ConfirmationDialogFragment.newInstance(
+                title = "Discard Changes?",
+                subtitle = "You have unsaved changes. Do you want to save them before leaving?",
+                buttonText = "Save",
+                goBackText = "Discard",
+                iconRes = R.drawable.ic_warning,
+                iconBgColor = requireContext().getColor(R.color.ginkgo_yellow),
+                confirmBtnBgRes = R.drawable.bg_yellow_btn,
+                goBackBtnBgRes = R.drawable.bg_yellow_btn
+            )
+            dialog.setOnConfirmListener {
+                viewModel.submitChanges()
+                findNavController().popBackStack()
+            }
+            dialog.setOnGoBackListener {
+                findNavController().popBackStack()
+            }
+            dialog.show(childFragmentManager, "DiscardChanges")
+        } else {
+            findNavController().popBackStack()
         }
     }
 
@@ -213,8 +280,17 @@ class SessionManageFragment : Fragment() {
         
         member.profile?.photoUrl?.let { url ->
             if (url.isNotBlank()) {
+                binding.ivAvatar.setPadding(0, 0, 0, 0)
                 Glide.with(this).load(url).circleCrop().into(binding.ivAvatar)
+            } else {
+                val p = (10 * resources.displayMetrics.density).toInt()
+                binding.ivAvatar.setPadding(p, p, p, p)
+                binding.ivAvatar.setImageResource(R.drawable.ic_profile)
             }
+        } ?: run {
+            val p = (10 * resources.displayMetrics.density).toInt()
+            binding.ivAvatar.setPadding(p, p, p, p)
+            binding.ivAvatar.setImageResource(R.drawable.ic_profile)
         }
     }
 
@@ -230,8 +306,6 @@ class SessionManageFragment : Fragment() {
             tagContainerInfo.removeAllViews()
             session.courseCategory.wire.let { addTag(it, R.color.ginkgo_yellow) }
             session.tagType.wire.let { addTag(it, R.color.light_blue) }
-            
-            tvAttendeesCount.text = "Attendees (${session.joinedCount}/${session.capacity})"
             
             val isGated = session.mode == SessionMode.GATED
             toggleOpenToAll.setBackgroundResource(if (!isGated) R.drawable.bg_segment_manage_selected else android.R.color.transparent)
@@ -276,7 +350,13 @@ class SessionManageFragment : Fragment() {
 
     /** Cancelling sets status = cancelled and fans out; the screen then pops. */
     private fun onSessionCancelled() {
-        findNavController().popBackStack()
+        findNavController().navigate(
+            R.id.homeFragment,
+            null,
+            androidx.navigation.NavOptions.Builder()
+                .setPopUpTo(R.id.nav_graph, true)
+                .build()
+        )
     }
 
     override fun onDestroyView() {

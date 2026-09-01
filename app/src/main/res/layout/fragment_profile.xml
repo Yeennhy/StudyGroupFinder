@@ -72,8 +72,7 @@
                             android:layout_width="match_parent"
                             android:layout_height="match_parent"
                             android:src="@drawable/ic_profile"
-                            android:scaleType="fitCenter"
-                            android:padding="35dp"
+                            android:scaleType="centerCrop"
                             android:contentDescription="Profile picture"
                             tools:ignore="ContentDescription" />
 

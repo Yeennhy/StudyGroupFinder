@@ -312,60 +312,21 @@
                     app:chipSpacingVertical="8dp"
                     app:singleLine="false">
 
-                    <com.google.android.material.chip.Chip
-                        android:id="@+id/tagCs162"
-                        android:layout_width="wrap_content"
-                        android:layout_height="wrap_content"
-                        android:text="CS162"
-                        android:textStyle="bold"
-                        android:textSize="12sp"
-                        android:textColor="@color/graphite"
-                        android:fontFamily="@font/pjsans_bold"
-                        app:chipBackgroundColor="@color/ginkgo_yellow"
-                        app:chipStrokeColor="@color/graphite"
-                        app:chipStrokeWidth="2.5dp"
-                        app:chipCornerRadius="20dp"
-                        app:closeIconEnabled="true"
-                        app:closeIconTint="@color/graphite"
-                        app:closeIconSize="16dp"
-                        app:chipMinHeight="36dp"
-                        app:ensureMinTouchTargetSize="false" />
-
-                    <com.google.android.material.chip.Chip
-                        android:id="@+id/tagDijkstra"
-                        android:layout_width="wrap_content"
-                        android:layout_height="wrap_content"
-                        android:text="Dijkstra"
-                        android:textStyle="bold"
-                        android:textSize="12sp"
-                        android:textColor="@color/graphite"
-                        android:fontFamily="@font/pjsans_bold"
-                        app:chipBackgroundColor="@color/light_blue"
-                        app:chipStrokeColor="@color/graphite"
-                        app:chipStrokeWidth="2.5dp"
-                        app:chipCornerRadius="20dp"
-                        app:closeIconEnabled="true"
-                        app:closeIconTint="@color/graphite"
-                        app:closeIconSize="16dp"
-                        app:chipMinHeight="36dp"
-                        app:ensureMinTouchTargetSize="false" />
-
-                    <com.google.android.material.chip.Chip
+                    <TextView
                         android:id="@+id/btnAddTag"
                         android:layout_width="wrap_content"
-                        android:layout_height="wrap_content"
+                        android:layout_height="36dp"
+                        android:background="@drawable/bg_add_tag_dashed"
                         android:text="+ Add Tag"
-                        android:textStyle="bold"
-                        android:textSize="12sp"
                         android:textColor="@color/graphite"
+                        android:textSize="12sp"
+                        android:textStyle="bold"
+                        android:gravity="center"
+                        android:paddingStart="16dp"
+                        android:paddingEnd="16dp"
                         android:fontFamily="@font/bricolagegrotesque_bold"
-                        app:chipBackgroundColor="@color/gray_dot"
-                        app:chipStrokeColor="@color/graphite"
-                        app:chipStrokeWidth="2.5dp"
-                        app:chipCornerRadius="20dp"
-                        app:closeIconEnabled="false"
-                        app:chipMinHeight="36dp"
-                        app:ensureMinTouchTargetSize="false" />
+                        android:clickable="true"
+                        android:focusable="true" />
 
                 </com.google.android.material.chip.ChipGroup>
 
