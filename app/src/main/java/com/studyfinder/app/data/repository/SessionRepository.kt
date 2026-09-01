@@ -105,6 +105,7 @@ class SessionRepository {
      * Live updates while Session Detail is open (§7.3).
      */
     fun observeSession(sessionId: String): Flow<UiState<Session>> = callbackFlow {
+        var sawServer = false
         val listener = FirestoreRefs.session(sessionId).addSnapshotListener { snapshot, error ->
             if (error != null) {
                 trySend(UiState.Error(error.message ?: "Fetch failed", error))
@@ -113,7 +114,10 @@ class SessionRepository {
             if (snapshot != null && snapshot.exists()) {
                 val session = FirestoreMappers.toSession(snapshot)
                 if (session != null) {
-                    trySend(UiState.Success(session))
+                    val fromCache = snapshot.metadata.isFromCache
+                    if (!fromCache) sawServer = true
+                    if (fromCache && sawServer) trySend(UiState.Offline(session))
+                    else trySend(UiState.Success(session))
                 } else {
                     trySend(UiState.Error("Failed to parse session"))
                 }
@@ -165,6 +169,7 @@ class SessionRepository {
             return@callbackFlow
         }
 
+        var sawServer = false
         val listener = FirestoreRefs.sessions()
             .whereArrayContains(Field.MEMBER_UIDS, uid)
             .orderBy(Field.START_TIME, Query.Direction.ASCENDING)
@@ -178,7 +183,7 @@ class SessionRepository {
                     if (!includeCancelled) {
                         sessions = sessions.filter { it.status != SessionStatus.CANCELLED }
                     }
-                    
+
                     // Cache to Room if it's current user
                     if (uid == auth.currentUser?.uid) {
                         val now = System.currentTimeMillis()
@@ -186,8 +191,11 @@ class SessionRepository {
                             mySessionDao.upsertAll(sessions.map { FirestoreMappers.toMySessionEntity(it, now) })
                         }
                     }
-                    
-                    trySend(UiState.Success(sessions))
+
+                    val fromCache = snapshot.metadata.isFromCache
+                    if (!fromCache) sawServer = true
+                    if (fromCache && sawServer) trySend(UiState.Offline(sessions))
+                    else trySend(UiState.Success(sessions))
                 }
             }
         awaitClose { listener.remove() }

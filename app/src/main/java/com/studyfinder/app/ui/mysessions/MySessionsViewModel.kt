@@ -47,41 +47,45 @@ class MySessionsViewModel : ViewModel() {
 
     val upcomingSessions = sessionRepository.observeMySessions()
         .map { state ->
-            if (state is UiState.Success) {
-                val now = System.currentTimeMillis()
-                UiState.Success(state.data.filter { it.endTimeMillis > now }
-                    .sortedBy { it.startTimeMillis })
-            } else state
+            val now = System.currentTimeMillis()
+            fun future(list: List<Session>) =
+                list.filter { it.endTimeMillis > now }.sortedBy { it.startTimeMillis }
+            when (state) {
+                is UiState.Success -> UiState.Success(future(state.data))
+                is UiState.Offline -> UiState.Offline(future(state.cached))
+                else -> state
+            }
         }
         .stateIn(viewModelScope, SharingStarted.Lazily, UiState.Loading)
 
     val listItems: StateFlow<UiState<List<MySessionListItem>>> = upcomingSessions.map { state ->
-        if (state is UiState.Success) {
-            val items = mutableListOf<MySessionListItem>()
-            val grouped = state.data.groupBy { DateTimeUtils.toLocalDate(it.startTimeMillis) }
-            val today = LocalDate.now()
-            val tomorrow = today.plusDays(1)
-
-            grouped.keys.sorted().forEach { date ->
-                val label = when (date) {
-                    today -> "Today"
-                    tomorrow -> "Tomorrow"
-                    else -> date.format(java.time.format.DateTimeFormatter.ofPattern("EEEE, MMM d"))
-                }
-                items.add(MySessionListItem.Header(label))
-                grouped[date]?.forEach { session ->
-                    items.add(MySessionListItem.SessionItem(session))
-                }
-            }
-            if (items.isEmpty()) UiState.Empty() else UiState.Success(items)
-        } else if (state is UiState.Error) {
-            UiState.Error(state.message, state.cause)
-        } else if (state is UiState.Empty) {
-            UiState.Empty(state.message)
-        } else {
-            UiState.Loading
+        when (state) {
+            is UiState.Success -> groupByDay(state.data)
+                .let { if (it.isEmpty()) UiState.Empty() else UiState.Success(it) }
+            is UiState.Offline -> groupByDay(state.cached)
+                .let { if (it.isEmpty()) UiState.Empty() else UiState.Offline(it) }
+            is UiState.Error -> UiState.Error(state.message, state.cause)
+            is UiState.Empty -> UiState.Empty(state.message)
+            is UiState.Loading -> UiState.Loading
         }
     }.stateIn(viewModelScope, SharingStarted.Lazily, UiState.Loading)
+
+    private fun groupByDay(sessions: List<Session>): List<MySessionListItem> {
+        val items = mutableListOf<MySessionListItem>()
+        val grouped = sessions.groupBy { DateTimeUtils.toLocalDate(it.startTimeMillis) }
+        val today = LocalDate.now()
+        val tomorrow = today.plusDays(1)
+        grouped.keys.sorted().forEach { date ->
+            val label = when (date) {
+                today -> "Today"
+                tomorrow -> "Tomorrow"
+                else -> date.format(java.time.format.DateTimeFormatter.ofPattern("EEEE, MMM d"))
+            }
+            items.add(MySessionListItem.Header(label))
+            grouped[date]?.forEach { items.add(MySessionListItem.SessionItem(it)) }
+        }
+        return items
+    }
 
     val calendarDays: StateFlow<List<CalendarDayAdapter.Day>> = combine(
         upcomingSessions, _currentMonth

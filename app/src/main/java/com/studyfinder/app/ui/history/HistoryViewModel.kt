@@ -3,6 +3,7 @@ package com.studyfinder.app.ui.history
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.studyfinder.app.ServiceLocator
+import com.studyfinder.app.model.Session
 import com.studyfinder.app.model.SessionStatus
 import com.studyfinder.app.util.ActionResult
 import com.studyfinder.app.util.UiState
@@ -23,12 +24,17 @@ class HistoryViewModel : ViewModel() {
 
     val historySessions = sessionRepository.observeMySessions(includeCancelled = true)
         .map { state ->
-            if (state is UiState.Success) {
-                val now = System.currentTimeMillis()
-                val items = state.data.filter { it.isPast(now) || it.status == SessionStatus.CANCELLED }
-                    .sortedByDescending { it.startTimeMillis }
-                if (items.isEmpty()) UiState.Empty() else UiState.Success(items)
-            } else state
+            val now = System.currentTimeMillis()
+            fun past(list: List<Session>) = list
+                .filter { it.isPast(now) || it.status == SessionStatus.CANCELLED }
+                .sortedByDescending { it.startTimeMillis }
+            when (state) {
+                is UiState.Success -> past(state.data)
+                    .let { if (it.isEmpty()) UiState.Empty() else UiState.Success(it) }
+                is UiState.Offline -> past(state.cached)
+                    .let { if (it.isEmpty()) UiState.Empty() else UiState.Offline(it) }
+                else -> state
+            }
         }
         .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), UiState.Loading)
 

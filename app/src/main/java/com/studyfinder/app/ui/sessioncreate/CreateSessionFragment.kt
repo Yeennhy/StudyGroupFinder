@@ -9,6 +9,7 @@ import android.widget.SeekBar
 import android.widget.Toast
 import androidx.core.view.isVisible
 import androidx.fragment.app.Fragment
+import com.studyfinder.app.util.applyFadeThroughTransitions
 import androidx.fragment.app.viewModels
 import androidx.lifecycle.lifecycleScope
 import androidx.navigation.fragment.findNavController
@@ -42,6 +43,11 @@ class CreateSessionFragment : Fragment() {
     private var capacity = 4
     private var isGated = false
     private val selectedTags = mutableListOf<String>()
+
+    override fun onCreate(savedInstanceState: android.os.Bundle?) {
+        super.onCreate(savedInstanceState)
+        applyFadeThroughTransitions()
+    }
 
     override fun onCreateView(
         inflater: LayoutInflater,

@@ -7,6 +7,7 @@ import android.view.ViewGroup
 import android.widget.Toast
 import androidx.core.view.isVisible
 import androidx.fragment.app.Fragment
+import com.studyfinder.app.util.applyFadeThroughTransitions
 import androidx.fragment.app.viewModels
 import androidx.lifecycle.lifecycleScope
 import androidx.navigation.fragment.findNavController
@@ -47,6 +48,11 @@ class SessionManageFragment : Fragment() {
         onClick = { openMemberProfile(it.uid) }
     )
 
+    override fun onCreate(savedInstanceState: android.os.Bundle?) {
+        super.onCreate(savedInstanceState)
+        applyFadeThroughTransitions()
+    }
+
     override fun onCreateView(
         inflater: LayoutInflater,
         container: ViewGroup?,
@@ -77,8 +83,10 @@ class SessionManageFragment : Fragment() {
                         offlineView = binding.stateOfflineBanner.root,
                         contentView = null,
                     )
-                    if (state is UiState.Success && viewModel.pendingSession.value == null) {
-                        bindSession(state.data)
+                    val loaded = (state as? UiState.Success)?.data
+                        ?: (state as? UiState.Offline)?.cached
+                    if (loaded != null && viewModel.pendingSession.value == null) {
+                        bindSession(loaded)
                     }
                 }
             }

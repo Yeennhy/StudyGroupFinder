@@ -50,6 +50,7 @@ class ProfileRepository {
             return@callbackFlow
         }
 
+        var sawServer = false
         val listener = FirestoreRefs.user(uid).addSnapshotListener { snapshot, error ->
             if (error != null) {
                 trySend(UiState.Error(error.message ?: "Fetch failed", error))
@@ -62,7 +63,10 @@ class ProfileRepository {
                     scope.launch {
                         profileDao.upsert(FirestoreMappers.toEntity(profile))
                     }
-                    trySend(UiState.Success(profile))
+                    val fromCache = snapshot.metadata.isFromCache
+                    if (!fromCache) sawServer = true
+                    if (fromCache && sawServer) trySend(UiState.Offline(profile))
+                    else trySend(UiState.Success(profile))
                 }
             }
         }
@@ -70,6 +74,7 @@ class ProfileRepository {
     }.onStart { emit(UiState.Loading) }
 
     fun observeProfile(uid: String): Flow<UiState<UserProfile>> = callbackFlow {
+        var sawServer = false
         val listener = FirestoreRefs.user(uid).addSnapshotListener { snapshot, error ->
             if (error != null) {
                 trySend(UiState.Error(error.message ?: "Fetch failed", error))
@@ -78,7 +83,10 @@ class ProfileRepository {
             if (snapshot != null && snapshot.exists()) {
                 val profile = FirestoreMappers.toUserProfile(snapshot)
                 if (profile != null) {
-                    trySend(UiState.Success(profile))
+                    val fromCache = snapshot.metadata.isFromCache
+                    if (!fromCache) sawServer = true
+                    if (fromCache && sawServer) trySend(UiState.Offline(profile))
+                    else trySend(UiState.Success(profile))
                 }
             } else {
                 trySend(UiState.Error("Profile not found"))
