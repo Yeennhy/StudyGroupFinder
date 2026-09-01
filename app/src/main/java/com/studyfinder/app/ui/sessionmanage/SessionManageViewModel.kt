@@ -52,13 +52,15 @@ class SessionManageViewModel : ViewModel() {
         val communityId = (sessionState as? UiState.Success)?.data?.communityId
         flow {
             if (query.isBlank()) {
+                // When empty, show students from the same community as a recommendation
                 if (communityId != null) {
                     emit(profileRepository.findByCommunity(communityId))
                 } else {
                     emit(emptyList())
                 }
             } else {
-                emit(profileRepository.findByStudentId(query))
+                // When searching, look for anyone by ID or Name prefix
+                emit(profileRepository.searchUsers(query))
             }
         }
     }.stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), emptyList())

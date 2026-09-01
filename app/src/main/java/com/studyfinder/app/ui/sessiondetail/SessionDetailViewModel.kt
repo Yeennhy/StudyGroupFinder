@@ -110,24 +110,20 @@ class SessionDetailViewModel : ViewModel() {
         // Row 3: Host
         if (session.hostUid == currentUid) return ActionState.Manage
 
-        // Definitively check if joined via memberUids roster (§3.1).
-        // This resolves cases where subcollection status might be stale or inconsistent.
+        // Member check (highest priority join-state check)
         if (currentUid in session.memberUids) return ActionState.Leave
+
+        // Row 8: Full (Should block joining/accepting)
+        if (session.isFull) return ActionState.Full
+
+        // Row 7: Blocked
+        if (session.containsBlockedUser(blocked)) return ActionState.Blocked
 
         // Row 4: Invited
         if (myMembership?.status == MemberStatus.INVITED) return ActionState.AcceptInvite
 
-        // Row 5: Member (redundant check for safety)
-        if (myMembership?.status == MemberStatus.ACCEPTED || myMembership?.status == MemberStatus.ADMIN) return ActionState.Leave
-
         // Row 6: Pending
         if (myMembership?.status == MemberStatus.PENDING) return ActionState.RequestPending
-
-        // Row 7: Blocked
-        if (session.containsBlockedUser(blocked)) return ActionState.Blocked
-        
-        // Row 8: Full
-        if (session.isFull) return ActionState.Full
 
         // Rows 9 & 10: Join / Request
         return if (session.mode == SessionMode.OPEN) ActionState.Join else ActionState.RequestToJoin

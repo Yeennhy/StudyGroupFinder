@@ -214,6 +214,8 @@ class SessionDetailFragment : Fragment() {
                     ivAvatar.setImageResource(R.drawable.ic_profile)
                 }
             } ?: ivAvatar.setImageResource(R.drawable.ic_profile)
+
+            rowHost.setOnClickListener { openMemberProfile(member.uid) }
         }
     }
 

@@ -90,6 +90,10 @@ class SessionManageFragment : Fragment() {
                         offlineView = binding.stateOfflineBanner.root,
                         contentView = null,
                     )
+                    
+                    if (state is UiState.Success && state.data.status == com.studyfinder.app.model.SessionStatus.CANCELLED) {
+                        onSessionCancelled()
+                    }
                 }
             }
             launch {
@@ -330,7 +334,13 @@ class SessionManageFragment : Fragment() {
 
     /** Cancelling sets status = cancelled and fans out; the screen then pops. */
     private fun onSessionCancelled() {
-        findNavController().popBackStack()
+        findNavController().navigate(
+            R.id.homeFragment,
+            null,
+            androidx.navigation.NavOptions.Builder()
+                .setPopUpTo(R.id.nav_graph, true)
+                .build()
+        )
     }
 
     override fun onDestroyView() {
