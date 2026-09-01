@@ -51,6 +51,9 @@ class HomeViewModel : ViewModel() {
     /** Set once by [sortByDistance]; null until the user asks for a distance sort. */
     private val _myLocation = MutableStateFlow<DoubleArray?>(null)
 
+    private val _isFiltersExpanded = MutableStateFlow(true)
+    val isFiltersExpanded: StateFlow<Boolean> = _isFiltersExpanded.asStateFlow()
+
     private val _state = MutableStateFlow<UiState<List<SessionListAdapter.Row>>>(UiState.Loading)
     val state: StateFlow<UiState<List<SessionListAdapter.Row>>> = _state.asStateFlow()
 
@@ -204,6 +207,10 @@ class HomeViewModel : ViewModel() {
 
     fun setHideOverlapping(hide: Boolean) {
         _filters.value = _filters.value.copy(hideOverlapping = hide)
+    }
+
+    fun toggleFiltersExpanded() {
+        _isFiltersExpanded.value = !_isFiltersExpanded.value
     }
 
     /**

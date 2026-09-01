@@ -207,18 +207,36 @@
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintEnd_toEndOf="parent">
 
-        <LinearLayout
+        <androidx.constraintlayout.widget.ConstraintLayout
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:orientation="horizontal"
             android:paddingStart="20dp"
             android:paddingEnd="20dp">
+
+            <ImageButton
+                android:id="@+id/btnExpandFilters"
+                android:layout_width="0dp"
+                android:layout_height="0dp"
+                android:background="@drawable/bg_toggle_unselected_offset"
+                android:src="@drawable/ic_chevron_right"
+                android:contentDescription="@string/home_toggle_filters_cd"
+                android:scaleType="centerInside"
+                android:paddingTop="8dp"
+                android:paddingBottom="11dp"
+                android:rotation="90"
+                android:minHeight="0dp"
+                android:minWidth="0dp"
+                app:tint="@color/graphite"
+                app:layout_constraintDimensionRatio="1:1"
+                app:layout_constraintTop_toTopOf="@id/tvSort"
+                app:layout_constraintBottom_toBottomOf="@id/tvSort"
+                app:layout_constraintStart_toStartOf="parent" />
 
             <TextView
                 android:id="@+id/tvSort"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:layout_marginEnd="10dp"
+                android:layout_marginStart="8dp"
                 android:background="@drawable/bg_toggle_unselected_offset"
                 android:text="@string/home_sort_label"
                 android:textColor="@color/graphite"
@@ -230,12 +248,16 @@
                 android:paddingEnd="19dp"
                 android:paddingTop="8dp"
                 android:paddingBottom="11dp"
-                android:fontFamily="@font/pjsans_bold" />
+                android:fontFamily="@font/pjsans_bold"
+                app:layout_constraintStart_toEndOf="@id/btnExpandFilters"
+                app:layout_constraintTop_toTopOf="parent"
+                app:layout_constraintBottom_toBottomOf="parent" />
 
             <TextView
                 android:id="@+id/toggleConflicting"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
+                android:layout_marginStart="10dp"
                 android:background="@drawable/bg_toggle_unselected_offset"
                 android:text="Hide Conflicts"
                 android:textColor="@color/graphite"
@@ -245,7 +267,10 @@
                 android:paddingEnd="19dp"
                 android:paddingTop="8dp"
                 android:paddingBottom="11dp"
-                android:fontFamily="@font/pjsans_bold" />
+                android:fontFamily="@font/pjsans_bold"
+                app:layout_constraintStart_toEndOf="@id/tvSort"
+                app:layout_constraintTop_toTopOf="parent"
+                app:layout_constraintBottom_toBottomOf="parent" />
 
             <TextView
                 android:id="@+id/toggleGrind"
@@ -261,7 +286,10 @@
                 android:paddingTop="8dp"
                 android:paddingBottom="8dp"
                 android:fontFamily="@font/pjsans_bold"
-                android:visibility="gone"/>
+                android:visibility="gone"
+                app:layout_constraintStart_toEndOf="@id/toggleConflicting"
+                app:layout_constraintTop_toTopOf="parent"
+                app:layout_constraintBottom_toBottomOf="parent" />
 
             <TextView
                 android:id="@+id/toggleCasual"
@@ -277,9 +305,12 @@
                 android:paddingTop="8dp"
                 android:paddingBottom="8dp"
                 android:fontFamily="@font/pjsans_bold"
-                android:visibility="gone"/>
+                android:visibility="gone"
+                app:layout_constraintStart_toEndOf="@id/toggleGrind"
+                app:layout_constraintTop_toTopOf="parent"
+                app:layout_constraintBottom_toBottomOf="parent" />
 
-        </LinearLayout>
+        </androidx.constraintlayout.widget.ConstraintLayout>
 
     </HorizontalScrollView>
 
@@ -340,6 +371,7 @@
         android:focusable="true"
         android:paddingEnd="3dp"
         android:paddingBottom="4dp"
+        android:elevation="8dp"
         app:layout_constraintBottom_toTopOf="@id/navBar"
         app:layout_constraintEnd_toEndOf="parent">
 
@@ -361,6 +393,7 @@
         layout="@layout/fragment_navbar"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
+        android:elevation="8dp"
         app:layout_constraintBottom_toBottomOf="parent"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintEnd_toEndOf="parent" />

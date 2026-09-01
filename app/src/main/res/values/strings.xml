@@ -37,6 +37,7 @@
     <string name="state_retry">Retry</string>
     <string name="state_offline_banner">Showing saved data — you\'re offline</string>
     <string name="cd_category_filter">Course type filter</string>
+    <string name="home_toggle_filters_cd">Toggle filters visibility</string>
 
     <!-- Community selection UI states (§7.1) -->
     <string name="communities_empty">No communities match. Try another name or city.</string>

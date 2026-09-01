@@ -16,6 +16,8 @@ import androidx.activity.result.contract.ActivityResultContracts
 import androidx.core.content.ContextCompat
 import androidx.core.view.isVisible
 import androidx.fragment.app.Fragment
+import androidx.transition.AutoTransition
+import androidx.transition.TransitionManager
 import com.studyfinder.app.util.applyFadeThroughTransitions
 import androidx.fragment.app.viewModels
 import androidx.lifecycle.Lifecycle
@@ -81,6 +83,7 @@ class HomeFragment : Fragment() {
 
         binding.fabAdd.setOnClickListener { openCreateSession() }
         binding.stateError.btnStateRetry.setOnClickListener { viewModel.retry() }
+        binding.btnExpandFilters.setOnClickListener { viewModel.toggleFiltersExpanded() }
 
         wireSearch()
         wireSessionTypeChips()
@@ -255,6 +258,11 @@ class HomeFragment : Fragment() {
                         )
                     }
                 }
+                launch {
+                    viewModel.isFiltersExpanded.collect { expanded ->
+                        updateFiltersVisibility(expanded)
+                    }
+                }
                 viewModel.state.collect { state ->
                     StateRenderer.render(
                         state = state,
@@ -285,6 +293,49 @@ class HomeFragment : Fragment() {
     }
 
     // ------------------------------------------------------------------ helpers
+
+    private fun updateFiltersVisibility(expanded: Boolean) {
+        // Smooth layout transition for the overall container
+        TransitionManager.beginDelayedTransition(binding.root as ViewGroup, AutoTransition().apply {
+            duration = 300
+        })
+
+        val filterRows = listOf(
+            binding.scrollCategoryFilters,
+            binding.scrollCourseTypeFilters,
+            binding.scrollExpectationFilters
+        )
+
+        filterRows.forEachIndexed { index, view ->
+            if (expanded) {
+                // Staggered entrance: Fade in + slide up from a slight offset
+                view.isVisible = true
+                view.alpha = 0f
+                view.translationY = 20f
+                view.animate()
+                    .alpha(1f)
+                    .translationY(0f)
+                    .setDuration(300)
+                    .setStartDelay(index * 70L)
+                    .start()
+            } else {
+                // Exit: Fade out quickly
+                view.animate()
+                    .alpha(0f)
+                    .setDuration(150)
+                    .setStartDelay(0)
+                    .withEndAction { view.isVisible = false }
+                    .start()
+            }
+        }
+
+        val rotation = if (expanded) 90f else 0f
+        binding.btnExpandFilters.animate().rotation(rotation).setDuration(250).start()
+        
+        binding.btnExpandFilters.setBackgroundResource(
+            if (expanded) R.drawable.bg_toggle_selected else R.drawable.bg_toggle_unselected_offset
+        )
+    }
 
     private fun selectInRow(all: List<TextView>, selected: TextView) {
         all.forEach { chip ->
