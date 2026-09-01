@@ -1,8 +1,10 @@
 package com.studyfinder.app.ui.home
 
 import android.Manifest
+import android.annotation.SuppressLint
 import android.content.pm.PackageManager
 import android.os.Bundle
+import android.widget.Toast
 import android.text.Editable
 import android.text.TextWatcher
 import android.view.LayoutInflater
@@ -181,13 +183,36 @@ class HomeFragment : Fragment() {
         else locationPermission.launch(Manifest.permission.ACCESS_FINE_LOCATION)
     }
 
+    @SuppressLint("MissingPermission")
     private fun fetchLocationThenSort() {
         val client = LocationServices.getFusedLocationProviderClient(requireContext())
         try {
-            client.getCurrentLocation(Priority.PRIORITY_BALANCED_POWER_ACCURACY, null)
+            client.getCurrentLocation(Priority.PRIORITY_HIGH_ACCURACY, null)
                 .addOnSuccessListener { loc ->
-                    if (loc != null) viewModel.sortByDistance(loc.latitude, loc.longitude)
-                    else viewModel.onLocationPermissionDenied()
+                    if (loc != null) {
+                        viewModel.sortByDistance(loc.latitude, loc.longitude)
+                    } else {
+                        // Emulators often don't produce a fresh fix; fall back
+                        // to the last known location before giving up.
+                        client.lastLocation
+                            .addOnSuccessListener { last ->
+                                if (last != null) {
+                                    viewModel.sortByDistance(last.latitude, last.longitude)
+                                } else {
+                                    // Permission is granted but the device has
+                                    // no location at all (common on a fresh
+                                    // emulator). Tell the user why the sort
+                                    // didn't change, then fall back to time.
+                                    Toast.makeText(
+                                        requireContext(),
+                                        "Location unavailable — sorted by time instead",
+                                        Toast.LENGTH_SHORT,
+                                    ).show()
+                                    viewModel.onLocationPermissionDenied()
+                                }
+                            }
+                            .addOnFailureListener { viewModel.onLocationPermissionDenied() }
+                    }
                 }
                 .addOnFailureListener { viewModel.onLocationPermissionDenied() }
         } catch (e: SecurityException) {
