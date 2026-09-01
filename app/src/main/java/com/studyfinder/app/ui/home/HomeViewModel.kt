@@ -6,16 +6,20 @@ import com.studyfinder.app.ServiceLocator
 import com.studyfinder.app.model.CourseCategory
 import com.studyfinder.app.model.SessionSort
 import com.studyfinder.app.model.TagType
+import com.studyfinder.app.model.BusyInterval
+import com.studyfinder.app.model.Session
 import com.studyfinder.app.util.LocationUtils
 import com.studyfinder.app.util.OverlapUtils
 import com.studyfinder.app.util.UiState
 import kotlinx.coroutines.ExperimentalCoroutinesApi
+import kotlinx.coroutines.Job
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.flatMapLatest
+import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.launch
 
 /**
@@ -48,6 +52,8 @@ class HomeViewModel : ViewModel() {
     private val _state = MutableStateFlow<UiState<List<SessionListAdapter.Row>>>(UiState.Loading)
     val state: StateFlow<UiState<List<SessionListAdapter.Row>>> = _state.asStateFlow()
 
+    private var pipeline: Job? = null
+
     init {
         start()
     }
@@ -56,8 +62,9 @@ class HomeViewModel : ViewModel() {
     fun retry() = start()
 
     private fun start() {
+        pipeline?.cancel()
         _state.value = UiState.Loading
-        viewModelScope.launch {
+        pipeline = viewModelScope.launch {
             val profileState = profileRepository.observeCurrentProfile()
                 .first { it !is UiState.Loading }
             val rawCommunityId = (profileState as? UiState.Success)?.data?.communityId
@@ -68,19 +75,32 @@ class HomeViewModel : ViewModel() {
                 return@launch
             }
 
-            // Availability = the sessions the current user has already joined (§7.2).
-            val busy = sessionRepository.getBusyIntervals()
             val myUid = authRepository.currentUid
+
+            // Availability = the sessions the current user has already joined,
+            // observed live so joining/leaving updates the overlap greying
+            // without leaving Home (§7.2).
+            val busyFlow = sessionRepository.observeMySessions().map { st ->
+                val mine = (st as? UiState.Success)?.data
+                    ?: (st as? UiState.Offline)?.cached
+                    ?: emptyList()
+                mine.map { BusyInterval(it.startTimeMillis, it.endTimeMillis, it.title) }
+            }
 
             _filters
                 .flatMapLatest { f ->
                     combine(
+                        // Search is applied client-side over title/courseId/
+                        // courseName (substring, case-insensitive) so "calc"
+                        // matches "Calculus 1..." and no extra composite index
+                        // is needed — only the chips filter server-side.
                         sessionRepository.observeCommunitySessions(
-                            communityId, f.courseIdQuery, f.tagType, f.courseCategory,
+                            communityId, null, f.tagType, f.courseCategory,
                         ),
                         profileRepository.observeBlockedUids(),
                         _myLocation,
-                    ) { sessions, blocked, loc ->
+                        busyFlow,
+                    ) { sessions, blocked, loc, busy ->
                         buildRows(sessions, blocked, loc, f, busy, myUid)
                     }
                 }
@@ -89,11 +109,11 @@ class HomeViewModel : ViewModel() {
     }
 
     private fun buildRows(
-        sessionsState: UiState<List<com.studyfinder.app.model.Session>>,
+        sessionsState: UiState<List<Session>>,
         blocked: Set<String>,
         loc: DoubleArray?,
         f: Filters,
-        busy: List<com.studyfinder.app.model.BusyInterval>,
+        busy: List<BusyInterval>,
         myUid: String?,
     ): UiState<List<SessionListAdapter.Row>> {
         val sessions = when (sessionsState) {
@@ -104,7 +124,14 @@ class HomeViewModel : ViewModel() {
             is UiState.Loading -> return UiState.Loading
         }
 
-        var rows = sessions.map { s ->
+        val query = f.courseIdQuery?.trim()?.lowercase()
+        val filtered = if (query.isNullOrEmpty()) sessions else sessions.filter { s ->
+            s.title.lowercase().contains(query) ||
+                s.courseId.lowercase().contains(query) ||
+                s.courseName.lowercase().contains(query)
+        }
+
+        var rows = filtered.map { s ->
             val distanceKm = if (
                 f.sort == SessionSort.DISTANCE && loc != null && s.lat != null && s.lng != null
             ) {
@@ -150,6 +177,8 @@ class HomeViewModel : ViewModel() {
         _filters.value = _filters.value.copy(sort = sort)
     }
 
+    /** Free-text search — matched client-side against title / courseId /
+     *  courseName (substring, case-insensitive). */
     fun setCourseIdQuery(query: String?) {
         val normalized = query?.trim()?.takeIf { it.isNotEmpty() }
         if (normalized == _filters.value.courseIdQuery) return

@@ -11,6 +11,7 @@ import android.view.ViewGroup
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.core.content.ContextCompat
 import androidx.fragment.app.Fragment
+import com.studyfinder.app.util.applyFadeThroughTransitions
 import androidx.fragment.app.viewModels
 import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.lifecycleScope
@@ -45,6 +46,11 @@ class InboxFragment : Fragment() {
         ActivityResultContracts.RequestPermission()
     ) { /* reminders simply won't post if denied — no hard dependency (§9) */ }
 
+    override fun onCreate(savedInstanceState: android.os.Bundle?) {
+        super.onCreate(savedInstanceState)
+        applyFadeThroughTransitions()
+    }
+
     override fun onCreateView(
         inflater: LayoutInflater,
         container: ViewGroup?,
@@ -73,7 +79,7 @@ class InboxFragment : Fragment() {
                         loadingView = binding.progressInbox,
                         emptyView = binding.tvEmptyInbox,
                         errorView = binding.layoutErrorInbox,
-                        offlineView = null,
+                        offlineView = binding.bannerOfflineInbox,
                         contentView = binding.rvInbox,
                     )
                     val rows = when (state) {

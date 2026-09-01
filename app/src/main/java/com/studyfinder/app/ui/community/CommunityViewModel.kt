@@ -40,8 +40,13 @@ class CommunityViewModel : ViewModel() {
         queryJob?.cancel()
         queryJob = viewModelScope.launch {
             communityRepository.observeAllViaRest().collect { s ->
-                if (s is UiState.Success) {
-                    _cities.value = s.data.map { it.city }
+                val list = when (s) {
+                    is UiState.Success -> s.data
+                    is UiState.Offline -> s.cached
+                    else -> null
+                }
+                if (list != null) {
+                    _cities.value = list.map { it.city }
                         .filter { it.isNotBlank() }
                         .distinct()
                         .sorted()

@@ -7,6 +7,7 @@ import android.view.ViewGroup
 import androidx.core.content.res.ResourcesCompat
 import androidx.core.view.isVisible
 import androidx.fragment.app.Fragment
+import com.studyfinder.app.util.applyFadeThroughTransitions
 import androidx.fragment.app.viewModels
 import androidx.lifecycle.lifecycleScope
 import androidx.navigation.fragment.findNavController
@@ -42,6 +43,11 @@ class MySessionsFragment : Fragment() {
         findNavController().navigate(
             MySessionsFragmentDirections.actionMySessionsFragmentToSessionDetailFragment(session.id, SessionViewMode.LIVE)
         )
+    }
+
+    override fun onCreate(savedInstanceState: android.os.Bundle?) {
+        super.onCreate(savedInstanceState)
+        applyFadeThroughTransitions()
     }
 
     override fun onCreateView(

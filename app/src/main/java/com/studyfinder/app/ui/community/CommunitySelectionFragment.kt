@@ -13,6 +13,7 @@ import androidx.core.content.ContextCompat
 import androidx.core.content.res.ResourcesCompat
 import androidx.core.view.setPadding
 import androidx.fragment.app.Fragment
+import com.studyfinder.app.util.applyFadeThroughTransitions
 import androidx.fragment.app.viewModels
 import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.lifecycleScope
@@ -45,6 +46,11 @@ class CommunitySelectionFragment : Fragment() {
 
     private var searchWatcher: TextWatcher? = null
     private var selectedCity: String? = null
+
+    override fun onCreate(savedInstanceState: android.os.Bundle?) {
+        super.onCreate(savedInstanceState)
+        applyFadeThroughTransitions()
+    }
 
     override fun onCreateView(
         inflater: LayoutInflater,

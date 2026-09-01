@@ -45,8 +45,11 @@ class SessionDetailViewModel : ViewModel() {
 
     val actionState: StateFlow<ActionState> = combine(_session, _myMembership, _blockedUids) { sessionState, membership, blocked ->
         val currentUid = auth.currentUser?.uid ?: ""
-        if (sessionState is UiState.Success) {
-            resolveActionState(sessionState.data, membership, viewMode, blocked, currentUid)
+        val session = (sessionState as? UiState.Success)?.data
+            ?: (sessionState as? UiState.Offline)?.cached
+            
+        if (session != null) {
+            resolveActionState(session, membership, viewMode, blocked, currentUid)
         } else {
             ActionState.Join
         }

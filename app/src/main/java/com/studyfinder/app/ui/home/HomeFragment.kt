@@ -1,8 +1,10 @@
 package com.studyfinder.app.ui.home
 
 import android.Manifest
+import android.annotation.SuppressLint
 import android.content.pm.PackageManager
 import android.os.Bundle
+import android.widget.Toast
 import android.text.Editable
 import android.text.TextWatcher
 import android.view.LayoutInflater
@@ -13,6 +15,7 @@ import android.widget.TextView
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.core.content.ContextCompat
 import androidx.fragment.app.Fragment
+import com.studyfinder.app.util.applyFadeThroughTransitions
 import androidx.fragment.app.viewModels
 import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.lifecycleScope
@@ -50,6 +53,11 @@ class HomeFragment : Fragment() {
         ActivityResultContracts.RequestPermission()
     ) { granted ->
         if (granted) fetchLocationThenSort() else viewModel.onLocationPermissionDenied()
+    }
+
+    override fun onCreate(savedInstanceState: android.os.Bundle?) {
+        super.onCreate(savedInstanceState)
+        applyFadeThroughTransitions()
     }
 
     override fun onCreateView(
@@ -155,7 +163,9 @@ class HomeFragment : Fragment() {
                         3 -> viewModel.setSort(SessionSort.NAME_DESC)
                         4 -> requestDistanceSort()
                     }
-                    (anchor as TextView).text = item.title
+                    // Label follows the *actual* sort (see observeState) — a
+                    // failed GPS fetch silently reverts to time, so don't set
+                    // it optimistically here.
                     true
                 }
                 show()
@@ -173,13 +183,36 @@ class HomeFragment : Fragment() {
         else locationPermission.launch(Manifest.permission.ACCESS_FINE_LOCATION)
     }
 
+    @SuppressLint("MissingPermission")
     private fun fetchLocationThenSort() {
         val client = LocationServices.getFusedLocationProviderClient(requireContext())
         try {
-            client.getCurrentLocation(Priority.PRIORITY_BALANCED_POWER_ACCURACY, null)
+            client.getCurrentLocation(Priority.PRIORITY_HIGH_ACCURACY, null)
                 .addOnSuccessListener { loc ->
-                    if (loc != null) viewModel.sortByDistance(loc.latitude, loc.longitude)
-                    else viewModel.onLocationPermissionDenied()
+                    if (loc != null) {
+                        viewModel.sortByDistance(loc.latitude, loc.longitude)
+                    } else {
+                        // Emulators often don't produce a fresh fix; fall back
+                        // to the last known location before giving up.
+                        client.lastLocation
+                            .addOnSuccessListener { last ->
+                                if (last != null) {
+                                    viewModel.sortByDistance(last.latitude, last.longitude)
+                                } else {
+                                    // Permission is granted but the device has
+                                    // no location at all (common on a fresh
+                                    // emulator). Tell the user why the sort
+                                    // didn't change, then fall back to time.
+                                    Toast.makeText(
+                                        requireContext(),
+                                        "Location unavailable — sorted by time instead",
+                                        Toast.LENGTH_SHORT,
+                                    ).show()
+                                    viewModel.onLocationPermissionDenied()
+                                }
+                            }
+                            .addOnFailureListener { viewModel.onLocationPermissionDenied() }
+                    }
                 }
                 .addOnFailureListener { viewModel.onLocationPermissionDenied() }
         } catch (e: SecurityException) {
@@ -192,6 +225,18 @@ class HomeFragment : Fragment() {
     private fun observeState() {
         viewLifecycleOwner.lifecycleScope.launch {
             viewLifecycleOwner.repeatOnLifecycle(Lifecycle.State.STARTED) {
+                launch {
+                    viewModel.filters.collect { f ->
+                        binding.tvSort.setText(
+                            when (f.sort) {
+                                SessionSort.TIME -> R.string.home_sort_time
+                                SessionSort.NAME_ASC -> R.string.home_sort_name_asc
+                                SessionSort.NAME_DESC -> R.string.home_sort_name_desc
+                                SessionSort.DISTANCE -> R.string.home_sort_distance
+                            }
+                        )
+                    }
+                }
                 viewModel.state.collect { state ->
                     StateRenderer.render(
                         state = state,

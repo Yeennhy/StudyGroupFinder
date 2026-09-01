@@ -15,6 +15,7 @@ import com.studyfinder.app.util.ActionResult
 import com.studyfinder.app.util.UiState
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.catch
+import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.flow
 import kotlinx.coroutines.flow.onStart
 import kotlinx.coroutines.tasks.await
@@ -34,15 +35,24 @@ class CommunityRepository {
     fun observeAllViaRest(): Flow<UiState<List<Community>>> = flow<UiState<List<Community>>> {
         val response = RetrofitClient.publicCommunityApi.listCommunities()
         val communities = CommunityRestMapper.toCommunities(response)
-        
+
         // Cache to Room
         communityDao.upsertAll(communities.map { FirestoreMappers.toEntity(it) })
-        
+
         emit(UiState.Success(communities))
     }.onStart {
         emit(UiState.Loading)
     }.catch { e ->
-        emit(UiState.Error(e.message ?: "Failed to fetch communities", e))
+        // The REST call failed (usually offline). Fall back to the Room cache
+        // with an offline marker rather than a bare error screen (§2.1).
+        val cached = runCatching {
+            communityDao.observeAll().first().map { FirestoreMappers.toModel(it) }
+        }.getOrDefault(emptyList())
+        if (cached.isNotEmpty()) {
+            emit(UiState.Offline(cached))
+        } else {
+            emit(UiState.Error(e.message ?: "Failed to fetch communities", e))
+        }
     }
 
     /** Search / filter as you type goes through the SDK, which is faster here. */

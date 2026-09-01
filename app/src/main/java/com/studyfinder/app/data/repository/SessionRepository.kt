@@ -71,13 +71,14 @@ class SessionRepository {
             query = query.whereEqualTo(Field.COURSE_CATEGORY, courseCategory.wire)
         }
 
+        var sawServer = false
         val listener = query.addSnapshotListener { snapshot, error ->
             if (error != null) {
                 trySend(UiState.Error(error.message ?: "Fetch failed", error))
                 return@addSnapshotListener
             }
             if (snapshot != null) {
-                val sessions = snapshot.documents.mapNotNull { FirestoreMappers.toSession(it) }
+                var sessions = snapshot.documents.mapNotNull { FirestoreMappers.toSession(it) }
                     .filter { it.status == SessionStatus.UPCOMING } // Only show active sessions on Home
                 
                 // Cache to Room
@@ -85,8 +86,17 @@ class SessionRepository {
                 scope.launch {
                     sessionDao.upsertAll(sessions.map { FirestoreMappers.toEntity(it, now) })
                 }
-                
-                trySend(UiState.Success(sessions))
+
+                // Cache-only data *after* we've already seen the server once =
+                // the connection dropped (§2.1). The first cold-start cache tick
+                // is skipped so the banner doesn't flash on every open.
+                val fromCache = snapshot.metadata.isFromCache
+                if (!fromCache) sawServer = true
+                if (fromCache && sawServer) {
+                    trySend(UiState.Offline(sessions))
+                } else {
+                    trySend(UiState.Success(sessions))
+                }
             }
         }
         awaitClose { listener.remove() }
@@ -96,6 +106,7 @@ class SessionRepository {
      * Live updates while Session Detail is open (§7.3).
      */
     fun observeSession(sessionId: String): Flow<UiState<Session>> = callbackFlow {
+        var sawServer = false
         val listener = FirestoreRefs.session(sessionId).addSnapshotListener { snapshot, error ->
             if (error != null) {
                 trySend(UiState.Error(error.message ?: "Fetch failed", error))
@@ -104,7 +115,10 @@ class SessionRepository {
             if (snapshot != null && snapshot.exists()) {
                 val session = FirestoreMappers.toSession(snapshot)
                 if (session != null) {
-                    trySend(UiState.Success(session))
+                    val fromCache = snapshot.metadata.isFromCache
+                    if (!fromCache) sawServer = true
+                    if (fromCache && sawServer) trySend(UiState.Offline(session))
+                    else trySend(UiState.Success(session))
                 } else {
                     trySend(UiState.Error("Failed to parse session"))
                 }
@@ -164,6 +178,7 @@ class SessionRepository {
             return@callbackFlow
         }
 
+        var sawServer = false
         val listener = FirestoreRefs.sessions()
             .whereArrayContains(Field.MEMBER_UIDS, uid)
             .orderBy(Field.START_TIME, Query.Direction.ASCENDING)
@@ -177,7 +192,7 @@ class SessionRepository {
                     if (!includeCancelled) {
                         sessions = sessions.filter { it.status != SessionStatus.CANCELLED }
                     }
-                    
+
                     // Cache to Room if it's current user
                     if (uid == auth.currentUser?.uid) {
                         val now = System.currentTimeMillis()
@@ -186,8 +201,11 @@ class SessionRepository {
                             mySessionDao.upsertAll(sessions.map { FirestoreMappers.toMySessionEntity(it, now) })
                         }
                     }
-                    
-                    trySend(UiState.Success(sessions))
+
+                    val fromCache = snapshot.metadata.isFromCache
+                    if (!fromCache) sawServer = true
+                    if (fromCache && sawServer) trySend(UiState.Offline(sessions))
+                    else trySend(UiState.Success(sessions))
                 }
             }
         awaitClose { listener.remove() }

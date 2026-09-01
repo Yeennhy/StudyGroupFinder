@@ -32,6 +32,7 @@ class InboxRepository {
             return@callbackFlow
         }
 
+        var sawServer = false
         val listener = FirestoreRefs.inbox(uid)
             .orderBy(Field.CREATED_AT, Query.Direction.DESCENDING)
             .addSnapshotListener { snapshot, error ->
@@ -41,7 +42,13 @@ class InboxRepository {
                 }
                 if (snapshot != null) {
                     val items = snapshot.documents.mapNotNull { FirestoreMappers.toInboxItem(it) }
-                    trySend(UiState.Success(items))
+                    val fromCache = snapshot.metadata.isFromCache
+                    if (!fromCache) sawServer = true
+                    if (fromCache && sawServer) {
+                        trySend(UiState.Offline(items))
+                    } else {
+                        trySend(UiState.Success(items))
+                    }
                 }
             }
         awaitClose { listener.remove() }

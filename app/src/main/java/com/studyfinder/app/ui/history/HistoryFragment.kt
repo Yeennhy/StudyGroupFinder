@@ -18,6 +18,7 @@ import com.studyfinder.app.ui.common.StateRenderer
 import com.studyfinder.app.util.ActionResult
 import com.studyfinder.app.util.UiState
 import com.studyfinder.app.util.setupHeader
+import com.studyfinder.app.util.applyFadeThroughTransitions
 import kotlinx.coroutines.flow.collectLatest
 import kotlinx.coroutines.launch
 
@@ -36,6 +37,11 @@ class HistoryFragment : Fragment() {
 
     private val savePdfLauncher = registerForActivityResult(ActivityResultContracts.CreateDocument("application/pdf")) { uri ->
         uri?.let { viewModel.exportPdfToUri(requireContext(), it) }
+    }
+
+    override fun onCreate(savedInstanceState: Bundle?) {
+        super.onCreate(savedInstanceState)
+        applyFadeThroughTransitions()
     }
 
     override fun onCreateView(
