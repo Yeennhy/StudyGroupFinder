@@ -42,7 +42,7 @@ class ProfileViewModel : ViewModel() {
         uid != null && blockedUids.contains(uid)
     }.asLiveData()
 
-    private val _isEmailVerified = MutableStateFlow(false)
+    private val _isEmailVerified = MutableStateFlow(true) // Default to true to hide message initially
     val isEmailVerified: StateFlow<Boolean> = _isEmailVerified
 
     private val _saveResult = MutableLiveData<ActionResult>(ActionResult.Idle)
@@ -52,9 +52,11 @@ class ProfileViewModel : ViewModel() {
     fun start(uid: String?) {
         uidFlow.value = uid
         if (uid == null) {
+            // Initial check using cached state
             _isEmailVerified.value = authRepository.isEmailVerified
             viewModelScope.launch {
                 authRepository.reloadUser()
+                // Update with server-authoritative state
                 _isEmailVerified.value = authRepository.isEmailVerified
             }
         }

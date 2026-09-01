@@ -18,6 +18,7 @@
         android:paddingBottom="40dp"
         android:clipChildren="false"
         android:fillViewport="true"
+        android:visibility="gone"
         app:layout_constraintTop_toTopOf="parent"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintEnd_toEndOf="parent"
@@ -274,8 +275,6 @@
 
             </LinearLayout>
 
-
-
             <!-- ===== Card 2: Community (teal header, segmented) ===== -->
             <LinearLayout
                 android:id="@+id/cardCommunity"
@@ -295,6 +294,7 @@
                 app:layout_constraintEnd_toEndOf="parent">
 
                 <LinearLayout
+                    android:id="@+id/layoutCommunityHeader"
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
                     android:background="@drawable/bg_card_header_teal"
@@ -392,6 +392,7 @@
                 app:layout_constraintEnd_toEndOf="parent">
 
                 <RelativeLayout
+                    android:id="@+id/layoutPersonalDetailsHeader"
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
                     android:background="@drawable/bg_card_header_lblue"
@@ -644,6 +645,7 @@
                 app:layout_constraintEnd_toEndOf="parent">
 
                 <RelativeLayout
+                    android:id="@+id/layoutSessionActivityHeader"
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
                     android:background="@drawable/bg_card_header_red"

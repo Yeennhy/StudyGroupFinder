@@ -19,6 +19,7 @@ import androidx.core.content.FileProvider
 import androidx.core.view.isVisible
 import androidx.fragment.app.Fragment
 import androidx.lifecycle.Lifecycle
+import com.bumptech.glide.load.resource.drawable.DrawableTransitionOptions
 import com.studyfinder.app.util.applyFadeThroughTransitions
 import androidx.fragment.app.viewModels
 import androidx.lifecycle.lifecycleScope
@@ -98,6 +99,8 @@ class ProfileFragment : Fragment() {
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
         setupNavbar(binding.navBar)
+
+        binding.navBar.root.isVisible = isSelfView
         
         viewModel.start(args.uid)
 
@@ -214,6 +217,8 @@ class ProfileFragment : Fragment() {
             Glide.with(this)
                 .load(profile.photoUrl)
                 .circleCrop()
+                .placeholder(R.drawable.bg_pill_dark)
+                .transition(DrawableTransitionOptions.withCrossFade())
                 .into(binding.ivAvatar)
         } else {
             applyAvatarStyle(false)
@@ -260,6 +265,8 @@ class ProfileFragment : Fragment() {
         Glide.with(this)
             .load(uri)
             .circleCrop()
+            .placeholder(R.drawable.bg_pill_dark)
+            .transition(DrawableTransitionOptions.withCrossFade())
             .into(binding.ivAvatar)
     }
 
@@ -292,6 +299,16 @@ class ProfileFragment : Fragment() {
         binding.divAvatarCard.isVisible = showBlockInfo
         binding.blockmsg.isVisible = showBlockInfo
         binding.btnUnblock.isVisible = showBlockInfo
+
+        // Update card headers background
+        val headerBg = if (showBlockInfo) R.drawable.bg_card_header_coldgray else R.drawable.bg_card_header_teal
+        binding.layoutCommunityHeader.setBackgroundResource(headerBg)
+        
+        val personalHeaderBg = if (showBlockInfo) R.drawable.bg_card_header_coldgray else R.drawable.bg_card_header_lblue
+        binding.layoutPersonalDetailsHeader.setBackgroundResource(personalHeaderBg)
+        
+        val activityHeaderBg = if (showBlockInfo) R.drawable.bg_card_header_coldgray else R.drawable.bg_card_header_red
+        binding.layoutSessionActivityHeader.setBackgroundResource(activityHeaderBg)
 
         // Re-setup header to show/hide block button
         setupHeader(

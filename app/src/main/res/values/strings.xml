@@ -1,5 +1,5 @@
 <resources>
-    <string name="app_name">Study Group Finder</string>
+    <string name="app_name">StudyCohort</string>
 
     <!-- Screen titles, one per nav_graph destination -->
     <string name="title_login">Sign in</string>
