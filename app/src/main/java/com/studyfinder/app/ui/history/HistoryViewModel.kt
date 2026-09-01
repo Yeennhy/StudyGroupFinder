@@ -53,48 +53,113 @@ class HistoryViewModel : ViewModel() {
             try {
                 withContext(Dispatchers.IO) {
                     val pdfDocument = PdfDocument()
+                    
+                    // Paints for styling
+                    val headerBgPaint = Paint().apply { color = Color.parseColor("#FFD54F") } // Ginkgo Yellow
+                    val headerTextPaint = Paint().apply {
+                        typeface = Typeface.create(Typeface.DEFAULT, Typeface.BOLD)
+                        textSize = 28f
+                        color = Color.parseColor("#333333") // Graphite
+                    }
+                    val subHeaderTextPaint = Paint().apply {
+                        textSize = 14f
+                        color = Color.parseColor("#666666")
+                    }
                     val titlePaint = Paint().apply {
                         typeface = Typeface.create(Typeface.DEFAULT, Typeface.BOLD)
-                        textSize = 20f
+                        textSize = 18f
+                        color = Color.parseColor("#333333")
+                    }
+                    val labelPaint = Paint().apply {
+                        typeface = Typeface.create(Typeface.DEFAULT, Typeface.BOLD)
+                        textSize = 12f
+                        color = Color.parseColor("#555555")
                     }
                     val bodyPaint = Paint().apply {
-                        textSize = 14f
+                        textSize = 12f
+                        color = Color.parseColor("#333333")
                     }
-                    val headerPaint = Paint().apply {
-                        typeface = Typeface.create(Typeface.DEFAULT, Typeface.BOLD)
-                        textSize = 24f
-                        color = Color.BLACK
+                    val dividerPaint = Paint().apply {
+                        color = Color.LTGRAY
+                        strokeWidth = 1f
                     }
+                    val statusBgPaint = Paint().apply { style = Paint.Style.FILL }
 
                     var pageNumber = 1
                     var myPageInfo = PdfDocument.PageInfo.Builder(595, 842, pageNumber).create()
                     var myPage = pdfDocument.startPage(myPageInfo)
                     var canvas: Canvas = myPage.canvas
-                    var y = 50f
+                    
+                    fun drawPageHeader(canv: Canvas) {
+                        canv.drawRect(0f, 0f, 595f, 100f, headerBgPaint)
+                        canv.drawText("Study Session History", 40f, 60f, headerTextPaint)
+                        canv.drawText("Generated on: ${DateTimeUtils.formatDateTime(System.currentTimeMillis())}", 40f, 85f, subHeaderTextPaint)
+                    }
 
-                    // Header
-                    canvas.drawText("Study Session History", 50f, y, headerPaint)
-                    y += 40f
-                    canvas.drawText("Generated on: ${DateTimeUtils.formatDateTime(System.currentTimeMillis())}", 50f, y, bodyPaint)
-                    y += 50f
+                    drawPageHeader(canvas)
+                    var y = 140f
 
                     sessionsState.data.forEach { session ->
+                        // Check for page overflow
                         if (y > 750f) {
                             pdfDocument.finishPage(myPage)
                             pageNumber++
                             myPageInfo = PdfDocument.PageInfo.Builder(595, 842, pageNumber).create()
                             myPage = pdfDocument.startPage(myPageInfo)
                             canvas = myPage.canvas
-                            y = 50f
+                            drawPageHeader(canvas)
+                            y = 140f
                         }
 
-                        canvas.drawText(session.title, 50f, y, titlePaint)
+                        // Session Title
+                        canvas.drawText(session.title, 40f, y, titlePaint)
                         y += 25f
-                        canvas.drawText("Date: ${DateTimeUtils.formatDateTime(session.startTimeMillis)}", 70f, y, bodyPaint)
+
+                        // Course Info
+                        canvas.drawText("COURSE:", 40f, y, labelPaint)
+                        canvas.drawText("${session.courseId} - ${session.courseName}", 110f, y, bodyPaint)
                         y += 20f
-                        canvas.drawText("Location: ${session.locationName}", 70f, y, bodyPaint)
+
+                        // Time and Duration
+                        canvas.drawText("TIME:", 40f, y, labelPaint)
+                        val durationMinutes = ((session.endTimeMillis - session.startTimeMillis) / 60000).toInt()
+                        val timeStr = "${DateTimeUtils.formatDateTime(session.startTimeMillis)} (${DateTimeUtils.formatDuration(durationMinutes)})"
+                        canvas.drawText(timeStr, 110f, y, bodyPaint)
                         y += 20f
-                        canvas.drawText("Status: ${session.status.wire.uppercase()}", 70f, y, bodyPaint)
+
+                        // Location
+                        canvas.drawText("LOCATION:", 40f, y, labelPaint)
+                        canvas.drawText(session.locationName, 110f, y, bodyPaint)
+                        y += 20f
+
+                        // Status Badge
+                        canvas.drawText("STATUS:", 40f, y, labelPaint)
+                        val statusStr = session.status.wire.uppercase()
+                        val statusColor = when (session.status) {
+                            com.studyfinder.app.model.SessionStatus.FINISHED -> "#E8F5E9" // Light Green
+                            com.studyfinder.app.model.SessionStatus.CANCELLED -> "#FFEBEE" // Light Red
+                            else -> "#E3F2FD" // Light Blue
+                        }
+                        statusBgPaint.color = Color.parseColor(statusColor)
+                        val textWidth = bodyPaint.measureText(statusStr)
+                        canvas.drawRect(110f, y - 12f, 115f + textWidth + 5f, y + 5f, statusBgPaint)
+                        canvas.drawText(statusStr, 115f, y, bodyPaint)
+                        y += 30f
+
+                        // Goals (if present)
+                        if (session.goals.isNotBlank()) {
+                            canvas.drawText("GOALS:", 40f, y, labelPaint)
+                            val goalsLines = session.goals.lines()
+                            goalsLines.take(3).forEach { line ->
+                                if (y > 800f) return@forEach // Safety
+                                canvas.drawText(line, 110f, y, bodyPaint)
+                                y += 18f
+                            }
+                            y += 10f
+                        }
+
+                        // Divider line
+                        canvas.drawLine(40f, y, 555f, y, dividerPaint)
                         y += 40f
                     }
 

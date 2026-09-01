@@ -54,11 +54,10 @@ class HistoryFragment : Fragment() {
             title = "History",
             showHistory = false,
             showBackBtn = true,
-            showAvatar = false,
-            rightBtnIcon = R.drawable.ic_download // Use download icon for export
+            showAvatar = false
         )
         
-        binding.appHeader.rightmostBtn.setOnClickListener {
+        binding.btnExport.setOnClickListener {
             savePdfLauncher.launch("StudySessionHistory.pdf")
         }
 
