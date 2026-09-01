@@ -125,6 +125,11 @@ class SessionDetailFragment : Fragment() {
                     }
                 }
             }
+            launch {
+                ServiceLocator.profileRepository.observeBlockedUids().collectLatest { blocked ->
+                    attendeeAdapter.setBlockedUids(blocked)
+                }
+            }
         }
     }
 

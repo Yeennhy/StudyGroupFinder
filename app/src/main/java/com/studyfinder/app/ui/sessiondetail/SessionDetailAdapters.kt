@@ -16,6 +16,15 @@ class AttendeeAdapter(
     private val onClick: (SessionMember) -> Unit
 ) : ListAdapter<SessionMember, AttendeeAdapter.ViewHolder>(DIFF) {
 
+    private var blockedUids: Set<String> = emptySet()
+
+    fun setBlockedUids(uids: Set<String>) {
+        if (blockedUids != uids) {
+            blockedUids = uids
+            notifyDataSetChanged()
+        }
+    }
+
     class ViewHolder(val binding: ItemAttendeeRowBinding) : RecyclerView.ViewHolder(binding.root)
 
     override fun onCreateViewHolder(parent: ViewGroup, viewType: Int) = ViewHolder(
@@ -35,6 +44,12 @@ class AttendeeAdapter(
                     ivAvatar.setImageResource(R.drawable.ic_profile)
                 }
             } ?: ivAvatar.setImageResource(R.drawable.ic_profile)
+
+            tvBlockedBadge.visibility = if (blockedUids.contains(member.uid)) {
+                android.view.View.VISIBLE
+            } else {
+                android.view.View.GONE
+            }
 
             root.setOnClickListener { onClick(member) }
         }

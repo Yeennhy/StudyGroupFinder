@@ -110,22 +110,31 @@ class SignupFragment : Fragment() {
                     )
                 }
                 is ActionResult.Failure -> {
-                    handleAuthError(result.message)
+                    handleAuthError(result)
                 }
             }
         }
     }
 
-    private fun handleAuthError(message: String) {
-        val lowerMessage = message.lowercase()
-        when {
-            lowerMessage.contains("password") -> {
-                binding.tvPasswordError.text = message
-                binding.tvPasswordError.isVisible = true
+    private fun handleAuthError(failure: ActionResult.Failure) {
+        val personalizedMessage = when (failure.errorCode) {
+            "ERROR_EMAIL_ALREADY_IN_USE" -> "This email is already registered."
+            "ERROR_INVALID_EMAIL" -> "Please enter a valid email address."
+            "ERROR_WEAK_PASSWORD" -> "Password must be at least 6 characters long."
+            else -> failure.message
+        }
+
+        when (failure.errorCode) {
+            "ERROR_EMAIL_ALREADY_IN_USE", "ERROR_INVALID_EMAIL" -> {
+                binding.tvEmailError.text = personalizedMessage
+                binding.tvEmailError.isVisible = true
+                binding.tvPasswordError.isVisible = false
+
             }
             else -> {
-                binding.tvEmailError.text = message
-                binding.tvEmailError.isVisible = true
+                binding.tvPasswordError.text = personalizedMessage
+                binding.tvPasswordError.isVisible = true
+                binding.tvEmailError.isVisible = false
             }
         }
     }

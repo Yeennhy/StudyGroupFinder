@@ -128,7 +128,8 @@
                 android:textColor="@color/graphite"
                 android:textStyle="bold"
                 android:gravity="center"
-                android:paddingHorizontal="20dp"
+                android:paddingStart="16dp"
+                android:paddingEnd="19dp"
                 android:paddingTop="4dp"
                 android:paddingBottom="10dp"
                 android:fontFamily="@font/pjsans_bold" />
@@ -139,12 +140,13 @@
                 android:layout_height="wrap_content"
                 android:layout_marginStart="10dp"
                 android:textColor="@color/graphite"
-                android:background="@drawable/bg_pill_unselected"
+                android:background="@drawable/bg_pill_unselected_offset"
                 android:text="Universities"
                 android:gravity="center"
-                android:paddingHorizontal="16dp"
+                android:paddingStart="16dp"
+                android:paddingEnd="19dp"
                 android:paddingTop="4dp"
-                android:paddingBottom="6dp"
+                android:paddingBottom="7dp"
                 android:fontFamily="@font/pjsans_bold" />
 
             <TextView
@@ -152,13 +154,14 @@
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 android:layout_marginStart="10dp"
-                android:background="@drawable/bg_pill_unselected"
+                android:background="@drawable/bg_pill_unselected_offset"
                 android:textColor="@color/graphite"
                 android:text="STEM"
                 android:gravity="center"
-                android:paddingHorizontal="16dp"
+                android:paddingStart="16dp"
+                android:paddingEnd="19dp"
                 android:paddingTop="4dp"
-                android:paddingBottom="6dp"
+                android:paddingBottom="7dp"
                 android:fontFamily="@font/pjsans_bold" />
 
             <TextView
@@ -166,13 +169,14 @@
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 android:layout_marginStart="10dp"
-                android:background="@drawable/bg_pill_unselected"
+                android:background="@drawable/bg_pill_unselected_offset"
                 android:text="Arts"
                 android:textColor="@color/graphite"
                 android:gravity="center"
-                android:paddingHorizontal="16dp"
+                android:paddingStart="16dp"
+                android:paddingEnd="19dp"
                 android:paddingTop="4dp"
-                android:paddingBottom="6dp"
+                android:paddingBottom="7dp"
                 android:fontFamily="@font/pjsans_bold" />
 
             <TextView
@@ -180,13 +184,14 @@
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 android:layout_marginStart="10dp"
-                android:background="@drawable/bg_pill_unselected"
+                android:background="@drawable/bg_pill_unselected_offset"
                 android:text="Social"
                 android:textColor="@color/graphite"
                 android:gravity="center"
-                android:paddingHorizontal="16dp"
+                android:paddingStart="16dp"
+                android:paddingEnd="19dp"
                 android:paddingTop="4dp"
-                android:paddingBottom="6dp"
+                android:paddingBottom="7dp"
                 android:fontFamily="@font/pjsans_bold" />
 
         </LinearLayout>
@@ -281,9 +286,9 @@
             android:textColor="@color/graphite"
             android:textStyle="bold"
             android:paddingStart="20dp"
-            android:paddingEnd="20dp"
+            android:paddingEnd="23dp"
             android:paddingTop="8dp"
-            android:paddingBottom="10dp"
+            android:paddingBottom="11dp"
             android:fontFamily="@font/pjsans_bold" />
 
     </LinearLayout>

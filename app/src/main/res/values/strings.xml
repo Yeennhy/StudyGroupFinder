@@ -24,6 +24,7 @@
     <string name="notice_session_full">Session full</string>
     <string name="notice_contains_blocked_user">Contains a blocked user</string>
     <string name="notice_overlaps_schedule">Overlaps your schedule</string>
+    <string name="label_blocked">Blocked</string>
 
     <!-- Home UI states (§7.2 / §2.1) -->
     <string name="home_sort_label">Sort</string>

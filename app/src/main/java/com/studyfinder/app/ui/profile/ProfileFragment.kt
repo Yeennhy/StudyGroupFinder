@@ -107,7 +107,7 @@ class ProfileFragment : Fragment() {
         }
 
         binding.btnUnblock.setOnClickListener {
-            args.uid?.let { viewModel.blockUser(it) }
+            args.uid?.let { showUnblockConfirmationDialog(it) }
         }
 
         // Only self-view can edit or change community (§7.7)
@@ -327,9 +327,13 @@ class ProfileFragment : Fragment() {
         binding.btnEditAvatar.isVisible = enabled
         binding.btnSaveChanges.isVisible = enabled
 
-        // Hide edit triggers while editing or if not self-view
-        binding.btnEditDetails.isVisible = isSelfView && !enabled
+        // Keep edit button visible if self-view, toggle its icon
+        binding.btnEditDetails.isVisible = isSelfView
         binding.btnCommunityArrow.isVisible = isSelfView && !enabled
+
+        binding.ivEditDetailsIcon.setImageResource(
+            if (enabled) R.drawable.ic_x else R.drawable.ic_edit_pencil
+        )
 
         if (enabled) {
             // Copy data to EditTexts
@@ -366,6 +370,20 @@ class ProfileFragment : Fragment() {
                 isEditMode = true
             )
         )
+    }
+
+    private fun showUnblockConfirmationDialog(uid: String) {
+        ConfirmationDialogFragment.newInstance(
+            title = "Unblock User",
+            subtitle = "Are you sure you want to unblock this user?",
+            buttonText = "Unblock",
+            cancelText = "Cancel",
+            iconRes = R.drawable.ic_block,
+            iconBgColor = ContextCompat.getColor(requireContext(), R.color.theme_gray),
+            iconTint = ContextCompat.getColor(requireContext(), R.color.graphite)
+        ).apply {
+            setOnConfirmListener { viewModel.unblockUser(uid) }
+        }.show(parentFragmentManager, "UnblockConfirmationDialog")
     }
 
     private fun showSignOutConfirmationDialog() {

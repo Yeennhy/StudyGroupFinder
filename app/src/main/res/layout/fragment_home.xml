@@ -60,7 +60,7 @@
                 android:textStyle="bold"
                 android:gravity="center"
                 android:paddingStart="16dp"
-                android:paddingEnd="16dp"
+                android:paddingEnd="19dp"
                 android:paddingTop="8dp"
                 android:paddingBottom="11dp"
                 android:fontFamily="@font/pjsans_bold" />
@@ -70,14 +70,14 @@
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 android:layout_marginStart="8dp"
-                android:background="@drawable/bg_pill_unselected"
+                android:background="@drawable/bg_pill_unselected_offset"
                 android:text="Midterm"
                 android:textColor="@color/graphite"
                 android:gravity="center"
                 android:paddingStart="16dp"
-                android:paddingEnd="16dp"
+                android:paddingEnd="19dp"
                 android:paddingTop="8dp"
-                android:paddingBottom="8dp"
+                android:paddingBottom="11dp"
                 android:fontFamily="@font/pjsans_bold" />
 
             <TextView
@@ -85,14 +85,14 @@
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 android:layout_marginStart="8dp"
-                android:background="@drawable/bg_pill_unselected"
+                android:background="@drawable/bg_pill_unselected_offset"
                 android:text="Final"
                 android:textColor="@color/graphite"
                 android:gravity="center"
                 android:paddingStart="16dp"
-                android:paddingEnd="16dp"
+                android:paddingEnd="19dp"
                 android:paddingTop="8dp"
-                android:paddingBottom="8dp"
+                android:paddingBottom="11dp"
                 android:fontFamily="@font/pjsans_bold" />
 
             <TextView
@@ -100,14 +100,14 @@
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 android:layout_marginStart="10dp"
-                android:background="@drawable/bg_pill_unselected"
+                android:background="@drawable/bg_pill_unselected_offset"
                 android:text="Review"
                 android:textColor="@color/graphite"
                 android:gravity="center"
                 android:paddingStart="16dp"
-                android:paddingEnd="16dp"
+                android:paddingEnd="19dp"
                 android:paddingTop="8dp"
-                android:paddingBottom="8dp"
+                android:paddingBottom="11dp"
                 android:fontFamily="@font/pjsans_bold" />
 
         </LinearLayout>
@@ -170,7 +170,7 @@
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 android:layout_marginEnd="10dp"
-                android:background="@drawable/bg_toggle_unselected"
+                android:background="@drawable/bg_toggle_unselected_offset"
                 android:text="@string/home_sort_label"
                 android:textColor="@color/graphite"
                 android:textStyle="bold"
@@ -178,22 +178,22 @@
                 android:drawableEnd="@drawable/ic_timer"
                 android:drawablePadding="6dp"
                 android:paddingStart="16dp"
-                android:paddingEnd="16dp"
+                android:paddingEnd="19dp"
                 android:paddingTop="8dp"
-                android:paddingBottom="8dp"
+                android:paddingBottom="11dp"
                 android:fontFamily="@font/pjsans_bold" />
 
             <TextView
                 android:id="@+id/toggleConflicting"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:background="@drawable/bg_toggle_unselected"
-                android:text="Conflicting sessions"
+                android:background="@drawable/bg_toggle_unselected_offset"
+                android:text="Hide Conflicts"
                 android:textColor="@color/graphite"
                 android:textStyle="bold"
                 android:gravity="center"
                 android:paddingStart="16dp"
-                android:paddingEnd="16dp"
+                android:paddingEnd="19dp"
                 android:paddingTop="8dp"
                 android:paddingBottom="11dp"
                 android:fontFamily="@font/pjsans_bold" />
@@ -203,7 +203,7 @@
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 android:layout_marginStart="10dp"
-                android:background="@drawable/bg_toggle_unselected"
+                android:background="@drawable/bg_toggle_unselected_offset"
                 android:text="Grind"
                 android:textColor="@color/graphite"
                 android:gravity="center"
@@ -211,14 +211,15 @@
                 android:paddingEnd="16dp"
                 android:paddingTop="8dp"
                 android:paddingBottom="8dp"
-                android:fontFamily="@font/pjsans_bold" />
+                android:fontFamily="@font/pjsans_bold"
+                android:visibility="gone"/>
 
             <TextView
                 android:id="@+id/toggleCasual"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 android:layout_marginStart="10dp"
-                android:background="@drawable/bg_toggle_unselected"
+                android:background="@drawable/bg_toggle_unselected_offset"
                 android:text="Casual"
                 android:textColor="@color/graphite"
                 android:gravity="center"
@@ -226,7 +227,8 @@
                 android:paddingEnd="16dp"
                 android:paddingTop="8dp"
                 android:paddingBottom="8dp"
-                android:fontFamily="@font/pjsans_bold" />
+                android:fontFamily="@font/pjsans_bold"
+                android:visibility="gone"/>
 
         </LinearLayout>
 
@@ -321,9 +323,9 @@
             android:textColor="@color/graphite"
             android:textStyle="bold"
             android:paddingStart="20dp"
-            android:paddingEnd="20dp"
+            android:paddingEnd="23dp"
             android:paddingTop="8dp"
-            android:paddingBottom="10dp"
+            android:paddingBottom="11dp"
             android:fontFamily="@font/pjsans_bold" />
 
     </LinearLayout>

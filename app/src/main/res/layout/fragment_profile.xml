@@ -169,7 +169,8 @@
                     android:visibility="gone"
                     android:fontFamily="@font/pjsans_regular"
                     android:clickable="true"
-                    android:focusable="true" />
+                    android:focusable="true"
+                    android:background="?attr/selectableItemBackgroundBorderless" />
 
                 <TextView
                     android:id="@+id/tvProfileBio"
@@ -415,6 +416,7 @@
                         android:foreground="?attr/selectableItemBackground">
 
                         <ImageView
+                            android:id="@+id/ivEditDetailsIcon"
                             android:layout_width="18dp"
                             android:layout_height="18dp"
                             android:layout_gravity="center"
