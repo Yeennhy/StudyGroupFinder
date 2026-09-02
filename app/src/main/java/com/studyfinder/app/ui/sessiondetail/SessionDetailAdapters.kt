@@ -111,7 +111,7 @@ class MaterialAdapter(
             btnDeleteContainer.visibility = if (isHost && onDelete != null) android.view.View.VISIBLE else android.view.View.GONE
             btnDelete.setOnClickListener { onDelete?.invoke(url) }
 
-            root.setOnClickListener { onClick(url) }
+            row.setOnClickListener { onClick(url) }
         }
     }
 
