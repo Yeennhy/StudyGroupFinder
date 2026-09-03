@@ -66,6 +66,7 @@ object FirestoreMappers {
             id = doc.id,
             name = doc.getString(Field.NAME).orEmpty(),
             city = doc.getString(Field.CITY).orEmpty(),
+            imageUrl = doc.getString(Field.IMAGE_URL).orEmpty(),
             verified = doc.getBoolean(Field.VERIFIED) ?: false,
             domainWhitelist = (doc.get(Field.DOMAIN_WHITELIST) as? List<*>)?.mapNotNull { it as? String } ?: emptyList(),
             createdAtMillis = doc.getTimestamp(Field.CREATED_AT)?.toDate()?.time ?: 0L,
@@ -246,6 +247,7 @@ object FirestoreMappers {
         id = community.id,
         name = community.name,
         city = community.city,
+        imageUrl = community.imageUrl,
         verified = community.verified,
         domainWhitelist = community.domainWhitelist
     )
@@ -292,6 +294,7 @@ object FirestoreMappers {
         id = entity.id,
         name = entity.name,
         city = entity.city,
+        imageUrl = entity.imageUrl,
         verified = entity.verified,
         domainWhitelist = entity.domainWhitelist
     )

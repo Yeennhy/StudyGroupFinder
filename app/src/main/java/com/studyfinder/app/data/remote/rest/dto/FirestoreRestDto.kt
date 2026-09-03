@@ -45,6 +45,7 @@ data class FirestoreDocument(
 data class CommunityFields(
     @Json(name = "name") val communityName: StringValue? = null,
     val city: StringValue? = null,
+    val imageUrl: StringValue? = null,
     val verified: BoolValue? = null,
     val domainWhitelist: ArrayValue? = null,
     val createdAt: TimestampValue? = null,

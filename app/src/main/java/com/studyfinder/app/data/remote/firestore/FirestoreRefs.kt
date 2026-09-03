@@ -74,6 +74,7 @@ object FirestoreRefs {
         const val ADMISSION_YEAR = "admissionYear"
         const val BIO = "bio"
         const val PHOTO_URL = "photoUrl"
+        const val IMAGE_URL = "imageUrl"
         const val VERIFIED = "verified"
         const val DOMAIN_WHITELIST = "domainWhitelist"
         const val TYPE = "type"

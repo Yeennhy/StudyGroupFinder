@@ -33,6 +33,7 @@ object CommunityRestMapper {
                 id = doc.name?.substringAfterLast('/').orEmpty(),
                 name = fields.communityName?.stringValue.orEmpty(),
                 city = fields.city?.stringValue.orEmpty(),
+                imageUrl = fields.imageUrl?.stringValue.orEmpty(),
                 verified = fields.verified?.booleanValue ?: false,
                 domainWhitelist = fields.domainWhitelist?.arrayValue?.values?.mapNotNull { it.stringValue } ?: emptyList(),
                 // REST timestamps are ISO 8601 strings, we'll keep 0 for now as it's not critical for selection

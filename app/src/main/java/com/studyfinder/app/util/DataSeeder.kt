@@ -104,6 +104,7 @@ object DataSeeder {
                 id = "HCMUS",
                 name = "University of Science, VNU-HCM",
                 city = "Ho Chi Minh City",
+                imageUrl = "https://images.unsplash.com/photo-1562774053-701939374585?w=500&q=80",
                 verified = true,
                 domains = listOf("fitus.edu.vn", "hcmus.edu.vn"),
                 courses = listOf(
@@ -126,6 +127,7 @@ object DataSeeder {
                 id = "FPT-HCM",
                 name = "FPT University HCM",
                 city = "Ho Chi Minh City",
+                imageUrl = "https://images.unsplash.com/photo-1541339907198-e08756eaa63f?w=500&q=80",
                 verified = true,
                 domains = listOf("fpt.edu.vn"),
                 courses = listOf(
@@ -144,6 +146,7 @@ object DataSeeder {
                 id = "HUST",
                 name = "Hanoi University of Science and Technology",
                 city = "Hanoi",
+                imageUrl = "https://images.unsplash.com/photo-1523050854058-8df90110c9f1?w=500&q=80",
                 verified = true,
                 domains = listOf("hust.edu.vn", "sis.hust.edu.vn"),
                 courses = listOf(
@@ -162,6 +165,7 @@ object DataSeeder {
                 id = "OPEN-STUDY-DN",
                 name = "Da Nang Open Study Circle",
                 city = "Da Nang",
+                imageUrl = "https://images.unsplash.com/photo-1492538368677-f6e0afe31dcc?w=500&q=80",
                 verified = false,
                 domains = emptyList(),
                 courses = listOf(
@@ -180,6 +184,7 @@ object DataSeeder {
                 id = "OPEN-STUDY-CT",
                 name = "Can Tho Learners Hub",
                 city = "Can Tho",
+                imageUrl = "https://images.unsplash.com/photo-1519389950473-47ba0277781c?w=500&q=80",
                 verified = false,
                 domains = emptyList(),
                 courses = listOf(
@@ -201,6 +206,7 @@ object DataSeeder {
                 mapOf(
                     "name" to comm.name,
                     "city" to comm.city,
+                    "imageUrl" to comm.imageUrl,
                     "verified" to comm.verified,
                     "domainWhitelist" to comm.domains,
                     "createdAt" to Timestamp.now(),
@@ -526,6 +532,7 @@ object DataSeeder {
         val id: String,
         val name: String,
         val city: String,
+        val imageUrl: String,
         val verified: Boolean,
         val domains: List<String>,
         val courses: List<CourseData>,

@@ -43,6 +43,7 @@ data class CommunityEntity(
     @PrimaryKey val id: String,
     val name: String,
     val city: String,
+    val imageUrl: String,
     val verified: Boolean,
     val domainWhitelist: List<String>,
 )

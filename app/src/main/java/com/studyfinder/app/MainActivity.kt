@@ -28,9 +28,9 @@ class MainActivity : AppCompatActivity() {
         // Debug-only test data. The SharedPreferences flags inside seedAll stop
         // it re-running once seeded; see the checklist in DataSeeder.kt for the
         // Firestore-rules steps this depends on.
-        if (BuildConfig.DEBUG) {
-            DataSeeder.seedAll(this)
-        }
+        //if (BuildConfig.DEBUG) {
+        //    DataSeeder.seedAll(this)
+        //}
 
         val navHostFragment = supportFragmentManager
             .findFragmentById(R.id.nav_host_fragment) as NavHostFragment

@@ -26,7 +26,7 @@ import com.studyfinder.app.data.local.entity.SessionEntity
         MySessionEntity::class,
         ProfileEntity::class,
     ],
-    version = 1,
+    version = 2,
     exportSchema = false,
 )
 @TypeConverters(Converters::class)

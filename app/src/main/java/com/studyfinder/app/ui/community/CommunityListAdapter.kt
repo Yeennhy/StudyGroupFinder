@@ -5,6 +5,8 @@ import android.view.ViewGroup
 import androidx.recyclerview.widget.DiffUtil
 import androidx.recyclerview.widget.ListAdapter
 import androidx.recyclerview.widget.RecyclerView
+import com.bumptech.glide.Glide
+import com.studyfinder.app.R
 import com.studyfinder.app.databinding.ItemCommunityBinding
 import com.studyfinder.app.model.Community
 
@@ -34,6 +36,13 @@ class CommunityListAdapter(
             community.verified -> "Verified community"
             else -> "Open to everyone"
         }
+
+        Glide.with(b.ivLogo.context)
+            .load(community.imageUrl)
+            .placeholder(R.drawable.bg_photo_frame)
+            .error(R.drawable.bg_photo_frame)
+            .centerCrop()
+            .into(b.ivLogo)
 
         b.btnJoinCommunity.setOnClickListener { onClick(community) }
         b.root.setOnClickListener { onClick(community) }

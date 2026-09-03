@@ -10,6 +10,7 @@ data class Community(
     val id: String = "",
     val name: String = "",
     val city: String = "",
+    val imageUrl: String = "",
     /** true = joining requires an email domain in [domainWhitelist]. */
     val verified: Boolean = false,
     val domainWhitelist: List<String> = emptyList(),
