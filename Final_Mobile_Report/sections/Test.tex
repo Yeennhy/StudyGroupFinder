@@ -1,0 +1,85 @@
+\section{Testing and Evaluation}
+
+\subsection{Testing Strategy}
+
+Since most of the application's business logic revolves around \emph{multi-user} interaction (joining, inviting, approving, blocking, notifying), the primary testing strategy is \textbf{manual testing on a real device with two independent Firebase Authentication accounts}, rather than relying solely on unit tests exercised by a single account. Practical experience during development showed that several bugs only surfaced when testing with a second account — for example, the Firestore Rules permission bugs in Section~3.5, both of which only appear when the acting user is \emph{not} the session's host.
+
+Testing follows a checklist mapped directly to the functional requirements in Section~\ref{sec:functreq}, run against a freshly installed build (no leftover state from a previous run) after each major development milestone.
+
+\subsection{Key Test Scenarios}
+
+\begin{itemize}
+    \item \textbf{Two-account permission scenario}: Account A creates a gated session; Account B sends a join request; Account A approves/rejects it from Session Manage; verify the member counters and Inbox notifications update correctly on both sides.
+    \item \textbf{Network-state scenario}: open a data-driven screen with the network on, then disable connectivity — confirm the "showing cached data" banner appears and the previously loaded data still renders correctly; open the same screen with no network and an empty cache — confirm it correctly falls into the Error state rather than Offline.
+    \item \textbf{Runtime permission scenario}: deny the Camera/Location/Notification permissions — confirm the app never crashes and has a sensible fallback (silently reverting to a default, or a brief message) instead of a dead end.
+    \item \textbf{Cross-account sign-out/sign-in scenario}: sign out of Account A, sign in with Account B on the same device — confirm no data from Account A is still visible (checked directly against My Sessions, the screen most likely to leak stale data).
+    \item \textbf{Verified-community scenario}: attempt to join a verified community with an unverified email (expected: blocked, with a clear message), with a verified email on the wrong domain (expected: blocked), and with a valid account (expected: success).
+    \item \textbf{Firestore Security Rules Playground scenario}: tested independently in the console, not through the app — see Table~\ref{tab:rulesplayground}.
+\end{itemize}
+
+\subsection{Security Rules Test Cases}
+\label{sec:rulesplayground}
+
+Before building any screen that depends on them, the rules in Section~\ref{sec:security} were validated against ten simulated writes in the Firebase Console's Rules Playground (Table~\ref{tab:rulesplayground}). Rows 1, 4, and 7 correspond to the three flows a naive rule set would incorrectly block; rows 2, 5, 6, 8, and 9 check privilege-escalation and privacy leaks.
+
+\begin{table}[h]
+\centering
+\caption{Ten Rules Playground test cases}
+\label{tab:rulesplayground}
+\begin{tabular}{p{0.5cm}p{8.5cm}p{1.8cm}}
+\toprule
+\textbf{\#} & \textbf{Simulated write} & \textbf{Expected} \\
+\midrule
+1 & A non-host increments \texttt{joinedCount} and adds themselves to \texttt{memberUids} on an open session & Allow \\
+2 & The same write when \texttt{joinedCount} already equals \texttt{capacity} & Deny \\
+3 & A non-host attempts the same write on a gated session with no existing invitation & Deny \\
+4 & An invited user updates their own \texttt{members/\{uid\}} from \texttt{invited} to \texttt{accepted} & Allow \\
+5 & A user updates their own \texttt{members/\{uid\}} from \texttt{pending} to \texttt{accepted} & Deny \\
+6 & A user creates their own \texttt{members/\{uid\}} with \texttt{status: "admin"} & Deny \\
+7 & Account A creates a document in Account B's \texttt{inbox} with \texttt{fromUid = A} & Allow \\
+8 & Account A creates a document in Account B's \texttt{inbox} with \texttt{fromUid = C} (forged sender) & Deny \\
+9 & Account A reads Account B's \texttt{blocked} subcollection & Deny \\
+10 & A non-host edits a session's \texttt{title} field & Deny \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+\subsection{Test Results}
+
+Table~\ref{tab:testresult} summarizes results by functional area.
+
+\begin{table}[h]
+\centering
+\caption{Test results summary by functional area}
+\label{tab:testresult}
+\begin{tabular}{p{5.5cm}p{2cm}p{5cm}}
+\toprule
+\textbf{Functional area} & \textbf{Result} & \textbf{Notes} \\
+\midrule
+Sign up / sign in / forgot password / sign out & Pass & Verified against all 4 distinct Auth error codes \\
+Community Selection (REST API + verified gate) & Pass & Confirmed via a real network log of the REST call \\
+Home (filter/search/sort/distance) & Pass & Includes the location-permission-denied path \\
+Create / Edit / Manage session & Pass & Approve/reject flow verified with a second account \\
+Session Detail (10-state action button) & Pass & Full priority order verified, including both edge cases \\
+My Sessions (list + calendar) & Pass & \\
+Inbox (3 notification types + reminders) & Pass (with a caveat) & Reminders cannot push to a second device — see Section~\ref{sec:limitations} \\
+History + PDF export & Pass & \\
+Profile (edit, photo, block, dual view modes) & Pass & \\
+Four UI states throughout & Pass & The Error state is hard to trigger deliberately; only verified when a composite index was genuinely missing \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+\subsection{Known Limitations}
+\label{sec:limitations}
+
+Presented honestly, as encountered during development, rather than glossed over:
+
+\begin{itemize}
+    \item \textbf{"Host-only material upload" is enforced only in the UI}: Storage Rules cannot read Firestore data to check who the session host is, so this constraint only hides the upload control from non-hosts — it is not an unbreakable server-side guarantee. A proper fix would require an intermediary Cloud Function, outside this project's scope.
+    \item \textbf{The campus-location list in Create/Edit Session is not yet scoped per community}: although Firestore already stores per-community locations (\texttt{communities/\{id\}/locations}), the Create and Edit Session forms currently use one fixed list of four locations shared by every community, without reading this existing data. This is a follow-up implementation gap, not an architectural limitation.
+    \item \textbf{Reminders cannot be pushed to another device}: since Firebase Cloud Messaging is not integrated, WorkManager-based reminders are scheduled only on the device that performed the triggering action (self-join, self-accept) — when a host approves someone else's request, the reminder is scheduled on the host's device, not automatically on the approved user's device.
+    \item \textbf{PDF export has no direct share action}: after export, the file is only saved to a location chosen through the system dialog; there is no built-in \texttt{Intent.ACTION\_SEND} flow to share it immediately through another app.
+    \item \textbf{No \texttt{collectionGroup} query is used}: this is a deliberate design choice (Section~\ref{sec:datamodel}) made to avoid expanding the Security Rules surface, traded off against having to denormalize \texttt{memberUids} onto the parent document and manually keep that field consistent across every membership transaction.
+    \item \textbf{A data-overwrite bug in seed data was found during multi-account testing}: the team discovered that the script generating personalized seed data for a first-time sign-in (assigning host status on a fixed sample session) performed an unconditional document overwrite instead of checking existence first, so a second account signing in for the first time on the same device would silently "steal" host status from the first account with no warning. This is purely an artifact of the sample-data seeding script used for demos/testing, and has no effect on the application's real business logic when operating on genuine user data; it is recorded here as a lesson about checking existence before overwriting in Firestore write operations.
+\end{itemize}

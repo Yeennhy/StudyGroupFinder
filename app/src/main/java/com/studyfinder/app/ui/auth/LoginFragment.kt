@@ -83,9 +83,13 @@ class LoginFragment : Fragment() {
                     binding.tvPasswordError.isVisible = false
                 }
                 is ActionResult.Success -> {
-                    // Navigate to Home (Repository handles checking if community is set, 
-                    // but for now we follow the resolved route logic or just Home)
-                    goToHome()
+                    viewModel.resolveStartRoute { route ->
+                        if (!isAdded) return@resolveStartRoute
+                        when (route) {
+                            AuthViewModel.StartRoute.COMMUNITY_SELECTION -> goToCommunitySelection()
+                            else -> goToHome()
+                        }
+                    }
                 }
                 is ActionResult.Failure -> {
                     handleAuthError(result)

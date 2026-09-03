@@ -14,7 +14,10 @@ import android.widget.PopupMenu
 import android.widget.TextView
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.core.content.ContextCompat
+import androidx.core.view.isVisible
 import androidx.fragment.app.Fragment
+import androidx.transition.AutoTransition
+import androidx.transition.TransitionManager
 import com.studyfinder.app.util.applyFadeThroughTransitions
 import androidx.fragment.app.viewModels
 import androidx.lifecycle.Lifecycle
@@ -27,6 +30,7 @@ import com.google.android.gms.location.Priority
 import com.studyfinder.app.R
 import com.studyfinder.app.databinding.FragmentHomeBinding
 import com.studyfinder.app.model.CourseCategory
+import com.studyfinder.app.model.ExpectationLevel
 import com.studyfinder.app.model.SessionSort
 import com.studyfinder.app.model.SessionViewMode
 import com.studyfinder.app.model.TagType
@@ -78,11 +82,13 @@ class HomeFragment : Fragment() {
         binding.rvSessions.adapter = adapter
 
         binding.fabAdd.setOnClickListener { openCreateSession() }
-        binding.btnRetryHome.setOnClickListener { viewModel.retry() }
+        binding.stateError.btnStateRetry.setOnClickListener { viewModel.retry() }
+        binding.btnExpandFilters.setOnClickListener { viewModel.toggleFiltersExpanded() }
 
         wireSearch()
         wireSessionTypeChips()
         wireCourseTypeChips()
+        wireExpectationLevelChips()
         wireToggleAndSort()
         observeState()
     }
@@ -140,12 +146,27 @@ class HomeFragment : Fragment() {
         }
     }
 
+    private fun wireExpectationLevelChips() {
+        val row = listOf(
+            binding.chipExpAll to null,
+            binding.chipExpPass to ExpectationLevel.PASS,
+            binding.chipExpCasual to ExpectationLevel.CASUAL,
+            binding.chipExpGrind to ExpectationLevel.OVERACHIEVING,
+        )
+        row.forEach { (chip, level) ->
+            chip.setOnClickListener {
+                selectInRow(row.map { it.first }, chip)
+                viewModel.setExpectationLevel(level)
+            }
+        }
+    }
+
     private fun wireToggleAndSort() {
         binding.toggleConflicting.setOnClickListener {
             val next = binding.toggleConflicting.tag != true
             binding.toggleConflicting.tag = next
             binding.toggleConflicting.setBackgroundResource(
-                if (next) R.drawable.bg_toggle_selected else R.drawable.bg_toggle_unselected
+                if (next) R.drawable.bg_toggle_selected else R.drawable.bg_toggle_unselected_offset
             )
             viewModel.setHideOverlapping(next)
         }
@@ -237,15 +258,29 @@ class HomeFragment : Fragment() {
                         )
                     }
                 }
+                launch {
+                    viewModel.isFiltersExpanded.collect { expanded ->
+                        updateFiltersVisibility(expanded)
+                    }
+                }
                 viewModel.state.collect { state ->
                     StateRenderer.render(
                         state = state,
-                        loadingView = binding.progressHome,
-                        emptyView = binding.tvEmptyHome,
-                        errorView = binding.layoutErrorHome,
-                        offlineView = binding.bannerOfflineHome,
+                        loadingView = binding.stateLoading.root,
+                        emptyView = binding.stateEmpty.root,
+                        errorView = binding.stateError.root,
+                        offlineView = binding.stateOfflineBanner.root,
                         contentView = binding.rvSessions,
                     )
+                    
+                    if (state is UiState.Error) {
+                        android.util.Log.e("STUDY_FINDER_DEBUG", "Home load failed: ${state.message}", state.cause)
+                        
+                        binding.stateError.tvStateErrorMessage.setText(R.string.home_error)
+                        binding.stateError.tvStateErrorDetail.isVisible = true
+                        binding.stateError.tvStateErrorDetail.text = state.message
+                    }
+
                     val rows = when (state) {
                         is UiState.Success -> state.data
                         is UiState.Offline -> state.cached
@@ -259,11 +294,54 @@ class HomeFragment : Fragment() {
 
     // ------------------------------------------------------------------ helpers
 
+    private fun updateFiltersVisibility(expanded: Boolean) {
+        // Smooth layout transition for the overall container
+        TransitionManager.beginDelayedTransition(binding.root as ViewGroup, AutoTransition().apply {
+            duration = 300
+        })
+
+        val filterRows = listOf(
+            binding.scrollCategoryFilters,
+            binding.scrollCourseTypeFilters,
+            binding.scrollExpectationFilters
+        )
+
+        filterRows.forEachIndexed { index, view ->
+            if (expanded) {
+                // Staggered entrance: Fade in + slide up from a slight offset
+                view.isVisible = true
+                view.alpha = 0f
+                view.translationY = 20f
+                view.animate()
+                    .alpha(1f)
+                    .translationY(0f)
+                    .setDuration(300)
+                    .setStartDelay(index * 70L)
+                    .start()
+            } else {
+                // Exit: Fade out quickly
+                view.animate()
+                    .alpha(0f)
+                    .setDuration(150)
+                    .setStartDelay(0)
+                    .withEndAction { view.isVisible = false }
+                    .start()
+            }
+        }
+
+        val rotation = if (expanded) 90f else 0f
+        binding.btnExpandFilters.animate().rotation(rotation).setDuration(250).start()
+        
+        binding.btnExpandFilters.setBackgroundResource(
+            if (expanded) R.drawable.bg_toggle_selected else R.drawable.bg_toggle_unselected_offset
+        )
+    }
+
     private fun selectInRow(all: List<TextView>, selected: TextView) {
         all.forEach { chip ->
             val isSelected = chip === selected
             chip.setBackgroundResource(
-                if (isSelected) R.drawable.bg_pill_selected else R.drawable.bg_pill_unselected
+                if (isSelected) R.drawable.bg_pill_selected else R.drawable.bg_pill_unselected_offset
             )
         }
     }

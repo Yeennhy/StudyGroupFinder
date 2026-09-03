@@ -1,0 +1,156 @@
+\section{Implementation}
+
+This section walks through the implementation in the order a real user would encounter it, highlighting the engineering decisions behind each screen rather than just its visible behavior.
+
+\subsection{Splash and Authentication}
+
+\subsubsection{Splash Screen and Startup Routing}
+
+The splash screen (\texttt{SplashFragment}) displays the app's branding — the name "StudyCohort," the tagline "Study smarter, together," and a graduation-cap icon that shares its vector path with the app's launcher icon — while performing the three-way routing logic described in Section~\ref{sec:navflow}. The routing itself lives in \texttt{AuthViewModel.resolveStartRoute()}: if the user is not signed in, route to Login; if signed in, observe the user's profile document until a result arrives — route to Home if \texttt{communityId} is already set, otherwise (including the case of a document read failure) route to Community Selection. Using \texttt{popUpTo(splashFragment)/inclusive=true} on all three branches guarantees Splash can never be reached again via the Back button.
+
+\subsubsection{Sign Up}
+
+The registration form has five fields: full name, student ID, email, password, and confirm password. The order of operations on submit matters: (1) create the account via \texttt{createUserWithEmailAndPassword}; (2) write the \texttt{users/\{uid\}} document to Firestore \textbf{immediately}, since every subsequent screen reads it; (3) call \texttt{sendEmailVerification()}. After a successful sign-up, the app proactively signs the user back out and routes to a shared Success screen, forcing a fresh sign-in — this simplifies state handling compared to keeping the session alive through the rest of the registration flow.
+
+\subsubsection{Sign In}
+
+Four distinct \texttt{FirebaseAuthException} codes are handled explicitly instead of collapsing everything into a generic "something went wrong": wrong password, account not found, malformed email, and disabled account; a network failure (not a \texttt{FirebaseAuthException}) falls through to a default branch that surfaces the raw Firebase SDK message.
+
+\subsubsection{Forgot Password}
+
+Uses Firebase Authentication's \texttt{sendPasswordResetEmail()} directly; the actual password reset happens on a page hosted by Firebase, outside the application — there is no "enter a new password" screen inside the app.
+
+\subsubsection{Sign Out}
+
+On sign-out: call \texttt{auth.signOut()}, then clear all four Room tables (session, community, my-session, profile) to guarantee no residual data from a previous account is visible when a different account signs in on the same device, then navigate to Login with \texttt{popUpTo} the entire navigation graph.
+
+\subsection{Community Selection}
+
+The initial "browse all communities" list is loaded through Retrofit calling the Firestore REST endpoint directly (\texttt{https://firestore.googleapis.com/v1/projects/\{projectId\}/databases/(default)/documents/communities}) — satisfying the course's mandatory external-API requirement. As soon as the user types in the search box or selects a city chip, the flow switches to the regular Firestore SDK (\texttt{whereGreaterThanOrEqualTo} for prefix search).
+
+Verified communities are marked with a small checkmark icon next to the "Join Community" button. Joining a verified community checks two conditions in order: (1) the account's email is verified (\texttt{isEmailVerified}); if not, the user is asked to verify their email first; (2) the email's domain matches the community's \texttt{domainWhitelist}; if not, the join is rejected with a clear message. Unverified communities skip both checks.
+
+\subsection{Home}
+
+\subsubsection{Filtering, Search, and Sorting}
+
+Three independent filter-chip rows (session type, course type, expectation level) are sent to Firestore as genuine query conditions (not filtered client-side), which requires the matching composite indexes to already exist in the console. The search box, by contrast, performs a client-side, case-insensitive substring match across the title/course-ID/course-name fields of the already-fetched list, debounced by 350\,ms to avoid re-filtering on every keystroke. Four sort options — soonest time, name ascending/descending, nearest distance — are applied client-side on top of the filtered result set.
+
+\subsubsection{Distance Sorting (Haversine)}
+
+When the user selects distance-based sorting, the app requests the location permission if not already granted, fetches the current position once via \texttt{FusedLocationProviderClient.getCurrentLocation()} (falling back to \texttt{lastLocation} if unavailable), then computes the Haversine distance to each session's coordinates:
+
+\begin{verbatim}
+fun distanceKm(lat1, lng1, lat2, lng2): Double {
+    val R = 6371.0 // Earth's radius, km
+    val dLat = Math.toRadians(lat2 - lat1)
+    val dLng = Math.toRadians(lng2 - lng1)
+    val a = sin(dLat/2).pow(2) +
+            cos(Math.toRadians(lat1)) * cos(Math.toRadians(lat2)) *
+            sin(dLng/2).pow(2)
+    return R * 2 * atan2(sqrt(a), sqrt(1 - a))
+}
+\end{verbatim}
+
+If the user denies the location permission or a fix cannot be obtained, no error dialog is shown; the app silently falls back to sorting by time with a brief Toast message, keeping the experience uninterrupted.
+
+\subsubsection{Session Card Greying}
+
+A session card is greyed out (reduced opacity, header strip re-colored) and shown with a small notice label according to a strict priority: already full $>$ contains a member blocked by the viewer $>$ overlaps a session the viewer has already joined. The overlap condition is computed by observing the current user's own joined-sessions list in parallel, so joining or leaving a session updates the greying effect live without leaving the Home screen.
+
+\subsection{Session Lifecycle}
+
+\subsubsection{Create Session}
+
+The creation form includes: course ID and name (free text), course category (a fixed enum list), title, description, goals, an Open-to-All/Only-Requests toggle (mapped to \texttt{open}/\texttt{gated}), campus location, session type (normal/midterm/final), expectation level (pass/casual/overachieving), free-form tags, a start date and time, and a \textbf{duration slider} — seven notches from 30 minutes to 3 hours 30 minutes in 30-minute steps, letting the creator balance the time commitment for their own session instead of typing a raw minute value. Capacity is adjusted with a stepper, defaulting to 4 with a minimum of 2.
+
+Session creation uses a \texttt{WriteBatch} rather than two separate writes, to atomically create both the session document (\texttt{joinedCount = 1}, \texttt{memberUids = [hostUid]}) and the host's own member subdocument (status \texttt{admin}) in a single commit — preventing a process interruption between the two writes from ever leaving behind a session with no host. On success, the app navigates to the shared Success screen, from which it returns to Home.
+
+\subsubsection{Pick Up Session}
+
+From the read-only past view of a completed session (reached via History), the only remaining action button is "Pick up session." Confirming it opens Create Session with the \texttt{prefillFromSessionId} argument, which pre-fills every attribute of the old session (course, title, description, goals, session type, expectation level, location, capacity, open/gated mode, tags) — date, time, and duration are deliberately left blank, forcing the user to pick values relevant to the current moment. After the new session is created successfully, the app automatically sends an invitation to every \emph{accepted} member of the old session (excluding anyone who was only invited or still pending on the old one).
+
+\subsubsection{Session Detail --- the Action-Button State Machine}
+\label{sec:actionmatrix}
+
+This is the screen with the most intricate branching logic in the application: the action button at the bottom must reflect the exact relationship between the viewer and the session, evaluated strictly in the priority order shown in Table~\ref{tab:actionmatrix} (a condition higher in the table is always checked first).
+
+\begin{table}[h]
+\centering
+\caption{Evaluation order for the Session Detail action button}
+\label{tab:actionmatrix}
+\begin{tabular}{p{0.7cm}p{4.2cm}p{4cm}p{1.5cm}}
+\toprule
+\textbf{\#} & \textbf{Condition} & \textbf{Button text} & \textbf{Enabled} \\
+\midrule
+1 & Viewing in past mode (from History) & Pick up session & Yes \\
+2 & The session was cancelled by the host & Cancelled by host & No \\
+3 & The viewer is the host & Manage session & Yes \\
+4 & The viewer is already an accepted member & Leave session & Yes \\
+5 & The session is full & Session full & No \\
+6 & Contains a member blocked by the viewer & Contains blocked user & No \\
+7 & The viewer has a pending invite & Accept invite & Yes \\
+8 & The viewer has a pending request & Request pending & No \\
+9 & Otherwise: open mode & Join session & Yes \\
+10 & Otherwise: gated mode & Request to join & Yes \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+Two design points in this priority order stand out. First, "already a member" (condition~4) is checked \textbf{before} "session full" (condition~5) — meaning a member who joined earlier always keeps seeing "Leave session," even if the session later fills up with other people; only \emph{new} joiners are blocked by the capacity check. Second, "full" and "contains a blocked user" (conditions~5, 6) are checked \textbf{before} "has a pending invite" (condition~7) — meaning an outstanding invitation can effectively become "locked" if the session fills up or a blocked member joins before the invitee accepts.
+
+Blocking (condition~6) is evaluated \textbf{per viewer} — based on the currently signed-in account's own block list, not a global one — so two different users looking at the same session can legitimately see two different button states.
+
+Beyond the main action button, the screen also shows: a read-only pending-requests card (visible to the host on gated sessions with pending requesters — tapping a row only opens that user's profile; there is no approve/reject control here, that action only exists on Session Manage); a study-materials section (only the host sees the upload control, and only while the session is upcoming); and, for the host, a "Mark finished" button that transitions the session's status to \emph{finished}.
+
+\subsubsection{Session Manage --- a Staged-Changes Model}
+
+The host-only management screen follows a \emph{staged changes} model: approving/rejecting a join request is written to Firestore immediately, but editing session details and removing members are only held in the \texttt{ViewModel}'s in-memory state — the UI reflects them right away (a removed row disappears from the list), but nothing is actually committed to Firestore until the user taps "Save" at the bottom of the screen and confirms. Tapping Back while changes are still unsaved shows a "Discard changes?" dialog, offering to save before leaving or discard the pending changes entirely.
+
+Editing session details opens a dedicated full-screen dialog, sharing nearly every field with the Create Session form (except the open/gated toggle, which is controlled by its own switch directly on the Manage screen). When the final Save action actually commits to Firestore, every remaining member (except the host) receives a system notification in their Inbox — regardless of which specific field changed, any edit triggers the same notification. Cancelling a session (which does not delete the document, only sets its status to \emph{cancelled}) fans out an equivalent notification to every member, and also cancels the WorkManager reminder that had been scheduled for it.
+
+\subsubsection{Invite by Student ID}
+
+The search screen accepts a partial student ID or name (prefix search); when the search box is empty, it suggests members already in the same community. Selecting a person creates, in one action, a member subdocument with status \texttt{invited} and an \texttt{invite}-type Inbox entry for the invited user — the only mechanism through which an invitation "reaches" someone else's Inbox, relying on the cross-user \texttt{allow create} exception described in Section~\ref{sec:security}.
+
+\subsection{Study Material Attachments}
+
+Uploading uses \texttt{ACTION\_OPEN\_DOCUMENT} to pick an arbitrary file, reads its bytes via \texttt{ContentResolver}, uploads it to the \texttt{materials} bucket on Supabase Storage under the path \texttt{\{sessionId\}/\{fileName\}}, then writes the returned public URL into the \texttt{materialUrls} array on the session document (using \texttt{FieldValue.arrayUnion}). Deletion happens in reverse order: the URL is removed from Firestore first (so the UI updates instantly), and only then is the physical file removed from Supabase — if that second step fails, the error is only logged rather than failing the whole operation, since the visible state (Firestore) is already consistent.
+
+\subsection{My Sessions}
+
+\subsubsection{List View}
+
+The list of upcoming joined sessions is grouped by date, with a date-header row (Today/Tomorrow/or a full date) inserted before each group.
+
+\subsubsection{Calendar View --- Hand-Built, No External Library}
+
+Because Android's built-in \texttt{CalendarView} does not support custom per-day markers, the calendar grid is hand-built with a \texttt{RecyclerView} plus \texttt{GridLayoutManager(context, 7)}, rendering 42 cells (6 weeks) that always start on Monday regardless of the system locale, matching how a calendar is conventionally read. A day with sessions has its entire day-number circle filled in one color; the currently-selected day is filled with a different color — if a selected day also happens to have sessions, the selection color takes priority. On first opening the screen, the app automatically jumps to the month containing the nearest upcoming session and pre-selects that date.
+
+\subsection{Inbox}
+
+The notification list is grouped by date using interleaved date-pill rows. Three notification types are handled differently: an invitation (Accept and Details buttons, with Accept resolved immediately in-place without leaving Inbox); a join request — host-facing (a single Details button, routing straight to Session Manage for approval/rejection, not resolvable directly from Inbox); and a general system notification (no action buttons, tapping the row only marks it read).
+
+Reminders are scheduled via \texttt{WorkManager} when a user joins, accepts an invitation, or has their request approved by the host — with a 15-minute lead time before the session's start — and are cancelled when that user leaves the session or the host cancels it entirely. Because no server-side push service is integrated, a host approving someone else's request only schedules a reminder on the host's own device; it is not automatically pushed to the approved user's device.
+
+\subsection{History and PDF Export}
+
+Cancelled sessions are rendered with a dashed border and reduced opacity to visually distinguish them from normally completed sessions (solid border, full opacity). PDF export (not part of the original spec, added afterward) uses Android's standard \texttt{android.graphics.pdf.PdfDocument} API directly — no external library — building each page with a header, user details, and a list of past sessions with a status-colored badge, automatically paginating once content exceeds the page height. The file is written to a location chosen by the user through the system's standard save dialog (\texttt{ACTION\_CREATE\_DOCUMENT}); there is no share action immediately after export.
+
+\subsection{Profile}
+
+\subsubsection{Editing Information and the Activity Graph}
+
+Four editable groups: name/bio, community (routes to Community Selection in edit mode), personal details (department/major/admission year), and an activity heatmap drawn by a custom \texttt{View} (overriding \texttt{onMeasure}/\texttt{onDraw}, no charting library), coloring each day cell by the number of sessions joined over the last 90 days, sourced from the same \texttt{whereArrayContains("memberUids", uid)} query described in Section~\ref{sec:datamodel}.
+
+\subsubsection{Uploading a Profile Photo}
+
+Users can pick a photo from the system camera or the gallery (Android Photo Picker). The image previews immediately in the UI; the actual upload to Cloudinary only happens when "Save changes" is tapped, running concurrently with saving the other profile fields.
+
+\subsubsection{Blocking Users and the Two View Modes}
+
+When viewing someone else's profile (a non-null \texttt{uid} argument), the UI automatically switches to read-only mode: the bottom navigation bar is hidden, every edit control is hidden, and the sign-out button is replaced with a Block button. Blocking a user writes a document into a \texttt{blocked} subcollection \textbf{on the viewer's own} user document (not on the blocked user's document), ensuring each account only ever sees its own block list. The effect is reflected on Home immediately (greying out sessions that contain the blocked user) without a manual refresh, since \texttt{HomeViewModel} observes the session list and the block list in parallel.
+
+\subsection{Seed Data}
+
+To support testing and demonstration, the app ships with an automatically generated sample dataset (debug builds only) on first launch, covering multiple communities (both verified and unverified, each with its own campus locations and course catalog) and a range of edge-case sessions: a session already at capacity, a session containing a blocked member, a gated session with pending requests already queued, a member double-booked across two overlapping sessions, and an account that is simultaneously a host and has a pending request to review, to fully exercise the management flow. Seeding is guarded by a flag stored in \texttt{SharedPreferences} to remain idempotent — it does not re-seed on subsequent launches.

@@ -1,0 +1,93 @@
+\section{Overview}
+
+\subsection{Problem Statement}
+
+On university campuses, students still organize study groups mostly by hand, through disconnected chat groups on Facebook, Zalo, or Messenger. This approach has three concrete shortcomings from a software-engineering standpoint:
+
+\begin{itemize}
+    \item There is no way to filter by course, expectation level, or physical proximity within a campus, so a student has to manually sift through dozens of unrelated chat groups.
+    \item There is no reliable way to tell whether a group still has an open seat, is already full, or contains a member the student would rather not study with.
+    \item There is no activity history, no identity guarantee that the organizer actually belongs to the claimed school/department, and no automated reminder mechanism.
+\end{itemize}
+
+\textbf{Study Group Finder} (in-app display name: \emph{StudyCohort}) is an Android application built to replace this ad-hoc workflow with a structured system: students who belong to the same \emph{community} (school/department) can create, discover, and join study sessions filtered by course, time, location, and commitment level.
+
+\subsection{Objectives}
+
+\begin{itemize}
+    \item Build a complete Android application following the MVVM pattern, using Firebase (Authentication, Firestore, built-in offline persistence) as the primary data source and Room as the local cache layer.
+    \item Support the full lifecycle of a study session: creation, member invitation, join-request approval, editing, cancellation, and completion.
+    \item Provide session discovery through filtering, search, and sorting (by time, name, and geographic distance via the Haversine formula combined with device GPS).
+    \item Satisfy all three mandatory technical requirements of the course (Section~\ref{sec:coursereq}).
+    \item Deliver a consistent user experience with all four standard UI states (loading, empty, error, offline) on every screen that fetches data.
+\end{itemize}
+
+\subsection{Scope and Target Users}
+
+The application follows a multi-community model: after registering, each user selects (or is routed to) exactly one \emph{community} — representing a specific school or department — and only ever sees sessions, members, and campus locations that belong to that community. A community can be \emph{verified} (requires an email address on the school's domain, plus a verified email) or \emph{unverified} (open to anyone).
+
+The target audience is university students who need to find or organize course-based study groups. The technical scope is limited to Android (no iOS or web client), with no dedicated backend server — all business logic runs on the client and is constrained by Firestore Security Rules — and no server-triggered push notifications (FCM); reminders are handled entirely on-device via WorkManager.
+
+\subsection{Mandatory Course Requirements}
+\label{sec:coursereq}
+
+The project must independently demonstrate three core technical capabilities required by the course, separate from any business feature. Table~\ref{tab:coursereq} summarizes how each requirement is satisfied and where it is implemented.
+
+\begin{table}[h]
+\centering
+\caption{The three mandatory technical requirements and how they are satisfied}
+\label{tab:coursereq}
+\begin{tabular}{p{3.2cm}p{6cm}p{4cm}}
+\toprule
+\textbf{Requirement} & \textbf{How it is satisfied} & \textbf{Source location} \\
+\midrule
+Persistent local storage & Room (SQLite) acts as a read-only offline cache for every core screen; data remains visible with the network off & \texttt{data/local/} (4 entities, 4 DAOs) \\
+\addlinespace
+External API call & Retrofit calls \texttt{https://firestore.\allowbreak googleapis.com/v1/\ldots} (the raw Firestore REST API) directly to load the initial community list, bypassing the Firebase SDK & \texttt{data/remote/rest/PublicCommunityApi.kt} \\
+\addlinespace
+Device hardware capability & Camera (profile photo capture via a system intent) and GPS (\texttt{FusedLocationProviderClient} for distance-based sorting) & \texttt{ui/profile/ProfileFragment.kt}, \texttt{ui/home/HomeFragment.kt} \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+The second requirement (external API) is deliberately implemented as a manual REST call rather than the Firestore SDK, even though both reach the same underlying database — this is precisely the course's \emph{external API} requirement, and silently swapping it for the SDK would no longer satisfy it. The response uses Firestore's REST \emph{typed wire format} (every field wrapped in an object such as \texttt{\{"stringValue": ...\}}), which requires a dedicated DTO layer (\texttt{dto/FirestoreRestDto.kt}) before being mapped to the domain model.
+
+\subsection{Team Responsibilities}
+
+Work was split along two axes: account/infrastructure ownership, and session-lifecycle ownership. Table~\ref{tab:assignment} summarizes the primary assignment; the remaining screens (Home, Community, Inbox) were implemented jointly, since they depend on both areas.
+
+\begin{table}[h]
+\centering
+\caption{Detailed work assignment by module}
+\label{tab:assignment}
+\begin{tabular}{p{2.3cm}p{9.5cm}p{1.6cm}}
+\toprule
+\textbf{Member} & \textbf{Module / screen ownership} & \textbf{\%} \\
+\midrule
+Khoi &
+Firebase Console setup (Authentication, Firestore, Storage) and Security Rules authoring; \newline
+Shared navigation graph (\texttt{nav\_graph.xml}) and app header component; \newline
+Splash screen and three-way routing logic; \newline
+Seed-data script (\texttt{DataSeeder}); \newline
+Sign up / sign in / forgot password / sign out; \newline
+Profile screen (edit fields, activity graph, photo upload, block user, dual view modes)
+& \\
+\addlinespace
+Vi &
+Create / Edit / Manage session (including the staged-changes pattern); \newline
+Session Detail (action-state machine, study material attachments); \newline
+My Sessions (list view and self-built calendar view); \newline
+Session History (including PDF export)
+& \\
+\addlinespace
+Shared &
+Home (filters, search, sort, Haversine distance); \newline
+Community Selection (REST API, verified gate); \newline
+Inbox (three notification types, WorkManager reminders); \newline
+The four UI states applied across the whole application
+& \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+\emph{The \% column is left for the team to fill in based on an internal contribution assessment before submission.}

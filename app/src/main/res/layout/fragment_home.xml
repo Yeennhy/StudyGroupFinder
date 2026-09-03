@@ -169,12 +169,12 @@
 
     </HorizontalScrollView>
 
-    <!-- Toggle + sort row (Conflicting sessions / Sort) -->
+    <!-- Expectation-level filter row (ExpectationLevel, §7.2) -->
     <HorizontalScrollView
-        android:id="@+id/scrollToggleFilters"
+        android:id="@+id/scrollExpectationFilters"
         android:layout_width="0dp"
         android:layout_height="wrap_content"
-        android:layout_marginTop="12dp"
+        android:layout_marginTop="10dp"
         android:scrollbars="none"
         app:layout_constraintTop_toBottomOf="@id/scrollCourseTypeFilters"
         app:layout_constraintStart_toStartOf="parent"
@@ -187,11 +187,56 @@
             android:paddingStart="20dp"
             android:paddingEnd="20dp">
 
+            <TextView android:id="@+id/chipExpAll" style="@style/HomeFilterPillSelected" android:text="All Levels" />
+            <TextView android:id="@+id/chipExpPass" style="@style/HomeFilterPill" android:text="Pass" />
+            <TextView android:id="@+id/chipExpCasual" style="@style/HomeFilterPill" android:text="Casual" />
+            <TextView android:id="@+id/chipExpGrind" style="@style/HomeFilterPill" android:text="Overachieving" />
+
+        </LinearLayout>
+
+    </HorizontalScrollView>
+
+    <!-- Toggle + sort row (Conflicting sessions / Sort) -->
+    <HorizontalScrollView
+        android:id="@+id/scrollToggleFilters"
+        android:layout_width="0dp"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="12dp"
+        android:scrollbars="none"
+        app:layout_constraintTop_toBottomOf="@id/scrollExpectationFilters"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintEnd_toEndOf="parent">
+
+        <androidx.constraintlayout.widget.ConstraintLayout
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:paddingStart="20dp"
+            android:paddingEnd="20dp">
+
+            <ImageButton
+                android:id="@+id/btnExpandFilters"
+                android:layout_width="0dp"
+                android:layout_height="0dp"
+                android:background="@drawable/bg_toggle_unselected_offset"
+                android:src="@drawable/ic_chevron_right"
+                android:contentDescription="@string/home_toggle_filters_cd"
+                android:scaleType="centerInside"
+                android:paddingTop="8dp"
+                android:paddingBottom="11dp"
+                android:rotation="90"
+                android:minHeight="0dp"
+                android:minWidth="0dp"
+                app:tint="@color/graphite"
+                app:layout_constraintDimensionRatio="1:1"
+                app:layout_constraintTop_toTopOf="@id/tvSort"
+                app:layout_constraintBottom_toBottomOf="@id/tvSort"
+                app:layout_constraintStart_toStartOf="parent" />
+
             <TextView
                 android:id="@+id/tvSort"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:layout_marginEnd="10dp"
+                android:layout_marginStart="8dp"
                 android:background="@drawable/bg_toggle_unselected_offset"
                 android:text="@string/home_sort_label"
                 android:textColor="@color/graphite"
@@ -203,12 +248,16 @@
                 android:paddingEnd="19dp"
                 android:paddingTop="8dp"
                 android:paddingBottom="11dp"
-                android:fontFamily="@font/pjsans_bold" />
+                android:fontFamily="@font/pjsans_bold"
+                app:layout_constraintStart_toEndOf="@id/btnExpandFilters"
+                app:layout_constraintTop_toTopOf="parent"
+                app:layout_constraintBottom_toBottomOf="parent" />
 
             <TextView
                 android:id="@+id/toggleConflicting"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
+                android:layout_marginStart="10dp"
                 android:background="@drawable/bg_toggle_unselected_offset"
                 android:text="Hide Conflicts"
                 android:textColor="@color/graphite"
@@ -218,7 +267,10 @@
                 android:paddingEnd="19dp"
                 android:paddingTop="8dp"
                 android:paddingBottom="11dp"
-                android:fontFamily="@font/pjsans_bold" />
+                android:fontFamily="@font/pjsans_bold"
+                app:layout_constraintStart_toEndOf="@id/tvSort"
+                app:layout_constraintTop_toTopOf="parent"
+                app:layout_constraintBottom_toBottomOf="parent" />
 
             <TextView
                 android:id="@+id/toggleGrind"
@@ -234,7 +286,10 @@
                 android:paddingTop="8dp"
                 android:paddingBottom="8dp"
                 android:fontFamily="@font/pjsans_bold"
-                android:visibility="gone"/>
+                android:visibility="gone"
+                app:layout_constraintStart_toEndOf="@id/toggleConflicting"
+                app:layout_constraintTop_toTopOf="parent"
+                app:layout_constraintBottom_toBottomOf="parent" />
 
             <TextView
                 android:id="@+id/toggleCasual"
@@ -250,100 +305,59 @@
                 android:paddingTop="8dp"
                 android:paddingBottom="8dp"
                 android:fontFamily="@font/pjsans_bold"
-                android:visibility="gone"/>
+                android:visibility="gone"
+                app:layout_constraintStart_toEndOf="@id/toggleGrind"
+                app:layout_constraintTop_toTopOf="parent"
+                app:layout_constraintBottom_toBottomOf="parent" />
 
-        </LinearLayout>
+        </androidx.constraintlayout.widget.ConstraintLayout>
 
     </HorizontalScrollView>
 
     <!-- ===================== UI states (§7.2 / §2.1) ===================== -->
 
-    <ProgressBar
-        android:id="@+id/progressHome"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
+    <include
+        android:id="@+id/stateLoading"
+        layout="@layout/layout_state_loading"
+        android:layout_width="0dp"
+        android:layout_height="0dp"
         android:visibility="gone"
-        app:layout_constraintTop_toTopOf="@id/rvSessions"
-        app:layout_constraintBottom_toBottomOf="@id/rvSessions"
+        app:layout_constraintTop_toBottomOf="@id/scrollToggleFilters"
+        app:layout_constraintBottom_toTopOf="@id/navBar"
         app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintEnd_toEndOf="parent"
-        tools:visibility="gone" />
+        app:layout_constraintEnd_toEndOf="parent" />
 
-    <TextView
-        android:id="@+id/tvEmptyHome"
+    <include
+        android:id="@+id/stateEmpty"
+        layout="@layout/layout_state_empty"
+        android:layout_width="0dp"
+        android:layout_height="0dp"
+        android:visibility="gone"
+        app:layout_constraintTop_toBottomOf="@id/scrollToggleFilters"
+        app:layout_constraintBottom_toTopOf="@id/navBar"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintEnd_toEndOf="parent" />
+
+    <include
+        android:id="@+id/stateError"
+        layout="@layout/layout_state_error"
+        android:layout_width="0dp"
+        android:layout_height="0dp"
+        android:visibility="gone"
+        app:layout_constraintTop_toBottomOf="@id/scrollToggleFilters"
+        app:layout_constraintBottom_toTopOf="@id/navBar"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintEnd_toEndOf="parent" />
+
+    <include
+        android:id="@+id/stateOfflineBanner"
+        layout="@layout/layout_state_offline_banner"
         android:layout_width="0dp"
         android:layout_height="wrap_content"
-        android:layout_marginStart="40dp"
-        android:layout_marginEnd="40dp"
-        android:gravity="center"
-        android:text="@string/home_empty"
-        android:textColor="@color/graphite"
-        android:textSize="15sp"
-        android:fontFamily="@font/pjsans_regular"
-        android:visibility="gone"
-        app:layout_constraintTop_toTopOf="@id/rvSessions"
-        app:layout_constraintBottom_toBottomOf="@id/rvSessions"
-        app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintEnd_toEndOf="parent"
-        tools:visibility="gone" />
-
-    <LinearLayout
-        android:id="@+id/layoutErrorHome"
-        android:layout_width="0dp"
-        android:layout_height="wrap_content"
-        android:layout_marginStart="40dp"
-        android:layout_marginEnd="40dp"
-        android:gravity="center"
-        android:orientation="vertical"
-        android:visibility="gone"
-        app:layout_constraintTop_toTopOf="@id/rvSessions"
-        app:layout_constraintBottom_toBottomOf="@id/rvSessions"
-        app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintEnd_toEndOf="parent"
-        tools:visibility="gone">
-
-        <TextView
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:gravity="center"
-            android:text="@string/home_error"
-            android:textColor="@color/graphite"
-            android:textSize="15sp"
-            android:fontFamily="@font/pjsans_regular" />
-
-        <TextView
-            android:id="@+id/btnRetryHome"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:layout_marginTop="12dp"
-            android:background="@drawable/bg_pill_selected"
-            android:text="@string/state_retry"
-            android:textColor="@color/graphite"
-            android:textStyle="bold"
-            android:paddingStart="20dp"
-            android:paddingEnd="23dp"
-            android:paddingTop="8dp"
-            android:paddingBottom="11dp"
-            android:fontFamily="@font/pjsans_bold" />
-
-    </LinearLayout>
-
-    <TextView
-        android:id="@+id/bannerOfflineHome"
-        android:layout_width="0dp"
-        android:layout_height="wrap_content"
-        android:background="@color/theme_gray"
-        android:gravity="center"
-        android:padding="6dp"
-        android:text="@string/state_offline_banner"
-        android:textColor="@color/graphite"
-        android:textSize="12sp"
-        android:fontFamily="@font/pjsans_bold"
         android:visibility="gone"
         app:layout_constraintTop_toBottomOf="@id/scrollToggleFilters"
         app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintEnd_toEndOf="parent"
-        tools:visibility="gone" />
+        app:layout_constraintEnd_toEndOf="parent" />
 
     <FrameLayout
         android:id="@+id/fabAdd"
@@ -357,6 +371,7 @@
         android:focusable="true"
         android:paddingEnd="3dp"
         android:paddingBottom="4dp"
+        android:elevation="8dp"
         app:layout_constraintBottom_toTopOf="@id/navBar"
         app:layout_constraintEnd_toEndOf="parent">
 
@@ -378,6 +393,7 @@
         layout="@layout/fragment_navbar"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
+        android:elevation="8dp"
         app:layout_constraintBottom_toBottomOf="parent"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintEnd_toEndOf="parent" />

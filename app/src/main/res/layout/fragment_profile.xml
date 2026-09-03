@@ -18,6 +18,7 @@
         android:paddingBottom="40dp"
         android:clipChildren="false"
         android:fillViewport="true"
+        android:visibility="gone"
         app:layout_constraintTop_toTopOf="parent"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintEnd_toEndOf="parent"
@@ -157,19 +158,6 @@
                     android:paddingBottom="4dp"
                     android:fontFamily="@font/bricolagegrotesque_bold" />
 
-                <TextView
-                    android:id="@+id/tvResendVerification"
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:layout_marginTop="12dp"
-                    android:text="Resend verification email"
-                    android:textSize="14sp"
-                    android:textColor="@color/graphite"
-                    android:visibility="gone"
-                    android:fontFamily="@font/pjsans_regular"
-                    android:clickable="true"
-                    android:focusable="true"
-                    android:background="?attr/selectableItemBackgroundBorderless" />
 
                 <TextView
                     android:id="@+id/tvProfileBio"
@@ -213,7 +201,8 @@
                     android:layout_width="match_parent"
                     android:layout_height="2dp"
                     android:layout_marginTop="16dp"
-                    android:background="@color/graphite"/>
+                    android:background="@color/graphite"
+                    android:visibility="gone"/>
                 <TextView
                     android:id="@+id/blockmsg"
                     android:layout_width="wrap_content"
@@ -222,6 +211,7 @@
                     android:text="You blocked this user"
                     android:textColor="@color/deep_red"
                     android:fontFamily="@font/pjsans_bold"
+                    android:visibility="gone"
                     />
 
                 <com.google.android.material.button.MaterialButton
@@ -243,11 +233,47 @@
                     android:paddingTop="12dp"
                     android:paddingBottom="12dp"
                     android:includeFontPadding="false"
-                    android:fontFamily="@font/bricolagegrotesque_bold" />
+                    android:fontFamily="@font/bricolagegrotesque_bold"
+                    android:visibility="gone"/>
+                <TextView
+                    android:id="@+id/verifymsg"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="12dp"
+                    android:text="Your account has not been verified yet"
+                    android:textColor="@color/graphite"
+                    android:fontFamily="@font/pjsans_bold"
+                    android:textSize="14dp"
+                    android:visibility="gone"
+                    />
+                <TextView
+                    android:id="@+id/verifymsg2"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="8dp"
+                    android:text="A verification link was sent via email upon sign up"
+                    android:textColor="@color/graphite"
+                    android:fontFamily="@font/pjsans_regular"
+                    android:textSize="13dp"
+                    android:visibility="gone"
+                    />
+                <TextView
+                    android:id="@+id/tvResendVerification"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="8dp"
+                    android:text="Resend verification email"
+                    android:textSize="13sp"
+                    android:textColor="@color/graphite"
+                    android:fontFamily="@font/pjsans_regular"
+                    android:clickable="true"
+                    android:focusable="true"
+                    android:background="?attr/selectableItemBackgroundBorderless"
+                    android:visibility="gone"
+                    />
+
 
             </LinearLayout>
-
-
 
             <!-- ===== Card 2: Community (teal header, segmented) ===== -->
             <LinearLayout
@@ -268,6 +294,7 @@
                 app:layout_constraintEnd_toEndOf="parent">
 
                 <LinearLayout
+                    android:id="@+id/layoutCommunityHeader"
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
                     android:background="@drawable/bg_card_header_teal"
@@ -365,6 +392,7 @@
                 app:layout_constraintEnd_toEndOf="parent">
 
                 <RelativeLayout
+                    android:id="@+id/layoutPersonalDetailsHeader"
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
                     android:background="@drawable/bg_card_header_lblue"
@@ -617,6 +645,7 @@
                 app:layout_constraintEnd_toEndOf="parent">
 
                 <RelativeLayout
+                    android:id="@+id/layoutSessionActivityHeader"
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
                     android:background="@drawable/bg_card_header_red"
@@ -805,7 +834,7 @@
         android:layout_width="0dp"
         android:layout_height="wrap_content"
         android:visibility="gone"
-        app:layout_constraintTop_toTopOf="parent"
+        app:layout_constraintTop_toBottomOf="@id/appHeader"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintEnd_toEndOf="parent" />
 
@@ -815,8 +844,8 @@
         android:layout_width="0dp"
         android:layout_height="0dp"
         android:visibility="gone"
-        app:layout_constraintTop_toTopOf="parent"
-        app:layout_constraintBottom_toBottomOf="parent"
+        app:layout_constraintTop_toBottomOf="@id/appHeader"
+        app:layout_constraintBottom_toTopOf="@id/navBar"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintEnd_toEndOf="parent" />
 
@@ -826,8 +855,8 @@
         android:layout_width="0dp"
         android:layout_height="0dp"
         android:visibility="gone"
-        app:layout_constraintTop_toTopOf="parent"
-        app:layout_constraintBottom_toBottomOf="parent"
+        app:layout_constraintTop_toBottomOf="@id/appHeader"
+        app:layout_constraintBottom_toTopOf="@id/navBar"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintEnd_toEndOf="parent" />
 
@@ -837,8 +866,8 @@
         android:layout_width="0dp"
         android:layout_height="0dp"
         android:visibility="gone"
-        app:layout_constraintTop_toTopOf="parent"
-        app:layout_constraintBottom_toBottomOf="parent"
+        app:layout_constraintTop_toBottomOf="@id/appHeader"
+        app:layout_constraintBottom_toTopOf="@id/navBar"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintEnd_toEndOf="parent" />
 

@@ -12,6 +12,7 @@ import com.studyfinder.app.data.remote.firestore.FirestoreRefs.Field
 import com.studyfinder.app.data.remote.supabase.SupabaseClientProvider
 import com.studyfinder.app.model.BusyInterval
 import com.studyfinder.app.model.CourseCategory
+import com.studyfinder.app.model.ExpectationLevel
 import com.studyfinder.app.model.MemberStatus
 import com.studyfinder.app.model.Session
 import com.studyfinder.app.model.SessionMember
@@ -58,10 +59,10 @@ class SessionRepository {
         courseIdQuery: String? = null,
         tagType: TagType? = null,
         courseCategory: CourseCategory? = null,
+        expectationLevel: ExpectationLevel? = null,
     ): Flow<UiState<List<Session>>> = callbackFlow {
         var query: Query = FirestoreRefs.sessions()
             .whereEqualTo(Field.COMMUNITY_ID, communityId)
-            .orderBy(Field.START_TIME, Query.Direction.ASCENDING)
 
         if (!courseIdQuery.isNullOrBlank()) {
             query = query.whereEqualTo(Field.COURSE_ID, courseIdQuery)
@@ -72,6 +73,12 @@ class SessionRepository {
         if (courseCategory != null) {
             query = query.whereEqualTo(Field.COURSE_CATEGORY, courseCategory.wire)
         }
+        if (expectationLevel != null) {
+            query = query.whereEqualTo(Field.EXPECTATION_LEVEL, expectationLevel.wire)
+        }
+
+        // Apply sort AFTER all equality filters
+        query = query.orderBy(Field.START_TIME, Query.Direction.ASCENDING)
 
         var sawServer = false
         val listener = query.addSnapshotListener { snapshot, error ->

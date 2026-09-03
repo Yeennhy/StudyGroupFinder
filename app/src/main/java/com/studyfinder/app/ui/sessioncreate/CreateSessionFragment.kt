@@ -76,6 +76,10 @@ class CreateSessionFragment : Fragment() {
     }
 
     private fun setupSpinners() {
+        // Course Category
+        val categories = com.studyfinder.app.model.CourseCategory.entries.map { it.wire.replaceFirstChar { c -> c.uppercase() } }
+        binding.spinnerCourseCategory.adapter = ArrayAdapter(requireContext(), android.R.layout.simple_spinner_dropdown_item, categories)
+
         // Preparing for (TagType)
         val preppingFor = TagType.entries.map { it.wire.replaceFirstChar { c -> c.uppercase() } }
         binding.spinnerPreparingFor.adapter = ArrayAdapter(requireContext(), android.R.layout.simple_spinner_dropdown_item, preppingFor)
@@ -208,6 +212,9 @@ class CreateSessionFragment : Fragment() {
                 title = title,
                 description = binding.etDescription.text.toString(),
                 goals = binding.etGoals.text.toString(),
+                courseId = binding.etCourseId.text.toString(),
+                courseName = binding.etCourseName.text.toString(),
+                courseCategory = com.studyfinder.app.model.CourseCategory.entries[binding.spinnerCourseCategory.selectedItemPosition],
                 location = location,
                 tagType = tagType,
                 expectation = expectation,
@@ -288,6 +295,10 @@ class CreateSessionFragment : Fragment() {
 
     private fun fillUi(session: Session) {
         binding.apply {
+            etCourseId.setText(session.courseId)
+            etCourseName.setText(session.courseName)
+            spinnerCourseCategory.setSelection(com.studyfinder.app.model.CourseCategory.entries.indexOf(session.courseCategory))
+
             etTitle.setText(session.title)
             etDescription.setText(session.description)
             etGoals.setText(session.goals)

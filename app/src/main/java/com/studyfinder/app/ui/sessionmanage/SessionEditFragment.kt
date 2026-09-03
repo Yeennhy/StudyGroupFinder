@@ -92,6 +92,14 @@ class SessionEditFragment : DialogFragment() {
 
     private fun setupUI() {
         binding.apply {
+            etDialogCourseId.setText(session.courseId)
+            etDialogCourseName.setText(session.courseName)
+            
+            // Course Category
+            val categories = com.studyfinder.app.model.CourseCategory.entries.map { it.wire.replaceFirstChar { c -> c.uppercase() } }
+            spinnerDialogCourseCategory.adapter = ArrayAdapter(requireContext(), android.R.layout.simple_spinner_dropdown_item, categories)
+            spinnerDialogCourseCategory.setSelection(com.studyfinder.app.model.CourseCategory.entries.indexOf(session.courseCategory))
+
             etDialogTitle.setText(session.title)
             etDialogDescription.setText(session.description)
             etDialogGoals.setText(session.goals)
@@ -200,6 +208,7 @@ class SessionEditFragment : DialogFragment() {
 
                 val tagType = TagType.entries.getOrNull(spinnerDialogPreparingFor.selectedItemPosition) ?: TagType.NORMAL
                 val expectation = ExpectationLevel.entries.getOrNull(spinnerDialogExpectation.selectedItemPosition) ?: ExpectationLevel.PASS
+                val courseCategory = com.studyfinder.app.model.CourseCategory.entries.getOrNull(spinnerDialogCourseCategory.selectedItemPosition) ?: com.studyfinder.app.model.CourseCategory.OTHER
                 
                 val vm = (parentFragment as? SessionManageFragment)?.viewModel
                 val location = vm?.locations?.value?.getOrNull(spinnerDialogCampus.selectedItemPosition)
@@ -208,6 +217,9 @@ class SessionEditFragment : DialogFragment() {
                     title = title,
                     description = etDialogDescription.text.toString(),
                     goals = etDialogGoals.text.toString(),
+                    courseId = etDialogCourseId.text.toString().trim(),
+                    courseName = etDialogCourseName.text.toString().trim(),
+                    courseCategory = courseCategory,
                     tagType = tagType,
                     expectationLevel = expectation,
                     locationName = location?.name ?: session.locationName,

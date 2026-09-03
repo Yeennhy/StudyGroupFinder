@@ -26,6 +26,10 @@ class AuthRepository {
     /** Gates joining a *verified* community — see §7.1. */
     val isEmailVerified: Boolean get() = auth.currentUser?.isEmailVerified == true
 
+    suspend fun reloadUser() {
+        auth.currentUser?.reload()?.await()
+    }
+
     suspend fun signIn(email: String, password: String): ActionResult {
         return try {
             auth.signInWithEmailAndPassword(email, password).await()

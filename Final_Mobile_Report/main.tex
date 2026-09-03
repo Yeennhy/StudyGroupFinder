@@ -1,0 +1,113 @@
+\documentclass[12pt]{scrartcl}
+\usepackage[sexy]{evan}
+
+% \usepackage[english]{babel}
+
+\parindent 0pt
+\usepackage{hyperref}
+\usepackage{tasks}
+\usepackage{amsmath}
+\usepackage{amsfonts}
+\usepackage{amssymb}
+\usepackage{indentfirst}
+\usepackage{listings}
+\usepackage{color}
+\usepackage{bm}
+\usepackage{appendix}
+\setcounter{secnumdepth}{4}
+\usepackage{forest}
+\usepackage{float}
+\usepackage{amssymb}
+
+\usepackage{array}
+\usepackage{csquotes}
+\usepackage{enumitem}
+
+
+\newtheorem*{soln1}{Solution}
+\definecolor{dkgreen}{rgb}{0,0.6,0}
+\definecolor{gray}{rgb}{0.5,0.5,0.5}
+\definecolor{mauve}{rgb}{0.58,0,0.82}
+
+\usepackage{algorithm}
+\usepackage{algpseudocode}
+\usepackage{booktabs} 
+\usepackage{biblatex}
+
+\usepackage{listings}
+\usepackage{xcolor}
+\definecolor{codegreen}{rgb}{0,0.6,0}
+\definecolor{codegray}{rgb}{0.5,0.5,0.5}
+\definecolor{codepurple}{rgb}{0.58,0,0.82}
+\definecolor{backcolour}{rgb}{0.95,0.95,0.92}
+
+\lstdefinestyle{mystyle}{
+    backgroundcolor=\color{backcolour},   
+    commentstyle=\color{codegreen},
+    keywordstyle=\color{magenta},
+    numberstyle=\tiny\color{codegray},
+    stringstyle=\color{codepurple},
+    basicstyle=\ttfamily\footnotesize,
+    breakatwhitespace=false,         
+    breaklines=true,                 
+    captionpos=b,                    
+    keepspaces=true,                 
+    numbers=left,                    
+    numbersep=5pt,                  
+    showspaces=false,                
+    showstringspaces=false,
+    showtabs=false,                  
+    tabsize=2
+}
+\lstset{style=mystyle}
+
+\usepackage{tcolorbox}
+\addbibresource{references.bib}
+
+\newtcolorbox{gitbox}{
+  colback=white,
+  tcbox raise=5pt,
+}
+
+
+\newcommand{\coursename}{CS162 - Introduction to Computer Science II}
+\newcommand{\reportname}{BUSMAP}
+\newcommand{\reporttitle}{TECHNICAL REPORT}
+
+\newcommand{\studentname}{Nguyen Thi Yen Nhi (24125071) \\ Nguyen Anh Khoi \\ (24125060) \\ Le Van Vi \\(24125050)}
+\newcommand{\teachername}{Đỗ Trọng Lễ \\
+Huỳnh Viết Thám \\
+Trần Minh Triết}
+
+
+
+
+\ihead{\textbf{}}
+
+\begin{document}
+\input{title2}
+
+\renewcommand{\baselinestretch}{1}
+
+\renewcommand{\baselinestretch}{1}
+
+\title{Technical Report} 
+
+\renewcommand{\contentsname}{Summary}
+
+\newpage
+\tableofcontents
+\newpage
+
+\include{sections/Overview}
+\include{sections/Tech}
+\include{sections/Design}
+\include{sections/Implementation}
+\include{sections/Install}
+\include{sections/Test}
+\include{sections/Conclusion}
+
+\printbibliography
+
+
+\end{document}

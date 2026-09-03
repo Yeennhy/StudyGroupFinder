@@ -54,6 +54,80 @@
                 <TextView
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
+                    android:text="Course ID"
+                    android:textStyle="bold"
+                    android:textSize="16sp"
+                    android:textColor="@color/graphite"
+                    android:fontFamily="@font/bricolagegrotesque_bold" />
+
+                <EditText
+                    android:id="@+id/etCourseId"
+                    android:layout_width="match_parent"
+                    android:layout_height="41dp"
+                    android:layout_marginTop="8dp"
+                    android:background="@drawable/bg_input_field"
+                    android:hint="e.g. MTH252"
+                    android:textColor="@color/graphite"
+                    android:paddingStart="12dp"
+                    android:paddingEnd="12dp"
+                    android:gravity="center_vertical"
+                    android:singleLine="true"
+                    android:textSize="14sp"
+                    android:fontFamily="@font/pjsans_medium" />
+
+                <TextView
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="18dp"
+                    android:text="Course Name"
+                    android:textStyle="bold"
+                    android:textSize="16sp"
+                    android:textColor="@color/graphite"
+                    android:fontFamily="@font/bricolagegrotesque_bold" />
+
+                <EditText
+                    android:id="@+id/etCourseName"
+                    android:layout_width="match_parent"
+                    android:layout_height="41dp"
+                    android:layout_marginTop="8dp"
+                    android:background="@drawable/bg_input_field"
+                    android:hint="e.g. Calculus II"
+                    android:textColor="@color/graphite"
+                    android:paddingStart="12dp"
+                    android:paddingEnd="12dp"
+                    android:gravity="center_vertical"
+                    android:singleLine="true"
+                    android:textSize="14sp"
+                    android:fontFamily="@font/pjsans_medium" />
+
+                <TextView
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="18dp"
+                    android:text="Course Category"
+                    android:textStyle="bold"
+                    android:textSize="16sp"
+                    android:textColor="@color/graphite"
+                    android:fontFamily="@font/bricolagegrotesque_bold" />
+
+                <Spinner
+                    android:id="@+id/spinnerCourseCategory"
+                    android:layout_width="match_parent"
+                    android:layout_height="41dp"
+                    android:layout_marginTop="8dp"
+                    android:background="@drawable/bg_input_field"
+                    android:padding="8dp" />
+
+                <View
+                    android:layout_width="match_parent"
+                    android:layout_height="2dp"
+                    android:layout_marginTop="18dp"
+                    android:layout_marginBottom="18dp"
+                    android:background="@color/graphite" />
+
+                <TextView
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
                     android:text="Session Title"
                     android:textStyle="bold"
                     android:textSize="16sp"
@@ -456,7 +530,7 @@
                     android:thumb="@drawable/bg_slider_thumb"
                     android:thumbOffset="0dp"
                     android:splitTrack="false"
-                    android:minHeight="32dp" />
+                    android:minHeight="8dp" />
 
                 <RelativeLayout
                     android:layout_width="match_parent"
@@ -477,7 +551,7 @@
                         android:layout_height="wrap_content"
                         android:layout_alignParentEnd="true"
                         android:layout_marginTop="4dp"
-                        android:text="2h"
+                        android:text="3h30"
                         android:textSize="12sp"
                         android:textColor="@color/light_graphite"
                         android:fontFamily="@font/bricolagegrotesque_bold" />

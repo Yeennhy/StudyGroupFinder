@@ -26,7 +26,7 @@ class CommunityListAdapter(
 
         b.tvCommunityName.text = community.name
         b.tvLocation.text = community.city.ifBlank { "—" }
-        b.ivVerifiedBadge.visibility = if (community.verified) android.view.View.VISIBLE else android.view.View.GONE
+        b.ivJoinCheck.visibility = if (community.verified) android.view.View.VISIBLE else android.view.View.GONE
 
         b.tvMembers.text = when {
             community.verified && community.domainWhitelist.isNotEmpty() ->

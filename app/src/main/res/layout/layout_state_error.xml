@@ -3,6 +3,7 @@
      Wire btnStateRetry to re-run the failed load. -->
 <LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
     android:gravity="center"
@@ -37,6 +38,20 @@
         android:textColor="@color/graphite"
         android:textSize="17sp"
         android:fontFamily="@font/bricolagegrotesque_bold" />
+
+    <TextView
+        android:id="@+id/tvStateErrorDetail"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="8dp"
+        android:gravity="center"
+        android:textColor="@color/graphite"
+        android:alpha="0.7"
+        android:textSize="13sp"
+        android:fontFamily="@font/pjsans_medium"
+        android:visibility="gone"
+        tools:visibility="visible"
+        tools:text="Missing index error message..." />
 
     <TextView
         android:id="@+id/btnStateRetry"
