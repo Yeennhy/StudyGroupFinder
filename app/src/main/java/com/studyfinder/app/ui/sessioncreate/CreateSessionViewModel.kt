@@ -10,8 +10,11 @@ import com.studyfinder.app.model.Session
 import com.studyfinder.app.model.TagType
 import com.studyfinder.app.util.ActionResult
 import com.studyfinder.app.util.UiState
+import kotlinx.coroutines.flow.MutableSharedFlow
 import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.SharedFlow
 import kotlinx.coroutines.flow.StateFlow
+import kotlinx.coroutines.flow.asSharedFlow
 import kotlinx.coroutines.flow.collectLatest
 import kotlinx.coroutines.launch
 
@@ -27,8 +30,8 @@ class CreateSessionViewModel : ViewModel() {
     private val _prefilledSession = MutableStateFlow<Session?>(null)
     val prefilledSession: StateFlow<Session?> = _prefilledSession
 
-    private val _createResult = MutableStateFlow<ActionResult?>(null)
-    val createResult: StateFlow<ActionResult?> = _createResult
+    private val _createResult = MutableSharedFlow<ActionResult>(replay = 0)
+    val createResult: SharedFlow<ActionResult> = _createResult.asSharedFlow()
 
     private var currentCommunityId: String? = null
     private var prefillSessionId: String? = null
@@ -81,7 +84,9 @@ class CreateSessionViewModel : ViewModel() {
     ) {
         val communityId = currentCommunityId
         if (communityId == null) {
-            _createResult.value = ActionResult.Failure("Community not selected")
+            viewModelScope.launch {
+                _createResult.emit(ActionResult.Failure("Community not selected"))
+            }
             return
         }
 
@@ -112,18 +117,22 @@ class CreateSessionViewModel : ViewModel() {
             
             val result = sessionRepository.createSession(session)
             if (result is com.studyfinder.app.util.Result.Success) {
-                // If it was a "pick up", invite everyone from the old one
+                // If it was a "pick up", invite everyone from the old one.
+                // We launch this in a separate job so the Success screen shows
+                // immediately after the session itself is saved (§7.6).
                 prefillSessionId?.let { oldId ->
-                    sessionRepository.inviteAllFrom(oldId, result.data)
+                    viewModelScope.launch {
+                        sessionRepository.inviteAllFrom(oldId, result.data)
+                    }
                 }
-                _createResult.value = ActionResult.Success
+                _createResult.emit(ActionResult.Success)
             } else if (result is com.studyfinder.app.util.Result.Error) {
-                _createResult.value = ActionResult.Failure(result.message)
+                _createResult.emit(ActionResult.Failure(result.message))
             }
         }
     }
     
     fun resetResult() {
-        _createResult.value = null
+        // No-op for SharedFlow
     }
 }

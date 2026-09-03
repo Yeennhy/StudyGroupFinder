@@ -80,13 +80,22 @@ class SessionRepository {
                 return@addSnapshotListener
             }
             if (snapshot != null) {
-                var sessions = snapshot.documents.mapNotNull { FirestoreMappers.toSession(it) }
-                    .filter { it.status == SessionStatus.UPCOMING } // Only show active sessions on Home
+                val now = System.currentTimeMillis()
+                val sessions = snapshot.documents.mapNotNull { FirestoreMappers.toSession(it) }
+                
+                // §Lazy Finishing: If we see an UPCOMING session that has ended, trigger a DB update.
+                // This works for any user because of the updated Security Rules.
+                sessions.forEach { session ->
+                    if (session.status == SessionStatus.UPCOMING && session.isPast(now)) {
+                        scope.launch { finishSession(session.id) }
+                    }
+                }
+
+                val upcomingOnly = sessions.filter { it.status == SessionStatus.UPCOMING && !it.isPast(now) }
                 
                 // Cache to Room
-                val now = System.currentTimeMillis()
                 scope.launch {
-                    sessionDao.upsertAll(sessions.map { FirestoreMappers.toEntity(it, now) })
+                    sessionDao.upsertAll(upcomingOnly.map { FirestoreMappers.toEntity(it, now) })
                 }
 
                 // Cache-only data *after* we've already seen the server once =
@@ -117,6 +126,12 @@ class SessionRepository {
             if (snapshot != null && snapshot.exists()) {
                 val session = FirestoreMappers.toSession(snapshot)
                 if (session != null) {
+                    // §Lazy Finishing: Trigger update if user opens an expired session
+                    val now = System.currentTimeMillis()
+                    if (session.status == SessionStatus.UPCOMING && session.isPast(now)) {
+                        scope.launch { finishSession(session.id) }
+                    }
+
                     val fromCache = snapshot.metadata.isFromCache
                     if (!fromCache) sawServer = true
                     if (fromCache && sawServer) trySend(UiState.Offline(session))
@@ -190,7 +205,16 @@ class SessionRepository {
                     return@addSnapshotListener
                 }
                 if (snapshot != null) {
+                    val now = System.currentTimeMillis()
                     var sessions = snapshot.documents.mapNotNull { FirestoreMappers.toSession(it) }
+
+                    // §Lazy Finishing: Update user's own joined sessions if they are past due
+                    sessions.forEach { session ->
+                        if (session.status == SessionStatus.UPCOMING && session.isPast(now)) {
+                            scope.launch { finishSession(session.id) }
+                        }
+                    }
+
                     if (!includeCancelled) {
                         sessions = sessions.filter { it.status != SessionStatus.CANCELLED }
                     }
@@ -260,19 +284,23 @@ class SessionRepository {
     private val reminderLeadMillis = 15 * 60 * 1000L
 
     /**
-     * Best-effort: fetch the session, and if it starts more than the lead time
-     * from now, enqueue a unique WorkManager reminder. Failures are swallowed —
-     * a missing reminder must never fail the membership change that triggered it.
+     * Best-effort: schedule a WorkManager reminder. If the session is passed,
+     * we skip fetching it from network if we already have the model.
      */
     private suspend fun scheduleReminder(sessionId: String) {
         try {
             val snap = FirestoreRefs.session(sessionId).get().await()
             val session = FirestoreMappers.toSession(snap) ?: return
+            scheduleReminder(session)
+        } catch (_: Exception) {}
+    }
+
+    private fun scheduleReminder(session: Session) {
+        try {
             if (session.status != SessionStatus.UPCOMING) return
             val delay = session.startTimeMillis - reminderLeadMillis - System.currentTimeMillis()
-            ReminderWorker.schedule(StudyFinderApp.instance, sessionId, delay, session.title)
-        } catch (_: Exception) {
-        }
+            ReminderWorker.schedule(StudyFinderApp.instance, session.id, delay, session.title)
+        } catch (_: Exception) {}
     }
 
     private fun cancelReminder(sessionId: String) {
@@ -433,12 +461,18 @@ class SessionRepository {
             val sessionRef = FirestoreRefs.sessions().document()
             val memberRef = FirestoreRefs.member(sessionRef.id, uid)
             
+            // Optimistic Create (§7.4): We commit the batch and return Success immediately.
+            // Firestore handles the queueing and local cache update, making the transition
+            // to the Success screen feel instant even on slow networks.
             db.batch().apply {
                 set(sessionRef, FirestoreMappers.sessionCreatePayload(session, uid))
                 set(memberRef, FirestoreMappers.memberPayload(MemberStatus.ADMIN))
-            }.commit().await()
+            }.commit() // No await() here for snappiness
 
-            scheduleReminder(sessionRef.id)
+            // Schedule reminder immediately using the local data
+            val createdSession = session.copy(id = sessionRef.id)
+            scheduleReminder(createdSession)
+            
             Result.Success(sessionRef.id)
         } catch (e: Exception) {
             Result.Error(e.message ?: "Creation failed", e)
@@ -480,9 +514,11 @@ class SessionRepository {
     }
 
     suspend fun finishSession(sessionId: String): ActionResult = try {
+        android.util.Log.d("SessionRepo", "Auto-finishing session: $sessionId")
         FirestoreRefs.session(sessionId).update(Field.STATUS, SessionStatus.FINISHED.wire).await()
         ActionResult.Success
     } catch (e: Exception) {
+        android.util.Log.e("SessionRepo", "Auto-finish failed for $sessionId: ${e.message}")
         ActionResult.Failure(e.message ?: "Operation failed", e)
     }
 
@@ -533,21 +569,38 @@ class SessionRepository {
         }
     }
 
-    suspend fun inviteAllFrom(previousSessionId: String, newSessionId: String): ActionResult = try {
-        val oldSessionDoc = FirestoreRefs.session(previousSessionId).get().await()
-        val oldMemberUids = (oldSessionDoc.get(Field.MEMBER_UIDS) as? List<*>)?.mapNotNull { it as? String } ?: emptyList()
-        val currentUid = auth.currentUser?.uid
-        
-        val toInvite = oldMemberUids.filter { it != currentUid }
-        
-        toInvite.forEach { uid ->
-            ServiceLocator.inboxRepository.sendInvite(uid, newSessionId)
-            FirestoreRefs.member(newSessionId, uid).set(FirestoreMappers.memberPayload(MemberStatus.INVITED)).await()
+    suspend fun inviteAllFrom(previousSessionId: String, newSessionId: String): ActionResult {
+        return try {
+            val oldSessionDoc = FirestoreRefs.session(previousSessionId).get().await()
+            val oldMemberUids = (oldSessionDoc.get(Field.MEMBER_UIDS) as? List<*>)?.mapNotNull { it as? String } ?: emptyList()
+            val currentUid = auth.currentUser?.uid
+            
+            val toInvite = oldMemberUids.filter { it != currentUid }
+            if (toInvite.isEmpty()) return ActionResult.Success
+
+            // Use a batch for efficiency (§7.5)
+            val batch = db.batch()
+            toInvite.forEach { uid ->
+                // 1. Create membership doc
+                val memberRef = FirestoreRefs.member(newSessionId, uid)
+                batch.set(memberRef, FirestoreMappers.memberPayload(MemberStatus.INVITED))
+                
+                // 2. Add inbox item
+                val inboxRef = FirestoreRefs.inbox(uid).document()
+                val item = com.studyfinder.app.model.InboxItem(
+                    type = com.studyfinder.app.model.InboxType.INVITE,
+                    sessionId = newSessionId,
+                    fromUid = currentUid ?: "",
+                    message = "You have been invited to join a study session!"
+                )
+                batch.set(inboxRef, FirestoreMappers.inboxPayload(item, currentUid ?: ""))
+            }
+            
+            batch.commit().await()
+            ActionResult.Success
+        } catch (e: Exception) {
+            ActionResult.Failure(e.message ?: "Invites failed", e)
         }
-        
-        ActionResult.Success
-    } catch (e: Exception) {
-        ActionResult.Failure(e.message ?: "Invites failed", e)
     }
 
     fun splitByTime(
