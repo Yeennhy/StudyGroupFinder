@@ -26,8 +26,13 @@ import io.github.jan.supabase.storage.storage
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.SupervisorJob
+import kotlinx.coroutines.async
+import kotlinx.coroutines.awaitAll
 import kotlinx.coroutines.channels.awaitClose
+import kotlinx.coroutines.coroutineScope
 import kotlinx.coroutines.flow.Flow
+import kotlinx.coroutines.launch
+import kotlinx.coroutines.tasks.await
 import kotlinx.coroutines.flow.callbackFlow
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.flow
@@ -164,13 +169,21 @@ class SessionRepository {
                 if (snapshot != null) {
                     val members = snapshot.documents.mapNotNull { FirestoreMappers.toSessionMember(it) }
                     
-                    // Fetch profiles for each member
+                    // Parallel profile fetching to avoid waterfall lag (§7.5)
                     scope.launch {
-                        val membersWithProfiles = members.map { member ->
-                            val profileDoc = FirestoreRefs.user(member.uid).get().await()
-                            member.copy(profile = FirestoreMappers.toUserProfile(profileDoc))
+                        try {
+                            val membersWithProfiles = coroutineScope {
+                                members.map { member ->
+                                    async {
+                                        val profileDoc = FirestoreRefs.user(member.uid).get().await()
+                                        member.copy(profile = FirestoreMappers.toUserProfile(profileDoc))
+                                    }
+                                }.awaitAll()
+                            }
+                            trySend(UiState.Success(membersWithProfiles))
+                        } catch (e: Exception) {
+                            trySend(UiState.Error("Profile sync failed", e))
                         }
-                        trySend(UiState.Success(membersWithProfiles))
                     }
                 }
             }
@@ -260,13 +273,21 @@ class SessionRepository {
                 if (snapshot != null) {
                     val members = snapshot.documents.mapNotNull { FirestoreMappers.toSessionMember(it) }
                     
-                    // Fetch profiles so the names/avatars appear in the Manage list (§7.5)
+                    // Parallel profile fetching to avoid waterfall lag (§7.5)
                     scope.launch {
-                        val membersWithProfiles = members.map { member ->
-                            val profileDoc = FirestoreRefs.user(member.uid).get().await()
-                            member.copy(profile = FirestoreMappers.toUserProfile(profileDoc))
+                        try {
+                            val membersWithProfiles = coroutineScope {
+                                members.map { member ->
+                                    async {
+                                        val profileDoc = FirestoreRefs.user(member.uid).get().await()
+                                        member.copy(profile = FirestoreMappers.toUserProfile(profileDoc))
+                                    }
+                                }.awaitAll()
+                            }
+                            trySend(UiState.Success(membersWithProfiles))
+                        } catch (e: Exception) {
+                            trySend(UiState.Error("Profile sync failed", e))
                         }
-                        trySend(UiState.Success(membersWithProfiles))
                     }
                 }
             }
@@ -410,8 +431,10 @@ class SessionRepository {
             transaction.update(memberRef, Field.STATUS, MemberStatus.ACCEPTED.wire)
         }.await()
         
-        // Notify user via inbox
-        ServiceLocator.inboxRepository.fanOutSystemMessage(sessionId, listOf(uid), "Your request to join has been approved!")
+        // Notify user via inbox in background
+        scope.launch {
+            ServiceLocator.inboxRepository.fanOutSystemMessage(sessionId, listOf(uid), "Your request to join has been approved!")
+        }
         scheduleReminder(sessionId)
 
         ActionResult.Success
@@ -421,6 +444,26 @@ class SessionRepository {
 
     suspend fun rejectRequest(sessionId: String, uid: String): ActionResult = try {
         FirestoreRefs.member(sessionId, uid).delete().await()
+        
+        // Notify user about rejection in background
+        scope.launch {
+            try {
+                val sessionDoc = FirestoreRefs.session(sessionId).get().await()
+                val session = FirestoreMappers.toSession(sessionDoc)
+                val title = session?.title ?: "a session"
+                val item = com.studyfinder.app.model.InboxItem(
+                    type = com.studyfinder.app.model.InboxType.SYSTEM,
+                    sessionId = sessionId,
+                    fromUid = auth.currentUser?.uid,
+                    message = "Your request to join \"$title\" was not accepted."
+                )
+                val inboxRef = FirestoreRefs.inbox(uid).document()
+                inboxRef.set(FirestoreMappers.inboxPayload(item, auth.currentUser?.uid ?: "")).await()
+            } catch (e: Exception) {
+                // Background notification failure shouldn't crash the app
+            }
+        }
+
         ActionResult.Success
     } catch (e: Exception) {
         ActionResult.Failure(e.message ?: "Rejection failed", e)
@@ -490,10 +533,16 @@ class SessionRepository {
         val sessionRef = FirestoreRefs.session(session.id)
         sessionRef.update(FirestoreMappers.sessionEditPayload(session)).await()
         
-        // Notify members
+        // Notify members - Background Fan-out (§7.5)
         val memberUids = session.memberUids.filter { it != auth.currentUser?.uid }
         if (memberUids.isNotEmpty()) {
-            ServiceLocator.inboxRepository.fanOutSystemMessage(session.id, memberUids, "The session details have been updated.")
+            scope.launch {
+                ServiceLocator.inboxRepository.fanOutSystemMessage(
+                    session.id, 
+                    memberUids, 
+                    "Details for \"${session.title}\" have been updated."
+                )
+            }
         }
         
         ActionResult.Success
@@ -509,10 +558,16 @@ class SessionRepository {
         sessionRef.update(Field.STATUS, SessionStatus.CANCELLED.wire).await()
         cancelReminder(sessionId)
 
-        // Notify members
+        // Notify members - Background Fan-out (§7.5)
         val memberUids = session.memberUids.filter { it != auth.currentUser?.uid }
         if (memberUids.isNotEmpty()) {
-            ServiceLocator.inboxRepository.fanOutSystemMessage(sessionId, memberUids, "The session has been cancelled by the host.")
+            scope.launch {
+                ServiceLocator.inboxRepository.fanOutSystemMessage(
+                    sessionId, 
+                    memberUids, 
+                    "The session \"${session.title}\" has been cancelled by the host."
+                )
+            }
         }
         
         ActionResult.Success
