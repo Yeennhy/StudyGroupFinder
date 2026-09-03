@@ -129,8 +129,15 @@ class HomeViewModel : ViewModel() {
             is UiState.Loading -> return UiState.Loading
         }
 
+        // Apply "Lazy Finishing" (§3.1) — filter out sessions that have already ended
+        // or have been manually finished/cancelled.
+        val now = System.currentTimeMillis()
+        val upcomingOnly = sessions.filter { 
+            !it.isPast(now) && it.status == com.studyfinder.app.model.SessionStatus.UPCOMING 
+        }
+
         val query = f.courseIdQuery?.trim()?.lowercase()
-        val filtered = if (query.isNullOrEmpty()) sessions else sessions.filter { s ->
+        val filtered = if (query.isNullOrEmpty()) upcomingOnly else upcomingOnly.filter { s ->
             s.title.lowercase().contains(query) ||
                 s.courseId.lowercase().contains(query) ||
                 s.courseName.lowercase().contains(query)

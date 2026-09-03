@@ -275,9 +275,8 @@ class CreateSessionFragment : Fragment() {
             }
             launch {
                 viewModel.createResult.collect { result ->
-                    if (result != null) binding.stateLoading.root.isVisible = false
+                    binding.stateLoading.root.isVisible = false
                     if (result is ActionResult.Success) {
-                        viewModel.resetResult()
                         findNavController().navigate(
                             CreateSessionFragmentDirections.actionCreateSessionFragmentToSuccessFragment(
                                 message = "Session Created!",
