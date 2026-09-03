@@ -29,7 +29,15 @@ class CommunityViewModel : ViewModel() {
     private val _joinResult = MutableLiveData<ActionResult>(ActionResult.Idle)
     val joinResult: LiveData<ActionResult> = _joinResult
 
-    private var queryJob: Job? = null
+    private var loadJob: Job? = null
+
+    /** Full REST list, kept so search / city filter run client-side. */
+    private var all: List<Community> = emptyList()
+    private var wasOffline = false
+
+    /** Current query + city, applied together over [all]. */
+    private var query: String = ""
+    private var city: String? = null
 
     init {
         loadAllViaRest()
@@ -37,42 +45,62 @@ class CommunityViewModel : ViewModel() {
 
     /** The REST-backed browse list — the course's external-API requirement. */
     fun loadAllViaRest() {
-        queryJob?.cancel()
-        queryJob = viewModelScope.launch {
+        loadJob?.cancel()
+        loadJob = viewModelScope.launch {
             communityRepository.observeAllViaRest().collect { s ->
-                val list = when (s) {
-                    is UiState.Success -> s.data
-                    is UiState.Offline -> s.cached
-                    else -> null
+                when (s) {
+                    is UiState.Loading -> if (all.isEmpty()) _state.value = UiState.Loading
+                    is UiState.Error -> if (all.isEmpty()) _state.value = s
+                    is UiState.Success -> {
+                        all = s.data
+                        wasOffline = false
+                        publishCities()
+                        applyFilters()
+                    }
+                    is UiState.Offline -> {
+                        all = s.cached
+                        wasOffline = true
+                        publishCities()
+                        applyFilters()
+                    }
+                    is UiState.Empty -> {
+                        all = emptyList()
+                        applyFilters()
+                    }
                 }
-                if (list != null) {
-                    _cities.value = list.map { it.city }
-                        .filter { it.isNotBlank() }
-                        .distinct()
-                        .sorted()
-                }
-                _state.value = s.normalizeEmpty()
             }
         }
     }
 
-    fun search(query: String) {
-        val q = query.trim()
-        if (q.isEmpty()) {
-            loadAllViaRest()
-            return
+    /** Free-text search — case-insensitive substring over name + city (§7.1). */
+    fun search(q: String) {
+        query = q.trim()
+        applyFilters()
+    }
+
+    fun filterByCity(c: String?) {
+        city = c
+        applyFilters()
+    }
+
+    private fun applyFilters() {
+        var list = all
+        city?.let { c -> list = list.filter { it.city.equals(c, ignoreCase = true) } }
+        if (query.isNotEmpty()) {
+            val q = query.lowercase()
+            list = list.filter {
+                it.name.lowercase().contains(q) || it.city.lowercase().contains(q)
+            }
         }
-        queryJob?.cancel()
-        queryJob = viewModelScope.launch {
-            communityRepository.searchByName(q).collect { _state.value = it.normalizeEmpty() }
+        _state.value = when {
+            list.isEmpty() -> UiState.Empty()
+            wasOffline -> UiState.Offline(list)
+            else -> UiState.Success(list)
         }
     }
 
-    fun filterByCity(city: String) {
-        queryJob?.cancel()
-        queryJob = viewModelScope.launch {
-            communityRepository.searchByCity(city).collect { _state.value = it.normalizeEmpty() }
-        }
+    private fun publishCities() {
+        _cities.value = all.map { it.city }.filter { it.isNotBlank() }.distinct().sorted()
     }
 
     /**
@@ -90,7 +118,4 @@ class CommunityViewModel : ViewModel() {
     fun clearJoinResult() {
         _joinResult.value = ActionResult.Idle
     }
-
-    private fun UiState<List<Community>>.normalizeEmpty(): UiState<List<Community>> =
-        if (this is UiState.Success && data.isEmpty()) UiState.Empty() else this
 }
