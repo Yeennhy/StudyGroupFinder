@@ -14,6 +14,9 @@ import com.studyfinder.app.model.UserProfile
 import com.studyfinder.app.util.ActionResult
 import com.studyfinder.app.util.UiState
 import kotlinx.coroutines.ExperimentalCoroutinesApi
+import kotlinx.coroutines.async
+import kotlinx.coroutines.awaitAll
+import kotlinx.coroutines.coroutineScope
 import kotlinx.coroutines.flow.*
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.tasks.await
@@ -23,7 +26,6 @@ import kotlinx.coroutines.tasks.await
 class SessionManageViewModel : ViewModel() {
 
     private val sessionRepository = ServiceLocator.sessionRepository
-    private val inboxRepository = ServiceLocator.inboxRepository
     private val profileRepository = ServiceLocator.profileRepository
 
     private val _session = MutableStateFlow<UiState<Session>>(UiState.Loading)
@@ -46,9 +48,14 @@ class SessionManageViewModel : ViewModel() {
 
     private val _searchQuery = MutableStateFlow("")
     
+    private val _isLoading = MutableStateFlow(false)
+    val isLoading: StateFlow<Boolean> = _isLoading
+    
+    @OptIn(kotlinx.coroutines.FlowPreview::class)
     val searchResults: StateFlow<List<UserProfile>> = combine(_session, _searchQuery) { sessionState, query ->
         Pair(sessionState, query)
-    }.flatMapLatest { (sessionState, query) ->
+    }.debounce(300) // Debounce search to prevent waterfall lag (§7.5)
+    .flatMapLatest { (sessionState, query) ->
         val communityId = (sessionState as? UiState.Success)?.data?.communityId
         flow {
             if (query.isBlank()) {
@@ -114,14 +121,18 @@ class SessionManageViewModel : ViewModel() {
     fun approve(uid: String) {
         val sid = currentSessionId ?: return
         viewModelScope.launch {
+            _isLoading.value = true
             _actionResult.value = sessionRepository.approveRequest(sid, uid)
+            _isLoading.value = false
         }
     }
 
     fun reject(uid: String) {
         val sid = currentSessionId ?: return
         viewModelScope.launch {
+            _isLoading.value = true
             _actionResult.value = sessionRepository.rejectRequest(sid, uid)
+            _isLoading.value = false
         }
     }
 
@@ -143,15 +154,20 @@ class SessionManageViewModel : ViewModel() {
         val toRemove = _removedMemberUids.value
 
         viewModelScope.launch {
+            _isLoading.value = true
             try {
                 // 1. Save session edits
                 if (_pendingSession.value != null) {
                     sessionRepository.editSession(sessionToSave)
                 }
 
-                // 2. Remove members
-                toRemove.forEach { uid ->
-                    sessionRepository.leaveOrRemove(sid, uid)
+                // 2. Remove members in parallel (§7.5)
+                if (toRemove.isNotEmpty()) {
+                    coroutineScope {
+                        toRemove.map { uid ->
+                            async { sessionRepository.leaveOrRemove(sid, uid) }
+                        }.awaitAll()
+                    }
                 }
 
                 _actionResult.value = ActionResult.Success
@@ -159,6 +175,8 @@ class SessionManageViewModel : ViewModel() {
                 _removedMemberUids.value = emptySet()
             } catch (e: Exception) {
                 _actionResult.value = ActionResult.Failure(e.message ?: "Update failed")
+            } finally {
+                _isLoading.value = false
             }
         }
     }
@@ -166,14 +184,18 @@ class SessionManageViewModel : ViewModel() {
     fun cancelSession() {
         val sid = currentSessionId ?: return
         viewModelScope.launch {
+            _isLoading.value = true
             _actionResult.value = sessionRepository.cancelSession(sid)
+            _isLoading.value = false
         }
     }
 
     fun finishSession() {
         val sid = currentSessionId ?: return
         viewModelScope.launch {
+            _isLoading.value = true
             _actionResult.value = sessionRepository.finishSession(sid)
+            _isLoading.value = false
         }
     }
 
@@ -203,19 +225,38 @@ class SessionManageViewModel : ViewModel() {
 
     fun inviteUser(uid: String) {
         val sid = currentSessionId ?: return
+        val db = com.google.firebase.firestore.FirebaseFirestore.getInstance()
+        
         viewModelScope.launch {
+            _isLoading.value = true
             try {
+                // Use a batch to perform both actions in one request for snappiness (§7.4)
+                val batch = db.batch()
+                
                 // 1. Create member doc with status INVITED
-                FirestoreRefs.member(sid, uid).set(
-                    FirestoreMappers.memberPayload(MemberStatus.INVITED)
-                ).await()
+                val memberRef = FirestoreRefs.member(sid, uid)
+                batch.set(memberRef, FirestoreMappers.memberPayload(MemberStatus.INVITED))
                 
                 // 2. Send inbox notification
-                inboxRepository.sendInvite(uid, sid)
+                val myUid = com.google.firebase.auth.FirebaseAuth.getInstance().currentUser?.uid ?: throw Exception("Not signed in")
+                val item = com.studyfinder.app.model.InboxItem(
+                    type = com.studyfinder.app.model.InboxType.INVITE,
+                    sessionId = sid,
+                    fromUid = myUid,
+                    message = "You have been invited to join a study session!"
+                )
+                val inboxRef = FirestoreRefs.inbox(uid).document()
+                batch.set(inboxRef, FirestoreMappers.inboxPayload(item, myUid))
+                
+                // Fire-and-forget: The write is committed to the local cache and the
+                // network queue immediately. We don't await the network confirmation.
+                batch.commit()
                 
                 _actionResult.value = ActionResult.Success
             } catch (e: Exception) {
                 _actionResult.value = ActionResult.Failure(e.message ?: "Invite failed")
+            } finally {
+                _isLoading.value = false
             }
         }
     }

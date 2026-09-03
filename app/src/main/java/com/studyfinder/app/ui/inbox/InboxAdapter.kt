@@ -99,7 +99,12 @@ class InboxAdapter(
                     }
                 }
                 InboxType.SYSTEM -> {
-                    binding.root.setOnClickListener { if (!item.read) onMarkRead(item) }
+                    binding.root.setOnClickListener { 
+                        if (!item.read) onMarkRead(item)
+                        if (item.sessionId != null) {
+                            onDetails(item)
+                        }
+                    }
                 }
             }
         }

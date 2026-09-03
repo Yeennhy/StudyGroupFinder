@@ -87,6 +87,11 @@ class SessionManageFragment : Fragment() {
 
         viewLifecycleOwner.lifecycleScope.launch {
             launch {
+                viewModel.isLoading.collectLatest { loading ->
+                    binding.actionLoadingOverlay.isVisible = loading
+                }
+            }
+            launch {
                 viewModel.session.collectLatest { state ->
                     com.studyfinder.app.ui.common.StateRenderer.render(
                         state = state,
