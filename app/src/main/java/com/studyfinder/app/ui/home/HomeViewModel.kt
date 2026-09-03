@@ -92,24 +92,19 @@ class HomeViewModel : ViewModel() {
                 mine.map { BusyInterval(it.startTimeMillis, it.endTimeMillis, it.title) }
             }
 
-            _filters
-                .flatMapLatest { f ->
-                    combine(
-                        // Search is applied client-side over title/courseId/
-                        // courseName (substring, case-insensitive) so "calc"
-                        // matches "Calculus 1..." and no extra composite index
-                        // is needed — only the chips filter server-side.
-                        sessionRepository.observeCommunitySessions(
-                            communityId, null, f.tagType, f.courseCategory, f.expectationLevel
-                        ),
-                        profileRepository.observeBlockedUids(),
-                        _myLocation,
-                        busyFlow,
-                    ) { sessions, blocked, loc, busy ->
-                        buildRows(sessions, blocked, loc, f, busy, myUid)
-                    }
-                }
-                .collect { _state.value = it }
+            // ALL filtering (chips + search) is client-side over one plain
+            // `communityId + orderBy(startTime)` query. That query needs only
+            // the single composite index every project already has, so no chip
+            // combination ever triggers a "this query requires an index" error.
+            combine(
+                sessionRepository.observeCommunitySessions(communityId),
+                profileRepository.observeBlockedUids(),
+                _myLocation,
+                busyFlow,
+                _filters,
+            ) { sessions, blocked, loc, busy, f ->
+                buildRows(sessions, blocked, loc, f, busy, myUid)
+            }.collect { _state.value = it }
         }
     }
 
@@ -136,11 +131,19 @@ class HomeViewModel : ViewModel() {
             !it.isPast(now) && it.status == com.studyfinder.app.model.SessionStatus.UPCOMING 
         }
 
+        // ---- client-side chip filters -----------------------------------------
+        var filtered = upcomingOnly
+        f.tagType?.let { t -> filtered = filtered.filter { it.tagType == t } }
+        f.courseCategory?.let { c -> filtered = filtered.filter { it.courseCategory == c } }
+        f.expectationLevel?.let { e -> filtered = filtered.filter { it.expectationLevel == e } }
+
         val query = f.courseIdQuery?.trim()?.lowercase()
-        val filtered = if (query.isNullOrEmpty()) upcomingOnly else upcomingOnly.filter { s ->
-            s.title.lowercase().contains(query) ||
-                s.courseId.lowercase().contains(query) ||
-                s.courseName.lowercase().contains(query)
+        if (!query.isNullOrEmpty()) {
+            filtered = filtered.filter { s ->
+                s.title.lowercase().contains(query) ||
+                    s.courseId.lowercase().contains(query) ||
+                    s.courseName.lowercase().contains(query)
+            }
         }
 
         var rows = filtered.map { s ->

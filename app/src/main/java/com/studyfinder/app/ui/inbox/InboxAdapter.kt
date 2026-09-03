@@ -78,9 +78,13 @@ class InboxAdapter(
 
             when (item.type) {
                 InboxType.INVITE -> {
-                    primary.visibility = View.VISIBLE
-                    primary.setText(R.string.inbox_accept)
-                    primary.setOnClickListener { onAccept(item) }
+                    // Accept is only offered while the invite is still open;
+                    // once handled (read) it just links to the session.
+                    if (!item.read) {
+                        primary.visibility = View.VISIBLE
+                        primary.setText(R.string.inbox_accept)
+                        primary.setOnClickListener { onAccept(item) }
+                    }
                     if (item.sessionId != null) {
                         secondary.visibility = View.VISIBLE
                         secondary.setText(R.string.inbox_details)

@@ -9,6 +9,7 @@ import com.studyfinder.app.util.ActionResult
 import com.studyfinder.app.util.UiState
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.launch
+import kotlinx.coroutines.withTimeoutOrNull
 
 /**
  * Shared by Splash, Login, Signup and Forgot Password (§7.0).
@@ -38,8 +39,10 @@ class AuthViewModel : ViewModel() {
                 onResolved(StartRoute.LOGIN)
                 return@launch
             }
-            val state = profileRepository.observeCurrentProfile()
-                .first { it !is UiState.Loading }
+            // Don't let a slow / offline profile read hang the splash forever.
+            val state = withTimeoutOrNull(8_000L) {
+                profileRepository.observeCurrentProfile().first { it !is UiState.Loading }
+            }
             val route = when (state) {
                 is UiState.Success ->
                     if (state.data.hasCommunity) StartRoute.HOME
