@@ -1,0 +1,110 @@
+\section{Technology Stack}
+
+\subsection{Language and UI Framework}
+
+The application is written entirely in Kotlin, using XML layouts with ViewBinding rather than Jetpack Compose. This choice was driven by three practical concerns: fine-grained control over screen-transition animations (\texttt{MaterialFadeThrough}), reuse of the ready-made Material Components widget set (date/time pickers, chips, bottom sheets), and lower technical risk given that most of the team was more experienced with XML than Compose within the project timeline. Every \texttt{Fragment}/\texttt{Activity} follows the standard ViewBinding pattern:
+
+\begin{verbatim}
+private var _binding: FragmentHomeBinding? = null
+private val binding get() = _binding!!
+override fun onDestroyView() {
+    super.onDestroyView()
+    _binding = null
+}
+\end{verbatim}
+
+Nulling the binding in \texttt{onDestroyView()} is mandatory: without it, the View reference leaks after the Fragment's view is destroyed while its ViewModel — scoped to the Fragment's lifecycle, not its view — is still alive (for example, when the fragment is temporarily hidden on the back stack).
+
+\subsection{MVVM Architecture}
+
+The application follows a unidirectional MVVM architecture~\cite{android-mvvm}, with Firestore as the single source of truth:
+
+\begin{verbatim}
+Firestore  --->  Repository  --->  Room  --->  ViewModel  --->  Fragment
+   ^                  |
+   +------- writes ---+
+\end{verbatim}
+
+Four rules are enforced throughout the codebase:
+\begin{enumerate}
+    \item Every write goes straight to Firestore; the UI/ViewModel layer never writes to Room directly.
+    \item Room is a read-only \emph{projection}, overwritten by the repository immediately after each successful Firestore read — a first-paint snapshot, not a source for business logic.
+    \item Screens observe Room through a \texttt{Flow}, never Firestore directly, with one exception: Session Detail, which keeps a real-time \texttt{addSnapshotListener} open so a host's edits appear instantly to anyone currently viewing that session — effectively substituting for a push notification.
+    \item Firestore's built-in offline persistence is never disabled; it owns the write queue while offline, while Room owns what gets rendered on screen.
+\end{enumerate}
+
+A direct consequence of this model: if a screen shows stale data, the bug is always in the repository's write-through path, never in the UI layer — which keeps debugging well-scoped.
+
+The project does not use a dependency-injection framework (Hilt/Koin); instead, a hand-rolled \texttt{ServiceLocator} is initialized once in \texttt{StudyFinderApp.kt} and lazily hands out the shared repositories used across the app.
+
+\subsection{Firebase Platform}
+
+\subsubsection{Firebase Authentication}
+Handles email/password registration and sign-in~\cite{firebase-auth}. The email-verification flag (\texttt{isEmailVerified}) is used as a gating condition when joining a \emph{verified} community.
+
+\subsubsection{Cloud Firestore}
+A NoSQL document database~\cite{firestore-docs} acting as the single source of truth for all business data (users, communities, sessions, notifications). Three Firestore-specific techniques are central to the implementation:
+\begin{itemize}
+    \item \textbf{Composite indexes}: queries that combine multiple filters (e.g. \texttt{communityId} + \texttt{tagType} + \texttt{courseCategory}, ordered by \texttt{startTime}) require a pre-created composite index in the console.
+    \item \textbf{Denormalization via \texttt{array-contains}}: since Firestore cannot query \emph{up} from a subcollection to its parent, the list of accepted member IDs is duplicated onto the parent session document as \texttt{memberUids}, enabling a single query — \texttt{whereArrayContains("memberUids", uid)} — that simultaneously powers My Sessions, History, the activity graph, and schedule-overlap detection.
+    \item \textbf{Transactions and batched writes}: every membership-state change (join, leave, approve, reject) is wrapped in a \texttt{runTransaction} to keep the \texttt{members/\{uid\}} subdocument and the parent's \texttt{joinedCount}/\texttt{memberUids} counters consistent; session creation uses a \texttt{WriteBatch} to atomically write the session document and the host's own member row in a single commit.
+\end{itemize}
+
+\subsubsection{Firebase Storage}
+Configured with its own, separate rule set (distinct from Firestore Rules). In practice, however, file storage for the application is mostly delegated to two third-party services instead (Section~\ref{sec:filestorage}).
+
+\subsection{Room — Local Cache}
+
+Room (a SQLite ORM~\cite{android-room}) consists of four entities and four matching DAOs, one per primary data stream (session, community, my-session, profile). A few implementation decisions worth noting:
+\begin{itemize}
+    \item \texttt{@TypeConverters} are required for \texttt{List<String>} fields (e.g. \texttt{memberUids}, \texttt{materialUrls}), since Room cannot persist list types directly; elements are joined using the ASCII \emph{Unit Separator} character (U+001F) to avoid collisions with commas that could legitimately appear in real data.
+    \item Timestamps are normalized to \texttt{Long} epoch-milliseconds directly in the entity; conversion to Firestore's \texttt{Timestamp} type happens only inside \texttt{FirestoreMappers}.
+    \item \texttt{fallbackToDestructiveMigration()} is used because Room here is purely a disposable cache — no migration is needed when the schema changes.
+    \item Every DAO exposes a \texttt{clear()} function, invoked on sign-out to guarantee no data leaks between accounts sharing the same device.
+\end{itemize}
+
+\subsection{Retrofit + Moshi — REST API}
+
+Used exclusively for the initial community-browsing screen (Section~\ref{sec:coursereq})~\cite{retrofit}. Because the Firestore REST API response~\cite{firestore-rest} is not flat JSON but a \emph{typed wire format}, the project defines an intermediate DTO layer and maps it to the domain model right at the repository boundary, so no other layer of the application ever has to know about \texttt{stringValue}/\texttt{booleanValue}/\texttt{arrayValue} wrappers. Both \texttt{moshi} and \texttt{moshi-kotlin-codegen} (processed via KSP) are required — omitting the codegen artifact triggers a \emph{reflective adapter missing} runtime failure.
+
+\subsection{File Storage: Cloudinary and Supabase Storage}
+\label{sec:filestorage}
+
+Beyond the configured Firebase Storage rules, the application actually relies on two dedicated file-storage services:
+\begin{itemize}
+    \item \textbf{Cloudinary}~\cite{cloudinary-docs} stores user profile photos (folder \texttt{users/profile\_pics}) via the Cloudinary Android SDK's \texttt{MediaManager}; the returned URL (\texttt{secure\_url}) is written to the \texttt{photoUrl} field on the user document in Firestore.
+    \item \textbf{Supabase Storage}~\cite{supabase-storage} stores study materials attached to sessions (bucket \texttt{materials}, path \texttt{\{sessionId\}/\{fileName\}}); Firestore only stores the resulting list of public URLs (\texttt{materialUrls}).
+\end{itemize}
+
+Separating file storage from Firebase Storage demonstrates integrating multiple third-party services within a single application, while making use of each platform's free tier.
+
+\subsection{WorkManager — On-Device Reminders}
+
+Session-start reminders use a \texttt{OneTimeWorkRequest}~\cite{android-workmanager} with an initial delay, scheduled via \texttt{enqueueUniqueWork} under a unique name \texttt{reminder\_\{sessionId\}} (policy \texttt{ExistingWorkPolicy.REPLACE} prevents duplicates if the reminder is (re)scheduled more than once). The work is cancelled when the user leaves the session or when the host cancels the session outright. Because Firebase Cloud Messaging is not integrated, reminders are entirely local to the device that performed the triggering action, with no ability to push a reminder as a side effect of someone else's action (Section~\ref{sec:limitations}).
+
+\subsection{Location and Camera — Device Capabilities}
+
+\subsubsection{FusedLocationProviderClient}
+Used to fetch the current location \textbf{once}~\cite{android-location} (\texttt{getCurrentLocation}, high accuracy priority) when the user selects distance-based sorting on Home, rather than subscribing to continuous location updates, to avoid unnecessary battery drain. Distance to each session is computed client-side using the Haversine formula~\cite{haversine}, based on the \texttt{lat}/\texttt{lng} coordinates already present in the query result.
+
+\subsubsection{Camera / Photo Picker / Document Picker}
+CameraX is deliberately not used, since it is intended for building a fully custom in-app camera UI, which is unnecessary here. Instead:
+\begin{itemize}
+    \item Taking a photo uses \texttt{ActivityResultContracts.TakePicture} (the system camera intent), requiring the runtime \texttt{CAMERA} permission.
+    \item Picking a photo from the gallery uses \texttt{ActivityResultContracts.PickVisualMedia} (the Android Photo Picker~\cite{android-photopicker}) — no storage permission is required on API~33+.
+    \item Attaching a study material uses \texttt{ACTION\_OPEN\_DOCUMENT} (the Storage Access Framework), which also requires no runtime permission.
+\end{itemize}
+
+\subsection{Navigation Component and Safe Args}
+
+All navigation uses a single \texttt{Activity} hosting one \texttt{NavHostFragment}~\cite{android-navigation}, with 14--15 destinations declared in \texttt{nav\_graph.xml}. Data is always passed between screens through \texttt{Safe Args} (never a manually-built \texttt{Bundle}), so an incorrect action name or argument type is caught at compile time rather than surfacing as a runtime crash. The four navigation arguments that shape a destination screen's behavior are described in Section~\ref{sec:navflow}.
+
+\subsection{Other Supporting Libraries}
+
+\begin{itemize}
+    \item \textbf{Glide}: loads and caches member avatars and community images.
+    \item \textbf{Material Components for Android}~\cite{material-components}: date/time pickers, chips, bottom-sheet dialogs, and the \texttt{MaterialFadeThrough} screen-transition effect.
+    \item \textbf{Kotlin Coroutines + \texttt{kotlinx-coroutines-play-services}}: allows calling \texttt{.await()} directly on a Firebase \texttt{Task<T>} instead of manually nesting callbacks.
+    \item \textbf{\texttt{android.graphics.pdf.PdfDocument}} (a standard Android API, no external library): used to build the exported session-history PDF.
+    \item \textbf{FileProvider}: safely shares \texttt{content://} URIs when opening files with an external app, avoiding a \texttt{FileUriExposedException}.
+\end{itemize}

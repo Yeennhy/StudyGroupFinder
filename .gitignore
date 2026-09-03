@@ -23,3 +23,17 @@ emulator_log.txt
 # Secrets and Configs
 app/google-services.json
 app/src/main/java/com/studyfinder/app/util/CloudinaryConfig.kt
+
+# LaTeX build artifacts (Final_Mobile_Report/)
+Final_Mobile_Report/*.aux
+Final_Mobile_Report/*.bbl
+Final_Mobile_Report/*.bcf
+Final_Mobile_Report/*.blg
+Final_Mobile_Report/*.fdb_latexmk
+Final_Mobile_Report/*.fls
+Final_Mobile_Report/*.log
+Final_Mobile_Report/*.pdf
+Final_Mobile_Report/*.pre
+Final_Mobile_Report/*.run.xml
+Final_Mobile_Report/*.toc
+Final_Mobile_Report/sections/*.aux

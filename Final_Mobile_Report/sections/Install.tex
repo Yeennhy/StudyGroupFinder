@@ -1,0 +1,40 @@
+\section{Installation and Setup}
+
+\subsection{Prerequisites}
+
+\begin{enumerate}
+    \item Create a Firebase project and enable three services: \textbf{Authentication} (Email/Password provider), \textbf{Cloud Firestore}, and \textbf{Storage}.
+    \item Create a Cloudinary account and obtain a \texttt{cloud\_name}, \texttt{api\_key}, and \texttt{api\_secret} — used to store user profile photos.
+    \item Create a Supabase project, obtain its URL and API key, and create a storage bucket named \texttt{materials} — used to store study materials attached to sessions.
+    \item Download \texttt{google-services.json} from the Firebase Console into the \texttt{app/} directory.
+    \item Paste the \textbf{Firestore Security Rules} and \textbf{Storage Rules} (Section~\ref{sec:security}) into the console — Storage denies everything by default, and Firestore Rules block all access until configured.
+    \item Fill in Cloudinary credentials in \texttt{CloudinaryConfig.kt} and Supabase credentials in \texttt{SupabaseClientProvider.kt}.
+    \item Replace \texttt{\{PROJECT\_ID\}} in \texttt{PublicCommunityApi.kt} with the real Firebase project ID.
+\end{enumerate}
+
+\subsection{Building and Running}
+
+The project uses the Gradle Kotlin DSL (\texttt{build.gradle.kts}), managed through Android Studio. A few notes for command-line builds on Windows:
+
+\begin{itemize}
+    \item Use Git Bash to run the build script — \textbf{not} \texttt{bash} inside PowerShell, which resolves to WSL and cannot see the \texttt{adb} instance managed by Android Studio.
+    \item \texttt{JAVA\_HOME} must point at the JBR bundled with Android Studio — the system's default \texttt{java} is typically an older JRE that is incompatible with the Android Gradle Plugin.
+\end{itemize}
+
+\begin{verbatim}
+# Git Bash
+./scripts/start-android.sh          # build + install + launch + stream logcat
+./scripts/start-android.sh :clean   # also wipes emulator data first
+\end{verbatim}
+
+\subsection{Sample Data for Demo/Testing}
+
+In debug builds, the app automatically generates a sample dataset (multiple communities, sessions in a variety of states) on first launch, with no manual steps required. Because this seeding step needs write access broader than the normal production rules, the recommended procedure is:
+
+\begin{enumerate}
+    \item Temporarily set the Firestore Rules to \texttt{allow read, write: if true;} in the console.
+    \item Run the debug build once and wait for the "Seeding complete!" toast.
+    \item Immediately restore the real rules (Section~\ref{sec:security}) — do not leave the project open to unrestricted writes.
+\end{enumerate}
+
+Seeding is guarded by a flag stored in \texttt{SharedPreferences} to remain idempotent across subsequent launches.

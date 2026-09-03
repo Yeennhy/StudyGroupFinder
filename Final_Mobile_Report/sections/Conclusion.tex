@@ -1,0 +1,30 @@
+\section{Conclusion and Future Work}
+
+\subsection{Results Achieved}
+
+The project delivers a complete Android application built on an MVVM architecture, with Firestore as the primary data source and Room serving as the offline cache layer, satisfying every mandatory functional area defined in Section~3.1: user authentication, profile management, community-scoped session discovery and organization, and the notification system. All three mandatory technical requirements of the course — persistent local storage, an external API call, and use of a device hardware capability — were implemented and verified concretely, not merely claimed.
+
+Beyond the mandatory requirements, the team added several features beyond the original specification to deepen the technical scope of the project: a hand-built calendar view for My Sessions, PDF export of session history, a "pick up session" mechanism that pre-fills and re-invites previous members automatically, and a user-blocking feature whose effect is reflected directly in the session list.
+
+\subsection{Lessons Learned}
+
+Developing this project surfaced several lessons with value beyond a typical programming assignment:
+
+\begin{itemize}
+    \item \textbf{Security rules are a design concern, not a final configuration step}: the two rules problems in Section~\ref{sec:security} (the join transaction, and cross-user notification fan-out) are both cases where a rule that "looks correct" on first read actually breaks the corresponding feature entirely. This shows that rules need to be designed alongside the business flow, not written after the UI is already finished.
+    \item \textbf{Single-account testing is not sufficient}: most of the most severe bugs encountered during development (including both rules problems above) only surfaced when testing with an account other than the one that created the data being acted on.
+    \item \textbf{Every Firestore write should be considered for idempotency}: the seed-data overwrite bug in Section~\ref{sec:limitations} is a concrete example of an unguarded \texttt{set()} call producing an unintended effect when invoked repeatedly across different contexts.
+    \item \textbf{Denormalization is a deliberate trade-off}: choosing to duplicate \texttt{memberUids} onto the parent document instead of using a \texttt{collectionGroup} query significantly simplifies the Security Rules, at the cost of requiring strict discipline to keep every membership-changing transaction synchronized in both places — missing either one silently corrupts the data in a way that is hard to detect later.
+\end{itemize}
+
+\subsection{Future Work}
+
+Several features were consciously deferred during the design phase because they require a larger architectural decision than this project's scope allows, and are proposed here as natural next steps:
+
+\begin{itemize}
+    \item \textbf{Device calendar synchronization}: importing/exporting sessions to the system calendar app (Google Calendar), requiring handling of the \texttt{READ\_CALENDAR}/\texttt{WRITE\_CALENDAR} permissions and two-way sync when a session changes.
+    \item \textbf{QR-code join}: allowing a host to generate a QR code representing a session, which members scan to join directly without manual search — well suited to sessions organized spontaneously on the spot.
+    \item \textbf{Server-side push notifications (Firebase Cloud Messaging)}: addressing the reminder limitation noted in Section~\ref{sec:limitations}, which would require a genuine architectural decision — introducing Cloud Functions to listen for Firestore changes and trigger notifications, instead of running all logic on the client as it does today.
+    \item \textbf{An AI-powered study assistant}: a chatbot backed by a large language model (e.g. via the Gemini API) that suggests relevant sessions or answers course-related questions — the lowest priority item, since it requires weighing a direct client-side API call (simple, but exposes the API key inside the APK) against routing through a dedicated backend (safer, but reintroduces exactly the "needs a server" problem the current architecture deliberately avoids).
+    \item \textbf{Server-side enforcement of "host-only material uploads"}: adding a Cloud Function that verifies host status before issuing an upload URL, addressing the limitation noted in Section~\ref{sec:limitations} that Storage Rules cannot currently read Firestore data.
+\end{itemize}

@@ -1,0 +1,330 @@
+\section{System Analysis and Design}
+
+\subsection{Functional Requirements}
+\label{sec:functreq}
+
+Functional requirements are grouped by screen cluster. Priority legend: \textbf{[M]} must-have, \textbf{[S]} should-have, \textbf{[N]} nice-to-have.
+
+\subsubsection{Authentication and Profile}
+\begin{itemize}
+    \item [M] Register with email/password; the user document is written to Firestore before the verification email is sent.
+    \item [M] Sign in, with distinct error messages for: wrong password, account not found, malformed email, network failure.
+    \item [M] Password recovery via Firebase's built-in recovery email.
+    \item [M] Sign out: fully clears the local Room cache to prevent data leaking between accounts sharing a device.
+    \item [M] Profile screen: displays and allows editing of community, department, major, admission year, full name, student ID, and bio; changes must persist across an app restart.
+    \item [M] Read-only mode when viewing another user's profile (all edit controls hidden).
+    \item [S] Upload a profile photo from the camera and from the gallery.
+    \item [N] GitHub-style activity heatmap.
+    \item [N] Block a user, with the effect visible on Home.
+\end{itemize}
+
+\subsubsection{Community}
+\begin{itemize}
+    \item [M] Appears automatically on first sign-in, before Home is reachable.
+    \item [M] The initial browse list loads via a REST API call, not the SDK — the course's mandatory external-API requirement.
+    \item [M] Search-as-you-type by name; filter by city.
+    \item [M] Joining an open community succeeds immediately.
+    \item [M] Joining a \emph{verified} community only succeeds when the email domain matches and the account is verified; failure must show a clear message.
+\end{itemize}
+
+\subsubsection{Home / Session List}
+\begin{itemize}
+    \item [M] Lists only sessions within the current user's community.
+    \item [M] Sort by time; sort by name (A--Z/Z--A).
+    \item [M] Search by title/course ID/course name.
+    \item [M] Filter chips: session type (normal/midterm/final), course type.
+    \item [M] Multiple filters and a sort applied together must return correct results (requires the matching composite index).
+    \item [S] Sort by geographic proximity, with the distance shown on each card.
+    \item [S] Denying the location permission must not crash the app — it silently falls back to sorting by time.
+    \item [N] Grey out or hide sessions that overlap the user's schedule or contain a blocked member.
+\end{itemize}
+
+\subsubsection{Session Lifecycle (Create/Detail/Manage)}
+\begin{itemize}
+    \item [M] Create a session with all required attributes: course, session type, expectation level, campus location, open/gated mode, duration, capacity.
+    \item [M] The creator immediately becomes a member with admin status, with the ratio correctly displayed as 1/Y.
+    \item [M] The action button on Session Detail must reflect the viewer's exact role and status (Section~\ref{sec:actionmatrix}).
+    \item [M] The pending-request list is shown only for gated sessions; approving/rejecting updates the member counters correctly.
+    \item [M] Editing the time/location and cancelling a session must notify every accepted member.
+    \item [S] Invite by student ID; the invited user receives an Inbox notification with an accept button.
+    \item [S] Attach and download study materials.
+\end{itemize}
+
+\subsubsection{My Sessions, Inbox, History}
+\begin{itemize}
+    \item [M] My Sessions list view, grouped by date.
+    \item [S] My Sessions calendar view, marking busy days.
+    \item [M] Inbox lists notifications; each invite row has an Accept button and a Details button.
+    \item [M] History shows past sessions, opening them in a read-only past-view mode.
+    \item [S] "Pick up session" pre-fills Create Session from a past session and re-invites its previous members.
+    \item [N] Export session history to PDF.
+\end{itemize}
+
+\subsection{Non-Functional Requirements}
+
+\begin{itemize}
+    \item \textbf{Four UI states} are mandatory on every data-fetching screen: loading, empty (with a real, specific message — not a generic placeholder), error (with a working retry action), and offline (cached data shown alongside a clear indicator).
+    \item \textbf{Multi-size screen adaptability}: \texttt{ConstraintLayout} combined with \texttt{dimens.xml} instead of hard-coded values; a few screens have a wide-screen layout variant (\texttt{values-sw600dp}).
+    \item \textbf{No data loss on rotation}: all filter/sort state is held in the \texttt{ViewModel}.
+    \item \textbf{Security}: every important business rule (who may modify what, capacity limits, no self-promotion to admin) must be enforced at the Firestore Security Rules layer, not only in the UI — since client-side checks can be bypassed.
+    \item \textbf{No dedicated backend}: all logic runs on-device; no Cloud Functions are used.
+\end{itemize}
+
+\subsection{Navigation Flow}
+\label{sec:navflow}
+
+The navigation graph's start destination is \texttt{splashFragment}. This screen reads both authentication state and community-membership state, then routes down one of three paths and removes itself from the back stack (since Firebase Auth persists a session across app launches, the start destination cannot be a static value declared in XML):
+
+\begin{verbatim}
+splashFragment --+-- not signed in ----------------> loginFragment
+                 +-- signed in, no community ------> communitySelectionFragment
+                 +-- signed in, has community -----> homeFragment
+
+loginFragment --+-> signupFragment --> communitySelectionFragment
+                +-> forgotPasswordFragment
+                +-> communitySelectionFragment   (new account)
+                +-> homeFragment                 (returning account)
+
+[ bottom nav ]  homeFragment | mySessionsFragment | inboxFragment | profileFragment
+
+homeFragment --+-> sessionDetailFragment (viewMode = LIVE)
+               +-> createSessionFragment (+ / FAB button)
+
+sessionDetailFragment --+-> sessionManageFragment      (host only)
+                        +-> profileFragment(uid)       (tap avatar -> read-only)
+                        +-> createSessionFragment(prefillFromSessionId)
+
+sessionManageFragment --+-> inviteByStudentIdFragment
+                        +-> profileFragment(uid)
+
+mySessionsFragment --+-> sessionDetailFragment (LIVE)
+                     +-> historyFragment
+
+historyFragment --> sessionDetailFragment (viewMode = PAST)
+
+inboxFragment --+-> sessionDetailFragment   ("Details" button on an invite row)
+                +-> sessionManageFragment   (join_request row, host-facing)
+
+profileFragment --+-> communitySelectionFragment(isEditMode = true)
+                  +-> loginFragment (sign out, popUpTo nav_graph inclusive)
+\end{verbatim}
+
+Four navigation arguments determine the destination screen's exact behavior, summarized in Table~\ref{tab:navargs}.
+
+\begin{table}[h]
+\centering
+\caption{Navigation arguments that shape screen behavior}
+\label{tab:navargs}
+\begin{tabular}{p{3.2cm}p{3.2cm}p{7cm}}
+\toprule
+\textbf{Argument} & \textbf{Screen} & \textbf{Meaning} \\
+\midrule
+\texttt{viewMode} & \texttt{sessionDetailFragment} & \texttt{LIVE} = normal view; \texttt{PAST} = read-only past view (from History) — every state-changing action button is disabled, replaced by a single "Pick up session" button \\
+\texttt{uid} & \texttt{profileFragment} & \texttt{null} = viewing one's own profile (editable, has sign-out); non-null = read-only view of another user's profile, only a Block button available \\
+\texttt{isEditMode} & \texttt{communitySelectionFragment} & \texttt{false} = first-time selection, then routes to Home; \texttt{true} = editing from Profile, then pops back \\
+\texttt{prefillFromSessionId} & \texttt{createSessionFragment} & non-null = reached via "pick up session"; pre-fills fields and re-invites the previous session's members after creation \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+\subsection{Data Model}
+\label{sec:datamodel}
+
+\subsubsection{Firestore Collections}
+
+Firestore is organized into the following top-level collections:
+
+\begin{itemize}
+    \item \texttt{communities/\{communityId\}} — community metadata: name, city, \texttt{verified} flag, accepted email domains (\texttt{domainWhitelist}); with two nested subcollections, \texttt{courses} and \texttt{locations}, holding each community's own course catalog and campus locations.
+    \item \texttt{users/\{uid\}} — user profile: name, student ID, current community, department/major/admission year, bio, avatar URL; with two nested subcollections, \texttt{inbox} (notifications) and \texttt{blocked} (block list — deliberately kept as a subcollection rather than an array field on the main document, so no other user can read whom a given user has blocked).
+    \item \texttt{sessions/\{sessionId\}} — session data: course, session type, expectation level, location, start/end time, capacity, mode (open/gated), status, and two key denormalized fields, \texttt{joinedCount} and \texttt{memberUids}; with a nested subcollection \texttt{members} tracking each participant's individual status (\texttt{accepted}/\texttt{invited}/\texttt{pending}/\texttt{admin}).
+\end{itemize}
+
+The key design decision is denormalizing \texttt{memberUids} onto the parent session document. Firestore has no way to query \emph{upward} — "which sessions have a \texttt{members/\{myUid\}} subdocument" is not expressible as an ordinary query — and a \texttt{collectionGroup} query, while theoretically capable of answering that, was deliberately excluded from the design because it would require its own separate rules block covering the entire collection group, meaningfully expanding the security surface that has to be reasoned about. The chosen alternative duplicates the list of \emph{accepted} member IDs directly onto the parent document, enabling a single query:
+
+\begin{verbatim}
+sessions().whereArrayContains("memberUids", uid).orderBy("startTime")
+\end{verbatim}
+
+that simultaneously drives My Sessions, History, the activity graph, and schedule-overlap detection. A direct consequence: \texttt{invited} and \texttt{pending} statuses are \textbf{not} counted in \texttt{joinedCount}/\texttt{memberUids} — that field means "accepted members," and every downstream feature depends on that exact meaning.
+
+\subsubsection{Room Entities (Local Cache)}
+
+Four Room entities map almost one-to-one to what must be visible immediately when the app reopens: \texttt{SessionEntity}, \texttt{CommunityEntity}, \texttt{MySessionEntity} (a dedicated projection driven by the \texttt{memberUids} query), and \texttt{ProfileEntity}. There is no separate domain layer between Firestore and the UI — the business model is used directly by the UI, and all mapping between Firestore documents, Room entities, and the model is centralized in \texttt{FirestoreMappers.kt}.
+
+\subsection{Security Design (Firestore Security Rules)}
+\label{sec:security}
+
+Rules~\cite{firestore-rules} are designed around one principle: every important business invariant must be enforced server-side, not only in the UI. Two rules that look "obviously correct" at first glance but would actually break the application if implemented naively are documented here in detail, since they carry the most transferable lessons.
+
+\subsubsection{Problem 1 --- Joining a Session}
+
+The naive approach: only the host may \texttt{update} a session document. But the join transaction increments \texttt{joinedCount} on that very document, executed \textbf{by the joining user}, not the host. Restricting updates to the host alone would roll back every non-host join transaction, so \textbf{no one but the host could ever join}. The fix is two helper functions, \texttt{joinsSelf()}/\texttt{leavesSelf()}, that allow a non-host to update only the membership counters, only for themselves, never past \texttt{capacity} — the seat limit is enforced in \emph{rules}, not only in the UI.
+
+\subsubsection{Problem 2 --- Inbox Fan-Out}
+
+Inviting, approving a request, editing, and cancelling a session all need to write a notification into \textbf{someone else's} \texttt{inbox}. An "owner-only write" rule would block every one of those, killing the entire Inbox feature. The fix: the owner keeps \texttt{read}/\texttt{update}/\texttt{delete}, but \textbf{any signed-in user may \texttt{create}} an item in another user's inbox — the one cross-user permission in the whole rule set — with the payload tightly constrained (\texttt{fromUid} must match the real sender, \texttt{read} must be initialized to \texttt{false}, message length capped at 500 characters) to prevent it from being abused as a spam channel.
+
+\subsubsection{Complete Firestore Security Rules}
+
+\begin{verbatim}
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+
+    function signedIn()   { return request.auth != null; }
+    function isSelf(uid)  { return signedIn() && request.auth.uid == uid; }
+
+    function isHostOf(sessionId) {
+      return signedIn() && request.auth.uid ==
+        get(/databases/$(database)/documents/sessions/$(sessionId)).data.hostUid;
+    }
+
+    function myMemberDoc(sessionId) {
+      return /databases/$(database)/documents/sessions/$(sessionId)/members/$(request.auth.uid);
+    }
+    function wasInvitedTo(sessionId) {
+      return exists(myMemberDoc(sessionId))
+        && get(myMemberDoc(sessionId)).data.status == 'invited';
+    }
+
+    function changedKeys() {
+      return request.resource.data.diff(resource.data).affectedKeys();
+    }
+
+    function joinsSelf() {
+      return changedKeys().hasOnly(['joinedCount', 'memberUids', 'updatedAt'])
+        && !(request.auth.uid in resource.data.memberUids)
+        && request.resource.data.memberUids.hasAll(resource.data.memberUids)
+        && request.resource.data.memberUids.size() == resource.data.memberUids.size() + 1
+        && request.auth.uid in request.resource.data.memberUids
+        && request.resource.data.joinedCount == resource.data.joinedCount + 1
+        && request.resource.data.joinedCount <= resource.data.capacity
+        && request.resource.data.status == 'upcoming'
+        && (resource.data.mode == 'open' || wasInvitedTo(sessionId));
+    }
+
+    function leavesSelf() {
+      return changedKeys().hasOnly(['joinedCount', 'memberUids', 'updatedAt'])
+        && request.auth.uid in resource.data.memberUids
+        && resource.data.memberUids.hasAll(request.resource.data.memberUids)
+        && request.resource.data.memberUids.size() == resource.data.memberUids.size() - 1
+        && !(request.auth.uid in request.resource.data.memberUids)
+        && request.resource.data.joinedCount == resource.data.joinedCount - 1;
+    }
+
+    match /communities/{communityId} {
+      allow read:  if true;
+      allow write: if false;
+    }
+
+    match /users/{uid} {
+      allow read:           if signedIn();
+      allow create, update: if isSelf(uid);
+      allow delete:         if false;
+
+      match /blocked/{blockedUid} {
+        allow read, write: if isSelf(uid);
+      }
+
+      match /inbox/{itemId} {
+        allow read, update, delete: if isSelf(uid);
+        allow create: if signedIn()
+          && request.resource.data.fromUid == request.auth.uid
+          && request.resource.data.type in ['invite', 'join_request', 'system']
+          && request.resource.data.read == false
+          && request.resource.data.message is string
+          && request.resource.data.message.size() <= 500;
+      }
+    }
+
+    match /sessions/{sessionId} {
+      allow read: if signedIn();
+
+      allow create: if signedIn()
+        && request.resource.data.hostUid == request.auth.uid
+        && request.resource.data.joinedCount == 1
+        && request.resource.data.memberUids == [request.auth.uid]
+        && request.resource.data.status == 'upcoming';
+
+      allow update: if (signedIn() && request.auth.uid == resource.data.hostUid)
+        || joinsSelf()
+        || leavesSelf();
+
+      allow delete: if signedIn() && request.auth.uid == resource.data.hostUid;
+
+      match /members/{uid} {
+        allow read: if signedIn();
+
+        allow create: if isHostOf(sessionId)
+          || (isSelf(uid)
+              && request.resource.data.status in ['pending', 'accepted']);
+
+        allow update: if isHostOf(sessionId)
+          || (isSelf(uid)
+              && resource.data.status == 'invited'
+              && request.resource.data.status == 'accepted');
+
+        allow delete: if isSelf(uid) || isHostOf(sessionId);
+      }
+    }
+  }
+}
+\end{verbatim}
+
+Beyond the two problems above, the rules also close two privilege-escalation paths: a user cannot write their own membership status as \texttt{admin}, and cannot self-approve a \texttt{pending} request into \texttt{accepted} (only the \texttt{invited} $\to$ \texttt{accepted} edge is legal to perform on oneself, matching the real-world semantics of "accepting an invitation").
+
+\subsubsection{Storage Rules — a Known Limitation}
+
+\begin{verbatim}
+rules_version = '2';
+service firebase.storage {
+  match /b/{bucket}/o {
+
+    match /users/{uid}/profile/{fileName} {
+      allow read:  if request.auth != null;
+      allow write: if request.auth != null
+        && request.auth.uid == uid
+        && request.resource.size < 5 * 1024 * 1024
+        && request.resource.contentType.matches('image/.*');
+    }
+
+    match /sessions/{sessionId}/materials/{fileName} {
+      allow read:  if request.auth != null;
+      allow write: if request.auth != null
+        && request.resource.size < 10 * 1024 * 1024;
+    }
+  }
+}
+\end{verbatim}
+
+Storage Rules run in a completely separate rules engine from Firestore and cannot read Firestore documents, so the constraint "only the host may attach a study material" is \textbf{not expressible here} — it is enforced purely in the UI, and these rules only cap file size and MIME type. Enforcing it properly at the server layer would require a Cloud Function, which is out of scope for this project. In practice, the application's actual photo/material upload paths go through Cloudinary and Supabase Storage instead (Section~\ref{sec:filestorage}), so this rule set functions as a configured fallback layer on the Firebase project rather than the production upload path.
+
+\subsection{Software Architecture}
+
+The package layout directly mirrors the MVVM data flow described above:
+
+\begin{verbatim}
+app/src/main/java/com/studyfinder/app/
++-- StudyFinderApp.kt         Application: initializes ServiceLocator + notification channel
++-- ServiceLocator.kt         manual DI
++-- MainActivity.kt           NavHostFragment + bottom navigation
++-- model/                    data classes consumed directly by the UI
++-- data/
+|   +-- local/                Room: entities, DAOs, converters
+|   +-- remote/
+|   |   +-- firestore/        FirestoreRefs (collection paths) + Mappers
+|   |   +-- rest/             Retrofit, used only for the community REST API
+|   |   +-- supabase/         Supabase Storage client (study materials)
+|   +-- repository/           AuthRepository, CommunityRepository,
+|                              SessionRepository, ProfileRepository, InboxRepository
++-- ui/                       one Fragment + ViewModel + Adapter per screen
++-- notification/              ReminderWorker, NotificationHelper
++-- util/                     UiState, DateTimeUtils, LocationUtils, OverlapUtils, ...
+\end{verbatim}
+
+\subsection{UI Design: Four States and Motion}
+
+The four UI states (loading, empty, error, offline) are standardized into a shared \texttt{StateRenderer} that accepts a \texttt{UiState<T>} and up to five matching views, automatically wrapping every state transition in a \texttt{TransitionManager.beginDelayedTransition} call so the switch animates smoothly without per-screen animation code. The offline state behaves differently from the other three: it renders \emph{alongside} the content (a warning banner above, cached data below) rather than being mutually exclusive with it. It is triggered off the \texttt{isFromCache} metadata of a Firestore snapshot, but only after at least one genuine server response has already been received — this distinguishes "never successfully loaded" (shown as an Error state) from "loaded successfully before, currently offline" (shown as an Offline banner over stale-but-valid data).
+
+Transitions between the main screens use Material Components' \texttt{MaterialFadeThrough} effect, producing a consistent, smooth feel throughout the app without requiring custom animation logic.
