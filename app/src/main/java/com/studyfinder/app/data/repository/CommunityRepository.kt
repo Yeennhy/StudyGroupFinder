@@ -98,19 +98,13 @@ class CommunityRepository {
                 ?: return ActionResult.Failure("Community not found")
 
             val user = FirebaseAuth.getInstance().currentUser
-            if (community.verified) {
-                // §7.0/§7.1: the domain gate is only meaningful once the address
-                // is proven — otherwise anyone signs up as x@university.edu.vn.
-                if (!ServiceLocator.authRepository.isEmailVerified) {
-                    return ActionResult.Failure(
-                        "Verify your email address before joining a verified community."
-                    )
-                }
-                if (!community.acceptsEmail(user?.email)) {
-                    return ActionResult.Failure(
-                        "Your email domain isn't on this community's allowed list."
-                    )
-                }
+            // Verified communities gate on the email domain only (§7.1). Email
+            // verification is not required — just an address at an allowed domain.
+            if (community.verified && !community.acceptsEmail(user?.email)) {
+                val allowed = community.domainWhitelist.joinToString(" or ") { "@$it" }
+                return ActionResult.Failure(
+                    "This community only accepts $allowed email addresses."
+                )
             }
 
             val uid = user?.uid ?: return ActionResult.Failure("User not signed in")

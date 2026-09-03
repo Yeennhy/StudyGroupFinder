@@ -10,34 +10,68 @@ import com.studyfinder.app.util.ActionResult
 import com.studyfinder.app.util.UiState
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
-import kotlinx.coroutines.flow.asStateFlow
+import kotlinx.coroutines.flow.combine
+import kotlinx.coroutines.flow.map
+import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.launch
 
-/** §7.1. */
+/**
+ * §7.1. The "browse all" list is fetched once over REST (the course's
+ * external-API requirement); search + city filter then run client-side over
+ * that list. [state] is a pure function of (rest result, query, city), so
+ * clearing a filter can never leave the screen stuck on an empty state.
+ */
 class CommunityViewModel : ViewModel() {
 
     private val communityRepository = ServiceLocator.communityRepository
 
-    private val _state = MutableStateFlow<UiState<List<Community>>>(UiState.Loading)
-    val state: StateFlow<UiState<List<Community>>> = _state.asStateFlow()
-
-    /** Distinct cities seen in the REST browse list — powers the city filter UI. */
-    private val _cities = MutableStateFlow<List<String>>(emptyList())
-    val cities: StateFlow<List<String>> = _cities.asStateFlow()
+    /** Raw REST result — Loading / Success / Offline / Error. */
+    private val _source = MutableStateFlow<UiState<List<Community>>>(UiState.Loading)
+    private val _query = MutableStateFlow("")
+    private val _city = MutableStateFlow<String?>(null)
 
     private val _joinResult = MutableLiveData<ActionResult>(ActionResult.Idle)
     val joinResult: LiveData<ActionResult> = _joinResult
 
     private var loadJob: Job? = null
 
-    /** Full REST list, kept so search / city filter run client-side. */
-    private var all: List<Community> = emptyList()
-    private var wasOffline = false
+    /** Distinct cities from the REST list — powers the city chip row. */
+    val cities: StateFlow<List<String>> = _source
+        .map { s ->
+            val list = (s as? UiState.Success)?.data
+                ?: (s as? UiState.Offline)?.cached
+                ?: emptyList()
+            list.map { it.city }.filter { it.isNotBlank() }.distinct().sorted()
+        }
+        .stateIn(viewModelScope, SharingStarted.Eagerly, emptyList())
 
-    /** Current query + city, applied together over [all]. */
-    private var query: String = ""
-    private var city: String? = null
+    val state: StateFlow<UiState<List<Community>>> =
+        combine(_source, _query, _city) { source, query, city ->
+            val (base, offline) = when (source) {
+                is UiState.Loading -> return@combine UiState.Loading
+                is UiState.Error -> return@combine source
+                is UiState.Empty -> emptyList<Community>() to false
+                is UiState.Success -> source.data to false
+                is UiState.Offline -> source.cached to true
+            }
+
+            var list = base
+            city?.let { c -> list = list.filter { it.city.equals(c, ignoreCase = true) } }
+            val q = query.trim().lowercase()
+            if (q.isNotEmpty()) {
+                list = list.filter {
+                    it.name.lowercase().contains(q) || it.city.lowercase().contains(q)
+                }
+            }
+
+            when {
+                list.isEmpty() -> UiState.Empty()
+                offline -> UiState.Offline(list)
+                else -> UiState.Success(list)
+            }
+        }.stateIn(viewModelScope, SharingStarted.Eagerly, UiState.Loading)
 
     init {
         loadAllViaRest()
@@ -48,65 +82,25 @@ class CommunityViewModel : ViewModel() {
         loadJob?.cancel()
         loadJob = viewModelScope.launch {
             communityRepository.observeAllViaRest().collect { s ->
-                when (s) {
-                    is UiState.Loading -> if (all.isEmpty()) _state.value = UiState.Loading
-                    is UiState.Error -> if (all.isEmpty()) _state.value = s
-                    is UiState.Success -> {
-                        all = s.data
-                        wasOffline = false
-                        publishCities()
-                        applyFilters()
-                    }
-                    is UiState.Offline -> {
-                        all = s.cached
-                        wasOffline = true
-                        publishCities()
-                        applyFilters()
-                    }
-                    is UiState.Empty -> {
-                        all = emptyList()
-                        applyFilters()
-                    }
-                }
+                // Keep the last good list visible while a refresh is loading.
+                if (s is UiState.Loading && _source.value is UiState.Success) return@collect
+                _source.value = s
             }
         }
     }
 
     /** Free-text search — case-insensitive substring over name + city (§7.1). */
     fun search(q: String) {
-        query = q.trim()
-        applyFilters()
+        _query.value = q
     }
 
     fun filterByCity(c: String?) {
-        city = c
-        applyFilters()
-    }
-
-    private fun applyFilters() {
-        var list = all
-        city?.let { c -> list = list.filter { it.city.equals(c, ignoreCase = true) } }
-        if (query.isNotEmpty()) {
-            val q = query.lowercase()
-            list = list.filter {
-                it.name.lowercase().contains(q) || it.city.lowercase().contains(q)
-            }
-        }
-        _state.value = when {
-            list.isEmpty() -> UiState.Empty()
-            wasOffline -> UiState.Offline(list)
-            else -> UiState.Success(list)
-        }
-    }
-
-    private fun publishCities() {
-        _cities.value = all.map { it.city }.filter { it.isNotBlank() }.distinct().sorted()
+        _city.value = c
     }
 
     /**
-     * Fails with a readable message when a verified community rejects the
-     * email domain or the account email is unverified — an inline error, not a
-     * silent no-op (§7.1).
+     * Fails with a readable message when a verified community's domain
+     * whitelist rejects the email (§7.1).
      */
     fun join(communityId: String) {
         _joinResult.value = ActionResult.Idle

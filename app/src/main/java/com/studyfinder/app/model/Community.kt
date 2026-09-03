@@ -17,13 +17,19 @@ data class Community(
     val createdAtMillis: Long = 0L,
 ) {
     /**
-     * Client-side gate for the join flow (§7.1). Meaningful only when the
-     * account's email is verified — see §7.0.
+     * Client-side gate for the join flow (§7.1). Checks the email's domain
+     * (the part after `@`) against [domainWhitelist]. A whitelist entry
+     * matches the domain itself *or* any subdomain of it, so `hcmus.edu.vn`
+     * accepts `me@hcmus.edu.vn` and `me@student.hcmus.edu.vn` alike.
      */
     fun acceptsEmail(email: String?): Boolean {
         if (!verified) return true
-        val domain = email?.substringAfterLast('@', "")?.lowercase().orEmpty()
-        return domain.isNotEmpty() && domainWhitelist.any { it.lowercase() == domain }
+        val domain = email?.substringAfterLast('@', "")?.trim()?.lowercase().orEmpty()
+        if (domain.isEmpty()) return false
+        return domainWhitelist.any { raw ->
+            val d = raw.trim().lowercase().removePrefix("@").removePrefix(".")
+            d.isNotEmpty() && (domain == d || domain.endsWith(".$d"))
+        }
     }
 }
 
