@@ -51,7 +51,7 @@ object DataSeeder {
 
     private const val TAG = "DataSeeder"
     private const val PREFS = "data_seeder"
-    private const val GLOBAL_SEED_VERSION = 2
+    private const val GLOBAL_SEED_VERSION = 3
     private const val KEY_GLOBAL = "global_seed_version"
     private const val KEY_USER_PREFIX = "user_seed_"
 
@@ -104,7 +104,7 @@ object DataSeeder {
                 id = "HCMUS",
                 name = "University of Science, VNU-HCM",
                 city = "Ho Chi Minh City",
-                imageUrl = "https://images.unsplash.com/photo-1562774053-701939374585?w=500&q=80",
+                imageUrl = "https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcRSciw7-PqXPrl2NdiU6IxO8EzEYl8xmhdoSyA4WKKx6A&s=10",
                 verified = true,
                 domains = listOf("fitus.edu.vn", "hcmus.edu.vn"),
                 courses = listOf(
@@ -127,7 +127,7 @@ object DataSeeder {
                 id = "FPT-HCM",
                 name = "FPT University HCM",
                 city = "Ho Chi Minh City",
-                imageUrl = "https://images.unsplash.com/photo-1541339907198-e08756eaa63f?w=500&q=80",
+                imageUrl = "https://vcdn1-vnexpress.vnecdn.net/2026/03/12/FPT-1773258207-1773258222.png?w=1200&h=0&q=100&dpr=1&fit=crop&s=T0RSDqnAhyN3TVq4sGZtIg",
                 verified = true,
                 domains = listOf("fpt.edu.vn"),
                 courses = listOf(
@@ -146,7 +146,7 @@ object DataSeeder {
                 id = "HUST",
                 name = "Hanoi University of Science and Technology",
                 city = "Hanoi",
-                imageUrl = "https://images.unsplash.com/photo-1523050854058-8df90110c9f1?w=500&q=80",
+                imageUrl = "https://upload.wikimedia.org/wikipedia/vi/e/ef/Logo_%C4%90%E1%BA%A1i_h%E1%BB%8Dc_B%C3%A1ch_Khoa_H%C3%A0_N%E1%BB%99i.svg?utm_source=vi.wikipedia.org&utm_campaign=index&utm_content=original",
                 verified = true,
                 domains = listOf("hust.edu.vn", "sis.hust.edu.vn"),
                 courses = listOf(
@@ -165,7 +165,7 @@ object DataSeeder {
                 id = "OPEN-STUDY-DN",
                 name = "Da Nang Open Study Circle",
                 city = "Da Nang",
-                imageUrl = "https://images.unsplash.com/photo-1492538368677-f6e0afe31dcc?w=500&q=80",
+                imageUrl = "https://www.udn.vn/Portals/1/logo_update.png?ver=2023-11-12-105510-093",
                 verified = false,
                 domains = emptyList(),
                 courses = listOf(
@@ -184,7 +184,7 @@ object DataSeeder {
                 id = "OPEN-STUDY-CT",
                 name = "Can Tho Learners Hub",
                 city = "Can Tho",
-                imageUrl = "https://images.unsplash.com/photo-1519389950473-47ba0277781c?w=500&q=80",
+                imageUrl = "https://en.ctu.edu.vn/images/2025/24CTU/1.jpg",
                 verified = false,
                 domains = emptyList(),
                 courses = listOf(
