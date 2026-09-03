@@ -347,8 +347,33 @@ class SessionRepository {
 
     suspend fun requestToJoin(sessionId: String): ActionResult = try {
         val uid = auth.currentUser?.uid ?: throw Exception("Not signed in")
-        val memberRef = FirestoreRefs.member(sessionId, uid)
-        memberRef.set(FirestoreMappers.memberPayload(MemberStatus.PENDING)).await()
+        FirestoreRefs.member(sessionId, uid)
+            .set(FirestoreMappers.memberPayload(MemberStatus.PENDING))
+            .await()
+
+        // Tell the host — a pending request that nobody is notified of is a
+        // dead end (§7.5). Best-effort: never fail the request over the notice.
+        try {
+            val sessionDoc = FirestoreRefs.session(sessionId).get().await()
+            val hostUid = sessionDoc.getString(Field.HOST_UID)
+            if (!hostUid.isNullOrBlank() && hostUid != uid) {
+                val myName = FirestoreRefs.user(uid).get().await()
+                    .getString(Field.NAME)?.takeIf { it.isNotBlank() } ?: "Someone"
+                val title = sessionDoc.getString(Field.TITLE).orEmpty()
+                FirestoreRefs.inbox(hostUid).add(
+                    mapOf(
+                        Field.TYPE to com.studyfinder.app.model.InboxType.JOIN_REQUEST.wire,
+                        Field.SESSION_ID to sessionId,
+                        Field.FROM_UID to uid,
+                        Field.MESSAGE to "$myName requested to join \"$title\".",
+                        Field.READ to false,
+                        Field.CREATED_AT to com.google.firebase.Timestamp.now(),
+                    )
+                ).await()
+            }
+        } catch (_: Exception) {
+        }
+
         ActionResult.Success
     } catch (e: Exception) {
         ActionResult.Failure(e.message ?: "Request failed", e)
