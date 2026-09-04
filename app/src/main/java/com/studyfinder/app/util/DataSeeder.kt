@@ -5,7 +5,9 @@ import android.util.Log
 import android.widget.Toast
 import com.google.firebase.Timestamp
 import com.google.firebase.auth.FirebaseAuth
+import com.google.firebase.firestore.FirebaseFirestore
 import com.studyfinder.app.data.remote.firestore.FirestoreRefs
+import com.studyfinder.app.data.remote.firestore.FirestoreRefs.Field
 import com.studyfinder.app.model.CourseCategory
 import com.studyfinder.app.model.ExpectationLevel
 import com.studyfinder.app.model.InboxType
@@ -17,6 +19,8 @@ import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.tasks.await
+import java.time.LocalDate
+import java.time.ZoneId
 import java.util.Calendar
 import java.util.Date
 
@@ -262,6 +266,68 @@ object DataSeeder {
         // A block pair among seeded users so member rosters have a blocked
         // person even before the signed-in user blocks anyone.
         FirestoreRefs.blocked(U_A).document(U_BLOCKED).set(mapOf("createdAt" to Timestamp.now())).await()
+    }
+
+    /**
+     * [ARCHIVED] Previously triggered by a long-press on the Profile activity graph.
+     * Generates a 90-day activity history for the specified user to test the heatmap.
+     */
+    suspend fun seedUserActivityGraph(uid: String) {
+        val db = FirebaseFirestore.getInstance()
+        try {
+            val batch = db.batch()
+            val now = LocalDate.now()
+            val random = kotlin.random.Random(System.currentTimeMillis())
+
+            for (i in 0..89) {
+                val date = now.minusDays(i.toLong())
+
+                // Weighted distribution:
+                // 0: 50%, 1: 30%, 2: 15%, 3+: 5%
+                // Adjusted by day of week: higher activity Tue-Thu (study days)
+                val dayOfWeek = date.dayOfWeek.value // 1 (Mon) - 7 (Sun)
+                val studyDayBias = if (dayOfWeek in 2..4) 0.15 else 0.0
+
+                val roll = random.nextDouble() - studyDayBias
+                val count = when {
+                    roll < 0.45 -> 0
+                    roll < 0.75 -> 1
+                    roll < 0.90 -> 2
+                    roll < 0.97 -> 3
+                    else -> 4
+                }
+
+                repeat(count) {
+                    val sessionRef = FirestoreRefs.sessions().document()
+                    // Random time between 8 AM and 8 PM
+                    val hour = 8 + random.nextInt(12)
+                    val minute = random.nextInt(60)
+                    val startTime = date.atTime(hour, minute).atZone(ZoneId.systemDefault()).toInstant().toEpochMilli()
+                    val endTime = startTime + 3600000L
+
+                    val payload = mapOf(
+                        Field.COMMUNITY_ID to "demo_community",
+                        Field.HOST_UID to uid,
+                        Field.TITLE to "Study Session: ${date.month} ${date.dayOfMonth}",
+                        Field.START_TIME to Timestamp(java.util.Date(startTime)),
+                        Field.END_TIME to Timestamp(java.util.Date(endTime)),
+                        Field.MEMBER_UIDS to listOf(uid),
+                        Field.STATUS to SessionStatus.FINISHED.wire,
+                        Field.CREATED_AT to Timestamp.now()
+                    )
+                    batch.set(sessionRef, payload)
+
+                    val memberRef = FirestoreRefs.member(sessionRef.id, uid)
+                    batch.set(memberRef, mapOf(
+                        Field.STATUS to MemberStatus.ACCEPTED.wire,
+                        Field.JOINED_AT to Timestamp.now()
+                    ))
+                }
+            }
+            batch.commit().await()
+        } catch (e: Exception) {
+            Log.e(TAG, "Activity graph seeding failed", e)
+        }
     }
 
     // ------------------------------------------------------------------ sessions

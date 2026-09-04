@@ -3,12 +3,6 @@ plugins {
     alias(libs.plugins.kotlin.android)
     alias(libs.plugins.navigation.safeargs)
     alias(libs.plugins.ksp)
-
-    // TODO(Phase 1): uncomment once app/google-services.json exists.
-    // The plugin FAILS the build when that file is missing, so it stays off
-    // until the Firebase project is created (§10 Phase 1). The Firebase
-    // dependencies below still compile without it — only runtime
-    // initialisation needs the JSON.
     alias(libs.plugins.google.services)
 }
 

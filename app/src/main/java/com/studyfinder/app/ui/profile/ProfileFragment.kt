@@ -205,7 +205,7 @@ class ProfileFragment : Fragment() {
         binding.tvProfileName.text = profile.name
         binding.tvProfileId.text = "ID: ${profile.studentId}"
         binding.tvProfileBio.text = profile.bio
-        binding.tvCommunityName.text = profile.communityId // TODO: Get name from ID
+        binding.tvCommunityName.text = profile.communityId
         binding.tvDepartmentValue.text = profile.department
         binding.tvMajorValue.text = profile.major
         binding.tvAdmissionYearValue.text = profile.admissionYear

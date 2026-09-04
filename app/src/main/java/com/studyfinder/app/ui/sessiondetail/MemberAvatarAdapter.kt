@@ -26,9 +26,7 @@ class MemberAvatarAdapter(
     )
 
     override fun onBindViewHolder(holder: ViewHolder, position: Int) {
-        TODO("§7.3")
     }
-
     private companion object {
         val DIFF = object : DiffUtil.ItemCallback<SessionMember>() {
             override fun areItemsTheSame(old: SessionMember, new: SessionMember) =
