@@ -31,7 +31,7 @@ import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.launch
 
 /**
- * Host-only management (§7.5).
+ * Fragment for session management by the host.
  */
 class SessionManageFragment : Fragment() {
 

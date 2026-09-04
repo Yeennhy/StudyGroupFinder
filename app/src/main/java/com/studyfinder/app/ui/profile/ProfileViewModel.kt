@@ -21,7 +21,9 @@ import kotlinx.coroutines.launch
 import java.time.Instant
 import java.time.ZoneId
 
-/** §7.7. */
+/**
+ * ViewModel for [ProfileFragment].
+ */
 @OptIn(ExperimentalCoroutinesApi::class)
 class ProfileViewModel : ViewModel() {
 
@@ -84,8 +86,7 @@ class ProfileViewModel : ViewModel() {
     }
 
     /**
-     * Activity graph (§7.7). Reuses the My Sessions query result — NOT a
-     * `collectionGroup("members")` query, which §4 does not permit.
+     * Activity graph. Reuses the My Sessions query result.
      */
     val activityCells: LiveData<List<ActivityCell>> = uidFlow.flatMapLatest { uid ->
         val targetUid = uid ?: authRepository.currentUid ?: ""
@@ -105,9 +106,7 @@ class ProfileViewModel : ViewModel() {
     }.asLiveData()
 
     /**
-     * Writes `users/{myUid}/blocked/{theirUid}` — a private subcollection, so
-     * the blocked person cannot read the list (§3.1). The visible effect is on
-     * Home: sessions whose member list contains them are greyed out (§7.2).
+     * Writes `users/{myUid}/blocked/{theirUid}` — a private subcollection.
      */
     fun blockUser(uid: String) {
         viewModelScope.launch {

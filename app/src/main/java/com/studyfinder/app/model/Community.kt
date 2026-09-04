@@ -1,10 +1,10 @@
 package com.studyfinder.app.model
 
 /**
- * `communities/{communityId}` (§3.1).
+ * `communities/{communityId}`.
  *
  * The only publicly-readable collection — it is what the pre-login REST
- * screen in §7.1 fetches over Retrofit.
+ * screen fetches over Retrofit.
  */
 data class Community(
     val id: String = "",
@@ -17,7 +17,7 @@ data class Community(
     val createdAtMillis: Long = 0L,
 ) {
     /**
-     * Client-side gate for the join flow (§7.1). Checks the email's domain
+     * Client-side gate for the join flow. Checks the email's domain
      * (the part after `@`) against [domainWhitelist]. A whitelist entry
      * matches the domain itself *or* any subdomain of it, so `hcmus.edu.vn`
      * accepts `me@hcmus.edu.vn` and `me@student.hcmus.edu.vn` alike.
@@ -35,8 +35,7 @@ data class Community(
 
 /**
  * A course offered in a community, seeded per community alongside the
- * category list so Create Session can use a dropdown instead of free text
- * (§3.1, §7.4).
+ * category list so Create Session can use a dropdown instead of free text.
  */
 data class Course(
     val id: String = "",
@@ -46,7 +45,7 @@ data class Course(
 
 /**
  * A predefined campus location, so sessions get real lat/lng for the
- * proximity sort without any geocoding (§3.1, §7.2).
+ * proximity sort without any geocoding.
  */
 data class CampusLocation(
     val id: String = "",

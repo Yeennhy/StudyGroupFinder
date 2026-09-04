@@ -12,8 +12,7 @@ import com.studyfinder.app.model.TagType
 import com.studyfinder.app.util.DateTimeUtils
 
 /**
- * Home's session card (§7.2): course, tag, time, location, X/Y joined, and
- * optionally a "(0.3km)" distance label.
+ * Home's session card.
  *
  * Three greyed-out treatments share this view holder — a full session, one
  * that overlaps the user's availability, and one containing a blocked user.

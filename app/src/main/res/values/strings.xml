@@ -20,13 +20,13 @@
     <string name="host_name_format">%1$s (Host)</string>
     <string name="pick_up_session">Pick up Session</string>
 
-    <!-- Home session card notices (§7.2) -->
+    <!-- Home session card notices -->
     <string name="notice_session_full">Session full</string>
     <string name="notice_contains_blocked_user">Contains a blocked user</string>
     <string name="notice_overlaps_schedule">Overlaps your schedule</string>
     <string name="label_blocked">Blocked</string>
 
-    <!-- Home UI states (§7.2 / §2.1) -->
+    <!-- Home UI states -->
     <string name="home_sort_label">Sort</string>
     <string name="home_sort_time">Soonest time</string>
     <string name="home_sort_name_asc">Name (A–Z)</string>
@@ -39,12 +39,12 @@
     <string name="cd_category_filter">Course type filter</string>
     <string name="home_toggle_filters_cd">Toggle filters visibility</string>
 
-    <!-- Community selection UI states (§7.1) -->
+    <!-- Community selection UI states -->
     <string name="communities_empty">No communities match. Try another name or city.</string>
     <string name="communities_error">Couldn\'t load communities. Check your connection and retry.</string>
     <string name="city_all">All cities</string>
 
-    <!-- Inbox (§7.8) -->
+    <!-- Inbox -->
     <string name="inbox_empty">Nothing here yet. Invites and session updates will show up on this screen.</string>
     <string name="inbox_error">Couldn\'t load your inbox. Check your connection and retry.</string>
     <string name="inbox_accept">Accept</string>
@@ -52,7 +52,7 @@
     <string name="inbox_date_today">Today</string>
     <string name="inbox_date_yesterday">Yesterday</string>
 
-    <!-- Reusable UI-state partials (§2.1 / Branch feature/ui-states) -->
+    <!-- Reusable UI-state partials -->
     <string name="state_empty_generic">Nothing here yet.</string>
     <string name="state_error_generic">Something went wrong</string>
     <string name="empty_session_detail">This session is no longer available.</string>

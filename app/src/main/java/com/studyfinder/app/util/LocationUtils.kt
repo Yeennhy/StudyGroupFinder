@@ -3,7 +3,7 @@ package com.studyfinder.app.util
 import kotlin.math.*
 
 /**
- * Proximity sorting logic (§7.2).
+ * Proximity sorting logic.
  */
 object LocationUtils {
 

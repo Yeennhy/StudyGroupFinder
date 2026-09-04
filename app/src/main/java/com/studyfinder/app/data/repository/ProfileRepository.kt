@@ -31,7 +31,7 @@ import java.time.LocalDate
 import java.time.ZoneId
 
 /**
- * Profile, photo upload, block list and the activity graph (§7.7).
+ * Profile, photo upload, block list and the activity graph.
  */
 class ProfileRepository {
 
@@ -143,9 +143,7 @@ class ProfileRepository {
 
     suspend fun searchUsers(query: String): List<UserProfile> {
         if (query.isBlank()) return emptyList()
-        
-        // Firestore doesn't support OR queries across different fields easily with partial matches.
-        // We'll perform two prefix queries and merge them.
+
         val byId = FirestoreRefs.users()
             .orderBy(Field.STUDENT_ID)
             .startAt(query)
@@ -199,7 +197,6 @@ class ProfileRepository {
         }
     }
 
-    // ------------------------------------------------------------ block list
 
     fun observeBlockedUids(): Flow<Set<String>> = callbackFlow {
         val uid = auth.currentUser?.uid

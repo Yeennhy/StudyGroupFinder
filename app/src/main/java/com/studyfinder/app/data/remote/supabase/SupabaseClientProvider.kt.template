@@ -4,7 +4,7 @@ import io.github.jan.supabase.createSupabaseClient
 import io.github.jan.supabase.storage.Storage
 
 /**
- * Supabase configuration (§2.2).
+ * Supabase configuration.
  *
  * Copy this file to SupabaseClientProvider.kt and fill in your credentials.
  */

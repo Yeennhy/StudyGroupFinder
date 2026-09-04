@@ -4,10 +4,6 @@ import com.google.firebase.firestore.CollectionReference
 import com.google.firebase.firestore.DocumentReference
 import com.google.firebase.firestore.FirebaseFirestore
 
-/**
- * One place that knows the collection layout from §3.1, so a path typo is a
- * compile error somewhere else rather than a silent empty query.
- */
 object FirestoreRefs {
 
     private val db: FirebaseFirestore get() = FirebaseFirestore.getInstance()
@@ -24,19 +20,19 @@ object FirestoreRefs {
 
     // ---- subcollections ----
 
-    /** Membership rows. Always written together with the parent's counters (§3.1). */
+    /** Membership rows. Always written together with the parent's counters. */
     fun members(sessionId: String): CollectionReference =
         session(sessionId).collection("members")
 
     fun member(sessionId: String, uid: String): DocumentReference =
         members(sessionId).document(uid)
 
-    /** Invites + notifications merged into one screen (§7.8). */
+    /** Invites + notifications merged into one screen. */
     fun inbox(uid: String): CollectionReference = user(uid).collection("inbox")
 
     /**
      * Private block list — a subcollection rather than a field, because the
-     * parent user document is world-readable to signed-in users (§3.1, §7.7).
+     * parent user document is world-readable to signed-in users.
      */
     fun blocked(uid: String): CollectionReference = user(uid).collection("blocked")
 

@@ -16,7 +16,7 @@ import com.studyfinder.app.data.local.entity.ProfileEntity
 import com.studyfinder.app.data.local.entity.SessionEntity
 
 /**
- * The offline cache (§2.2). Read-only from the UI's point of view — a
+ * The offline cache. Read-only from the UI's point of view — a
  * projection of Firestore, never a second source of truth.
  */
 @Database(

@@ -40,14 +40,14 @@ import kotlinx.coroutines.launch
 import java.io.File
 
 /**
- * Profile (§7.7) — two viewing modes in one destination.
+ * Profile screen showing user details and activity.
  *
  * `uid == null` is **self view**: editable, with photo upload and sign-out.
  * A non-null `uid` is the **read-only view** reached from a member list,
  * where the only action is Block.
  *
- * Fields per the spec: community, department, major, khóa tuyển
- * (`admissionYear`), name, student ID, bio.
+ * User profile details: community, department, major, admission year,
+ * name, student ID, bio.
  */
 class ProfileFragment : Fragment() {
 
@@ -124,13 +124,11 @@ class ProfileFragment : Fragment() {
             args.uid?.let { showUnblockConfirmationDialog(it) }
         }
 
-        // Only self-view can edit or change community (§7.7)
+        // Only self-view can edit or change community
         binding.btnEditDetails.isVisible = isSelfView
         binding.btnCommunityArrow.isVisible = isSelfView
 
         observeViewModel()
-        
-        // §7.7 Implementation: Profile fields, photo upload, etc.
     }
 
     private fun observeViewModel() {
@@ -389,7 +387,7 @@ class ProfileFragment : Fragment() {
         binding.btnEditAvatar.isVisible = enabled
         binding.btnSaveChanges.isVisible = enabled
 
-        // Hide verification UI in edit mode (§7.7)
+        // Hide verification UI in edit mode
         updateVerificationUi(viewModel.isEmailVerified.value)
         updateStatusDivider()
 
@@ -429,7 +427,7 @@ class ProfileFragment : Fragment() {
         viewModel.save(updatedProfile)
     }
 
-    /** The spec's "community edit in profile" entry point (§7.1). */
+    /** Navigate to community selection to change the current community. */
     private fun changeCommunity() {
         findNavController().navigate(
             ProfileFragmentDirections.actionProfileFragmentToCommunitySelectionFragment(
@@ -465,7 +463,7 @@ class ProfileFragment : Fragment() {
         }.show(parentFragmentManager, "SignOutDialog")
     }
 
-    /** Sign-out clears the Room cache, then pops the whole stack (§7.0). */
+    /** Sign-out clears the Room cache, then pops the whole stack. */
     private fun signOut() {
         viewModel.signOut()
         findNavController().navigate(

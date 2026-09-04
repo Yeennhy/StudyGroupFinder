@@ -13,10 +13,8 @@ import androidx.navigation.NavDeepLinkBuilder
 import com.studyfinder.app.R
 
 /**
- * Notification channel setup and builder helpers (§8).
+ * Notification channel setup and builder helpers.
  *
- * Only *local* notifications live here. Server-triggered push (FCM + Cloud
- * Functions) is explicitly out of scope — see §11.3.
  */
 object NotificationHelper {
 
@@ -37,7 +35,7 @@ object NotificationHelper {
         }
     }
 
-    /** "Your session starts in 15 minutes" (§8). */
+    /** "Your session starts in 15 minutes" . */
     @android.annotation.SuppressLint("MissingPermission")
     fun showSessionReminder(
         context: Context,

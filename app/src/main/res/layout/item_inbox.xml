@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="utf-8"?>
-<!-- One inbox row (§7.8). type decides the buttons:
+<!-- One inbox row. type decides the buttons:
      invite -> Accept + Details, join_request -> Details, system -> tap to read. -->
 <androidx.constraintlayout.widget.ConstraintLayout
     xmlns:android="http://schemas.android.com/apk/res/android"

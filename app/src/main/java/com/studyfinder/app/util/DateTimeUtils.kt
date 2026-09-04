@@ -6,7 +6,7 @@ import java.time.ZoneId
 import java.time.format.DateTimeFormatter
 
 /**
- * Common date/time formatting and manipulation (§7.2, §7.3, §7.4, §7.6).
+ * Common date/time formatting and manipulation.
  */
 object DateTimeUtils {
 

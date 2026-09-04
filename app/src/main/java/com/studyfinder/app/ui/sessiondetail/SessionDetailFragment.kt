@@ -34,7 +34,7 @@ import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.launch
 
 /**
- * Session detail (§7.3).
+ * Fragment showing details of a study session.
  */
 class SessionDetailFragment : Fragment() {
 

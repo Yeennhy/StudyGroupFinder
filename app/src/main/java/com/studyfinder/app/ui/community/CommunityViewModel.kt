@@ -17,12 +17,6 @@ import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.launch
 
-/**
- * §7.1. The "browse all" list is fetched once over REST (the course's
- * external-API requirement); search + city filter then run client-side over
- * that list. [state] is a pure function of (rest result, query, city), so
- * clearing a filter can never leave the screen stuck on an empty state.
- */
 class CommunityViewModel : ViewModel() {
 
     private val communityRepository = ServiceLocator.communityRepository
@@ -77,7 +71,7 @@ class CommunityViewModel : ViewModel() {
         loadAllViaRest()
     }
 
-    /** The REST-backed browse list — the course's external-API requirement. */
+    /** The REST-backed browse list. */
     fun loadAllViaRest() {
         loadJob?.cancel()
         loadJob = viewModelScope.launch {
@@ -89,7 +83,7 @@ class CommunityViewModel : ViewModel() {
         }
     }
 
-    /** Free-text search — case-insensitive substring over name + city (§7.1). */
+    /** Free-text search — case-insensitive substring over name + city. */
     fun search(q: String) {
         _query.value = q
     }
@@ -100,7 +94,7 @@ class CommunityViewModel : ViewModel() {
 
     /**
      * Fails with a readable message when a verified community's domain
-     * whitelist rejects the email (§7.1).
+     * whitelist rejects the email.
      */
     fun join(communityId: String) {
         _joinResult.value = ActionResult.Idle

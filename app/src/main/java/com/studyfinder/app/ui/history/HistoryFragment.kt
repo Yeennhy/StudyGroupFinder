@@ -23,7 +23,7 @@ import kotlinx.coroutines.flow.collectLatest
 import kotlinx.coroutines.launch
 
 /**
- * Session history (§7.6).
+ * Session history.
  */
 class HistoryFragment : Fragment() {
 

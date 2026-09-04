@@ -10,7 +10,7 @@ import com.studyfinder.app.R
 import com.studyfinder.app.databinding.ItemCommunityBinding
 import com.studyfinder.app.model.Community
 
-/** §7.1 — shows name, city, and a "verified" badge. */
+/** Shows name, city, and a "verified" badge. */
 class CommunityListAdapter(
     private val onClick: (Community) -> Unit,
 ) : ListAdapter<Community, CommunityListAdapter.ViewHolder>(DIFF) {

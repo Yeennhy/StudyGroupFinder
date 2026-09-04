@@ -7,13 +7,7 @@ import com.studyfinder.app.util.gone
 import com.studyfinder.app.util.visible
 
 /**
- * Switches loading / empty / error / offline state views for a [UiState] (§2.1).
- *
- * Visibility is toggled immediately (every non-target view is hidden before the
- * target is shown, so two state views can never be on screen at once), then the
- * view that becomes visible fades in. Deliberately NOT using
- * TransitionManager cross-fades here — during a fast sequence of state changes
- * (e.g. search-as-you-type) the outgoing and incoming views overlap mid-fade.
+ * Switches loading / empty / error / offline state views for a [UiState].
  */
 object StateRenderer {
 

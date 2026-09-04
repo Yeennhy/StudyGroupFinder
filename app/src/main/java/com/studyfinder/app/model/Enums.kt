@@ -1,15 +1,13 @@
 package com.studyfinder.app.model
 
 /**
- * Every enum stored in Firestore is persisted as its [wire] string, never as
- * an ordinal — ordinals break the moment someone reorders a constant, and the
- * Firestore console has to stay human-readable (§3.1).
+ * Every enum stored in Firestore is persisted as its [wire] string,
  */
 interface WireEnum {
     val wire: String
 }
 
-/** `sessions.tagType` — the spec's "session type" filter chips (§7.2). */
+/** `sessions.tagType` — session filter tags. */
 enum class TagType(override val wire: String) : WireEnum {
     NORMAL("normal"),
     MIDTERM("midterm"),
@@ -21,9 +19,8 @@ enum class TagType(override val wire: String) : WireEnum {
 }
 
 /**
- * `sessions.courseCategory` — the spec's "course type" filter chips (§7.2).
- * Distinct from `courseId`: a category spans many course IDs, so it cannot be
- * derived at query time. Seeded per community alongside the course list.
+ * `sessions.courseCategory` — course category tags.
+
  */
 enum class CourseCategory(override val wire: String) : WireEnum {
     PHYSICS("physics"),
@@ -40,7 +37,6 @@ enum class CourseCategory(override val wire: String) : WireEnum {
     }
 }
 
-/** `sessions.expectationLevel` — an enum, not free text, because Home sorts by it (§3.1). */
 enum class ExpectationLevel(override val wire: String) : WireEnum {
     PASS("pass"),
     CASUAL("casual"),
@@ -51,7 +47,6 @@ enum class ExpectationLevel(override val wire: String) : WireEnum {
     }
 }
 
-/** `sessions.mode` — chosen at creation time (§7.4). */
 enum class SessionMode(override val wire: String) : WireEnum {
     OPEN("open"),
     GATED("gated");
@@ -61,11 +56,6 @@ enum class SessionMode(override val wire: String) : WireEnum {
     }
 }
 
-/**
- * `sessions.status`. Deliberately has no `completed` value — nothing
- * serverless can flip that flag when the end time passes, so past-vs-upcoming
- * is derived from `endTime` client-side (§3.1).
- */
 enum class SessionStatus(override val wire: String) : WireEnum {
     UPCOMING("upcoming"),
     CANCELLED("cancelled"),
@@ -80,7 +70,7 @@ enum class SessionStatus(override val wire: String) : WireEnum {
  * `sessions/{id}/members/{uid}.status`.
  *
  * [INVITED] is what makes the "Accept Invite" button on Session Detail
- * possible without scanning the inbox (§3.1). Neither [INVITED] nor [PENDING]
+ * possible without scanning the inbox. Neither [INVITED] nor [PENDING]
  * counts toward `joinedCount` / `memberUids`.
  */
 enum class MemberStatus(override val wire: String) : WireEnum {
@@ -94,7 +84,7 @@ enum class MemberStatus(override val wire: String) : WireEnum {
     }
 }
 
-/** `users/{uid}/inbox/{id}.type` (§3.1). */
+/** `users/{uid}/inbox/{id}.type`. */
 enum class InboxType(override val wire: String) : WireEnum {
     INVITE("invite"),
     JOIN_REQUEST("join_request"),
@@ -105,7 +95,7 @@ enum class InboxType(override val wire: String) : WireEnum {
     }
 }
 
-/** Home's sort options (§7.2). [DISTANCE] requires the location permission. */
+/** Home's sort options. [DISTANCE] requires the location permission. */
 enum class SessionSort {
     /** Soonest start time first. */
     TIME,
@@ -118,8 +108,8 @@ enum class SessionSort {
 }
 
 /**
- * Which face Session Detail shows. [PAST] is the spec's "past view mode",
- * reached from History — every action button is suppressed (§7.3 row 1).
+ * Which face Session Detail shows. [PAST] is reached from History —
+ * every action button is suppressed.
  */
 enum class SessionViewMode {
     LIVE,

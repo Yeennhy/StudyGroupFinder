@@ -23,11 +23,7 @@ import kotlinx.coroutines.flow.flatMapLatest
 import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.launch
 
-/**
- * §7.2. Holds the full filter/sort state so a rotation does not reset it, and
- * composes the client-side annotations Home needs on top of the server query:
- * distance (Haversine), schedule overlap, and blocked-member greying.
- */
+
 @OptIn(ExperimentalCoroutinesApi::class)
 class HomeViewModel : ViewModel() {
 
@@ -41,7 +37,7 @@ class HomeViewModel : ViewModel() {
         val courseCategory: CourseCategory? = null,
         val expectationLevel: ExpectationLevel? = null,
         val sort: SessionSort = SessionSort.TIME,
-        /** Grey out rather than hide, so the list never silently shrinks (§7.2). */
+        /** Grey out rather than hide, so the list never silently shrinks. */
         val hideOverlapping: Boolean = false,
     )
 
@@ -82,9 +78,7 @@ class HomeViewModel : ViewModel() {
 
             val myUid = authRepository.currentUid
 
-            // Availability = the sessions the current user has already joined,
-            // observed live so joining/leaving updates the overlap greying
-            // without leaving Home (§7.2).
+            // Observed live so joining/leaving updates the overlap greying.
             val busyFlow = sessionRepository.observeMySessions().map { st ->
                 val mine = (st as? UiState.Success)?.data
                     ?: (st as? UiState.Offline)?.cached
@@ -92,10 +86,6 @@ class HomeViewModel : ViewModel() {
                 mine.map { BusyInterval(it.startTimeMillis, it.endTimeMillis, it.title) }
             }
 
-            // ALL filtering (chips + search) is client-side over one plain
-            // `communityId + orderBy(startTime)` query. That query needs only
-            // the single composite index every project already has, so no chip
-            // combination ever triggers a "this query requires an index" error.
             combine(
                 sessionRepository.observeCommunitySessions(communityId),
                 profileRepository.observeBlockedUids(),
@@ -124,14 +114,12 @@ class HomeViewModel : ViewModel() {
             is UiState.Loading -> return UiState.Loading
         }
 
-        // Apply "Lazy Finishing" (§3.1) — filter out sessions that have already ended
-        // or have been manually finished/cancelled.
+        // Filter out sessions that have already ended.
         val now = System.currentTimeMillis()
         val upcomingOnly = sessions.filter { 
             !it.isPast(now) && it.status == com.studyfinder.app.model.SessionStatus.UPCOMING 
         }
 
-        // ---- client-side chip filters -----------------------------------------
         var filtered = upcomingOnly
         f.tagType?.let { t -> filtered = filtered.filter { it.tagType == t } }
         f.courseCategory?.let { c -> filtered = filtered.filter { it.courseCategory == c } }
@@ -200,17 +188,17 @@ class HomeViewModel : ViewModel() {
         _filters.value = _filters.value.copy(courseIdQuery = normalized)
     }
 
-    /** Spec: session type chips — normal / midterm / final. */
+    /** Session type chips — normal / midterm / final. */
     fun setTagType(tagType: TagType?) {
         _filters.value = _filters.value.copy(tagType = tagType)
     }
 
-    /** Spec: course type chips — physics / calculus / DSA / … */
+    /** Course type chips — physics / calculus / DSA / … */
     fun setCourseCategory(category: CourseCategory?) {
         _filters.value = _filters.value.copy(courseCategory = category)
     }
 
-    /** Added: expectation level filter chips — pass / casual / overachieving */
+    /** Expectation level filter chips — pass / casual / overachieving */
     fun setExpectationLevel(level: ExpectationLevel?) {
         _filters.value = _filters.value.copy(expectationLevel = level)
     }
@@ -225,14 +213,14 @@ class HomeViewModel : ViewModel() {
 
     /**
      * Called by the Fragment after it has the one-shot `getCurrentLocation()`
-     * fix. Switches the sort to distance and re-annotates every row (§7.2).
+     * fix. Switches the sort to distance and re-annotates every row.
      */
     fun sortByDistance(lat: Double, lng: Double) {
         _myLocation.value = doubleArrayOf(lat, lng)
         _filters.value = _filters.value.copy(sort = SessionSort.DISTANCE)
     }
 
-    /** Location permission refused — silent fallback, no error UI (§7.2). */
+    /** Location permission refused — silent fallback, no error UI. */
     fun onLocationPermissionDenied() {
         _myLocation.value = null
         if (_filters.value.sort == SessionSort.DISTANCE) {

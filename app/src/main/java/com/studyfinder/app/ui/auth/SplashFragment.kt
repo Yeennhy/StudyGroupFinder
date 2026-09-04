@@ -10,7 +10,7 @@ import androidx.navigation.fragment.findNavController
 import com.studyfinder.app.databinding.FragmentSplashBinding
 
 /**
- * Decides where the app actually starts (§7.0).
+ * Decides where the app actually starts.
  *
  * Firebase persists the auth session across restarts, so the start
  * destination cannot be a static value in nav_graph.xml. The routing decision

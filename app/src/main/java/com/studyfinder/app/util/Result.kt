@@ -1,7 +1,7 @@
 package com.studyfinder.app.util
 
 /**
- * The four states every data-backed screen must render (§2.1).
+ * Common UI states for data-backed screens.
  *
  * [Offline] is deliberately distinct from [Error]: it carries cached Room data
  * and the UI shows a "showing cached data" hint rather than a retry-only

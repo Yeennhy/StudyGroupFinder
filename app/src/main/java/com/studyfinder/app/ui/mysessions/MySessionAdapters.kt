@@ -15,7 +15,6 @@ import com.studyfinder.app.model.Session
 import com.studyfinder.app.util.DateTimeUtils
 import java.time.LocalDate
 
-/** The list half of §7.6. */
 class MySessionListAdapter(
     private val onClick: (Session) -> Unit,
 ) : ListAdapter<MySessionListItem, RecyclerView.ViewHolder>(DIFF) {
@@ -83,7 +82,7 @@ sealed class MySessionListItem {
 }
 
 /**
- * The sessions list underneath the calendar in §7.6, using a smaller card
+ * The sessions list underneath the calendar, using a smaller card
  * style (`item_session_calendar`).
  */
 class CalendarSessionAdapter(
@@ -121,9 +120,6 @@ class CalendarSessionAdapter(
     }
 }
 
-/**
- * The calendar half of §7.6 — one month of day cells.
- */
 class CalendarDayAdapter(
     private val onDayClick: (LocalDate) -> Unit,
 ) : ListAdapter<CalendarDayAdapter.Day, CalendarDayAdapter.ViewHolder>(DIFF) {

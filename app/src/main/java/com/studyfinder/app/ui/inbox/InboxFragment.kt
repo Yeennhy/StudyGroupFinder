@@ -28,7 +28,7 @@ import com.studyfinder.app.util.setupNavbar
 import kotlinx.coroutines.launch
 
 /**
- * Invites + notifications, merged into one screen (§7.8).
+ * Invites + notifications, merged into one screen.
  */
 class InboxFragment : Fragment() {
 
@@ -44,7 +44,7 @@ class InboxFragment : Fragment() {
 
     private val notificationPermission = registerForActivityResult(
         ActivityResultContracts.RequestPermission()
-    ) { /* reminders simply won't post if denied — no hard dependency (§9) */ }
+    ) { /* reminders simply won't post if denied — no hard dependency */ }
 
     override fun onCreate(savedInstanceState: android.os.Bundle?) {
         super.onCreate(savedInstanceState)
@@ -94,7 +94,7 @@ class InboxFragment : Fragment() {
     }
 
     /**
-     * §9: ask for POST_NOTIFICATIONS once, in context — the Inbox is where
+     * Ask for POST_NOTIFICATIONS once, in context — the Inbox is where
      * session reminders and updates surface. Denial is harmless.
      */
     private fun maybeRequestNotificationPermission() {
@@ -128,7 +128,7 @@ class InboxFragment : Fragment() {
         )
     }
 
-    /** `join_request` rows are host-facing and link to management (§7.8). */
+    /** `join_request` rows are host-facing and link to management. */
     private fun openManage(sessionId: String) {
         findNavController().navigate(
             InboxFragmentDirections.actionInboxFragmentToSessionManageFragment(sessionId)

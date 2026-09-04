@@ -8,11 +8,11 @@ import androidx.navigation.ui.setupWithNavController
 import com.studyfinder.app.databinding.ActivityMainBinding
 
 /**
- * The single Activity for the whole app (§2 of the dev plan).
+ * The single Activity for the whole app.
  *
  * It owns exactly two things: the NavHostFragment, and the bottom navigation
  * bar's visibility. Screen logic lives in fragments; the start destination is
- * resolved by [com.studyfinder.app.ui.auth.SplashFragment], not here (§7.0).
+ * resolved by [com.studyfinder.app.ui.auth.SplashFragment], not here.
  */
 class MainActivity : AppCompatActivity() {
 
@@ -24,9 +24,7 @@ class MainActivity : AppCompatActivity() {
         binding = ActivityMainBinding.inflate(layoutInflater)
         setContentView(binding.root)
 
-        // Debug-only test data. The SharedPreferences flags inside seedAll stop
-        // it re-running once seeded; see the checklist in DataSeeder.kt for the
-        // Firestore-rules steps this depends on.
+        // Debug-only test data.
         //if (BuildConfig.DEBUG) {
         //    DataSeeder.seedAll(this)
         //}

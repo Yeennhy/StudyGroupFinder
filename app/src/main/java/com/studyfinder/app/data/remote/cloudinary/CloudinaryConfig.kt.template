@@ -1,7 +1,7 @@
 package com.studyfinder.app.data.remote.cloudinary
 
 /**
- * Cloudinary credentials (§1.0).
+ * Cloudinary credentials.
  *
  * Copy this file to CloudinaryConfig.kt and fill in your credentials.
  */

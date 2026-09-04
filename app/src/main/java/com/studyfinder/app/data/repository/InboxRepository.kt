@@ -17,7 +17,7 @@ import kotlinx.coroutines.flow.onStart
 import kotlinx.coroutines.tasks.await
 
 /**
- * Invites + notifications merged into one screen (§7.8).
+ * Invites + notifications merged into one screen.
  */
 class InboxRepository {
 
@@ -64,7 +64,7 @@ class InboxRepository {
         }
     }
 
-    /** Host invites someone by student ID (§7.5). */
+    /** Host invites someone by student ID. */
     suspend fun sendInvite(toUid: String, sessionId: String): ActionResult {
         return try {
             val myUid = auth.currentUser?.uid ?: throw Exception("Not signed in")
@@ -81,7 +81,7 @@ class InboxRepository {
         }
     }
 
-    /** Someone asks to join a gated session; the host is told (§7.5). */
+    /** Someone asks to join a gated session; the host is told. */
     suspend fun sendJoinRequestNotice(toHostUid: String, sessionId: String): ActionResult {
         return try {
             val myUid = auth.currentUser?.uid ?: throw Exception("Not signed in")
@@ -101,7 +101,7 @@ class InboxRepository {
     /**
      * Client-side fan-out after an edit or cancellation — iterate the
      * session's `memberUids`, which is exactly the recipient list and is
-     * already loaded (§7.5). No Cloud Function needed at this scale.
+     * already loaded. No Cloud Function needed at this scale.
      */
     suspend fun fanOutSystemMessage(
         sessionId: String,

@@ -7,8 +7,8 @@ import com.studyfinder.app.data.remote.cloudinary.CloudinaryConfig
 import com.studyfinder.app.notification.NotificationHelper
 
 /**
- * Application class (§5). Wires the ServiceLocator and creates the
- * notification channel the reminder worker posts into (§8).
+ * Application class. Wires the ServiceLocator and creates the
+ * notification channel the reminder worker posts into.
  */
 class StudyFinderApp : Application() {
 

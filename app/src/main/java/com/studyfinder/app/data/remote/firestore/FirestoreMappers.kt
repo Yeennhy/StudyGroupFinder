@@ -21,7 +21,7 @@ import com.studyfinder.app.model.TagType
 import com.studyfinder.app.model.UserProfile
 
 /**
- * Firestore document ⇄ model ⇄ Room entity conversion (§3.2).
+ * Firestore document ⇄ model ⇄ Room entity conversion.
  *
  * There is no separate domain layer — these are the only mapping functions in
  * the app, and they all live here.
@@ -115,7 +115,7 @@ object FirestoreMappers {
 
     /**
      * The create payload must already carry hostUid, joinedCount = 1 and
-     * memberUids = [hostUid], or the security rules reject it (§4, §7.4).
+     * memberUids = [hostUid], or the security rules reject it.
      */
     fun sessionCreatePayload(session: Session, hostUid: String): Map<String, Any?> = mapOf<String, Any?>(
         Field.COMMUNITY_ID to session.communityId,
@@ -176,7 +176,7 @@ object FirestoreMappers {
 
     /**
      * Cross-user inbox writes are constrained by the rules: fromUid must be
-     * the caller, read must be false, message under 500 chars (§4).
+     * the caller, read must be false, message under 500 chars.
      */
     fun inboxPayload(item: InboxItem, fromUid: String): Map<String, Any?> = mapOf<String, Any?>(
         Field.TYPE to item.type.wire,

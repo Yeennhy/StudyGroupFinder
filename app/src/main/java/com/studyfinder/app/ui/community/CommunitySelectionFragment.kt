@@ -30,10 +30,7 @@ import com.studyfinder.app.util.setupHeader
 import kotlinx.coroutines.launch
 
 /**
- * Community selection (§7.1) — two entry points, two data sources.
- *
- *  - initial "browse all" list   -> Retrofit REST call (§7.1)
- *  - search / city filter as you type -> Firestore SDK query
+ * Fragment for selecting a community from a list of available options.
  */
 class CommunitySelectionFragment : Fragment() {
 

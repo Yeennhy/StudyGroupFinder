@@ -590,7 +590,7 @@
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintEnd_toEndOf="parent" />
 
-    <!-- Action loading overlay (§7.5) -->
+    <!-- Action loading overlay -->
     <FrameLayout
         android:id="@+id/actionLoadingOverlay"
         android:layout_width="match_parent"

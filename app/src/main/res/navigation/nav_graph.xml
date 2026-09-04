@@ -1,14 +1,6 @@
 <?xml version="1.0" encoding="utf-8"?>
 <!--
-  The whole app's flow (§7 of the dev plan).
-
-  Start destination is splashFragment, which immediately routes three ways
-  based on auth + community state and pops itself (§7.0). Every route out of
-  Splash and Login pops back to nav_graph so the back button never returns to
-  a login screen after signing in.
-
-  homeFragment / mySessionsFragment / inboxFragment / profileFragment are the
-  four bottom-navigation destinations; their IDs match res/menu/bottom_nav_menu.xml.
+  The main navigation graph for the application.
 -->
 <navigation xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto"
@@ -16,7 +8,7 @@
     android:id="@+id/nav_graph"
     app:startDestination="@id/splashFragment">
 
-    <!-- ============================ auth (§7.0) ============================ -->
+    <!-- ============================ auth ============================ -->
 
     <fragment
         android:id="@+id/splashFragment"
@@ -130,7 +122,7 @@
             app:popUpToInclusive="true" />
     </fragment>
 
-    <!-- ====================== community selection (§7.1) ==================== -->
+    <!-- ====================== community selection ==================== -->
 
     <fragment
         android:id="@+id/communitySelectionFragment"
@@ -139,7 +131,7 @@
         tools:layout="@layout/fragment_community_selection">
 
         <!-- false = first login, continues to Home. true = "edit community"
-             from Profile, which pops back instead (§7.1, §7.7). -->
+             from Profile. -->
         <argument
             android:name="isEditMode"
             android:defaultValue="false"
@@ -156,7 +148,7 @@
             app:destination="@id/profileFragment" />
     </fragment>
 
-    <!-- ============================= home (§7.2) =========================== -->
+    <!-- ============================= home =========================== -->
 
     <fragment
         android:id="@+id/homeFragment"
@@ -167,7 +159,7 @@
         <action
             android:id="@+id/action_homeFragment_to_sessionDetailFragment"
             app:destination="@id/sessionDetailFragment" />
-        <!-- The spec's "+ button from Home" (§7.4). -->
+        <!-- The "+ button from Home". -->
         <action
             android:id="@+id/action_homeFragment_to_createSessionFragment"
             app:destination="@id/createSessionFragment" />
@@ -176,7 +168,7 @@
             app:destination="@id/historyFragment" />
     </fragment>
 
-    <!-- ======================== session detail (§7.3) ====================== -->
+    <!-- ======================== session detail ====================== -->
 
     <fragment
         android:id="@+id/sessionDetailFragment"
@@ -187,8 +179,7 @@
         <argument
             android:name="sessionId"
             app:argType="string" />
-        <!-- PAST is the spec's "past view mode", reached from History —
-             every action button is suppressed (§7.3 row 1). -->
+        <!-- PAST view mode, reached from History — every action button is suppressed. -->
         <argument
             android:name="viewMode"
             android:defaultValue="LIVE"
@@ -203,7 +194,7 @@
         <action
             android:id="@+id/action_sessionDetailFragment_to_profileFragment"
             app:destination="@id/profileFragment" />
-        <!-- "Continue from last time" lives inside past-session detail (§7.6). -->
+        <!-- "Continue from last time" lives inside past-session detail. -->
         <action
             android:id="@+id/action_sessionDetailFragment_to_createSessionFragment"
             app:destination="@id/createSessionFragment" />
@@ -212,7 +203,7 @@
             app:destination="@id/historyFragment" />
     </fragment>
 
-    <!-- ======================== create session (§7.4) ====================== -->
+    <!-- ======================== create session ====================== -->
 
     <fragment
         android:id="@+id/createSessionFragment"
@@ -220,7 +211,7 @@
         android:label="@string/title_create_session"
         tools:layout="@layout/fragment_create_session">
 
-        <!-- Non-null when arriving via "continue from last time" (§7.6). -->
+        <!-- Non-null when arriving via "continue from last time". -->
         <argument
             android:name="prefillFromSessionId"
             android:defaultValue="@null"
@@ -241,7 +232,7 @@
             app:popUpToInclusive="true" />
     </fragment>
 
-    <!-- ======================= session management (§7.5) =================== -->
+    <!-- ======================= session management =================== -->
 
     <fragment
         android:id="@+id/sessionManageFragment"
@@ -276,7 +267,7 @@
             app:destination="@id/successFragment" />
     </fragment>
 
-    <!-- ==================== my sessions & history (§7.6) =================== -->
+    <!-- ==================== my sessions & history =================== -->
 
     <fragment
         android:id="@+id/mySessionsFragment"
@@ -301,7 +292,7 @@
         android:label="@string/title_history"
         tools:layout="@layout/fragment_history">
 
-        <!-- Always opens detail in PAST mode — the spec's past view mode. -->
+        <!-- Always opens detail in PAST mode. -->
         <action
             android:id="@+id/action_historyFragment_to_sessionDetailFragment"
             app:destination="@id/sessionDetailFragment" />
@@ -310,7 +301,7 @@
             app:destination="@id/successFragment" />
     </fragment>
 
-    <!-- ============================ inbox (§7.8) =========================== -->
+    <!-- ============================ inbox =========================== -->
 
     <fragment
         android:id="@+id/inboxFragment"
@@ -318,7 +309,7 @@
         android:label="@string/title_inbox"
         tools:layout="@layout/fragment_inbox">
 
-        <!-- The "Details" button on an invite row (§7.8). -->
+        <!-- The "Details" button on an invite row. -->
         <action
             android:id="@+id/action_inboxFragment_to_sessionDetailFragment"
             app:destination="@id/sessionDetailFragment" />
@@ -331,7 +322,7 @@
             app:destination="@id/historyFragment" />
     </fragment>
 
-    <!-- ============================ profile (§7.7) ========================= -->
+    <!-- ============================ profile ========================= -->
 
     <fragment
         android:id="@+id/profileFragment"
@@ -340,18 +331,18 @@
         tools:layout="@layout/fragment_profile">
 
         <!-- null = self view (editable). Non-null = read-only view of another
-             user, reached from a member list (§7.7). -->
+             user, reached from a member list. -->
         <argument
             android:name="uid"
             android:defaultValue="@null"
             app:argType="string"
             app:nullable="true" />
 
-        <!-- The spec's "community edit in profile" (§7.1). -->
+        <!-- Community edit in profile. -->
         <action
             android:id="@+id/action_profileFragment_to_communitySelectionFragment"
             app:destination="@id/communitySelectionFragment" />
-        <!-- Sign out clears the cache and drops the entire back stack (§7.0). -->
+        <!-- Sign out clears the cache and drops the entire back stack. -->
         <action
             android:id="@+id/action_profileFragment_to_loginFragment"
             app:destination="@id/loginFragment"

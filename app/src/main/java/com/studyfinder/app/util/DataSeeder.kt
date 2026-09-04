@@ -25,31 +25,9 @@ import java.util.Calendar
 import java.util.Date
 
 /**
- * Seeds a full, test-shaped dataset for every schema in §3.1 of the dev plan.
+ * Seeds a test dataset for the application.
  *
- * Covers the cases the UI branches actually need to exercise:
- *  - verified vs free-for-all communities, several cities (Community filter)
- *  - ≥3 real campus locations + multi-category course lists per community
- *  - a "serial member" (`u-mem-rach`) double-booked across overlapping sessions
- *    (OverlapUtils / BusyInterval on Home)
- *  - a blocked-user pair, where the blocked user is in a session roster
- *  - sessions across every mode × tagType × courseCategory × expectationLevel
- *  - one full session, invited/pending member rows (Inbox invite / join_request)
- *  - inbox items of all three types for the signed-in user
- *
- * SEEDING CHECKLIST — do this in order, do NOT skip step 4:
- *  1. Firebase Console → Firestore → Rules: temporarily set
- *       allow read, write: if true;
- *     for `match /databases/{database}/documents { match /{document=**} }`.
- *  2. Launch a debug build once; wait for the "Seeding complete!" toast.
- *  3. Immediately paste the real rules from §4 of the dev plan back. Do not
- *     leave the project world-writable.
- *  4. The SharedPreferences flags below stop a re-seed on the next launch. To
- *     force a re-seed, clear app data or bump [GLOBAL_SEED_VERSION].
- *
- * Global data is seeded once. Rows tied to the signed-in account (block doc +
- * inbox items) are seeded once per uid — if you seed before logging in, kill
- * and reopen the app once after your first login so those run.
+ * Covers various cases for UI testing.
  */
 object DataSeeder {
 

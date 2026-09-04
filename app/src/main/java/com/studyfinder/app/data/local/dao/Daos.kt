@@ -12,7 +12,7 @@ import kotlinx.coroutines.flow.Flow
 
 /**
  * Every read returns a [Flow] so the UI re-renders automatically when the
- * repository writes a fresh snapshot through (§3.2, §2.2).
+ * repository writes a fresh snapshot through.
  */
 
 @Dao
@@ -30,7 +30,7 @@ interface SessionDao {
     @Query("DELETE FROM sessions WHERE communityId = :communityId")
     suspend fun clearCommunity(communityId: String)
 
-    /** Called on sign-out so a second account never sees the first's data (§7.0). */
+    /** Called on sign-out so a second account never sees the first's data. */
     @Query("DELETE FROM sessions")
     suspend fun clear()
 }

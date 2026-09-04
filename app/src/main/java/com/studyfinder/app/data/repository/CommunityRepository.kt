@@ -21,17 +21,12 @@ import kotlinx.coroutines.flow.onStart
 import kotlinx.coroutines.tasks.await
 
 /**
- * Community selection (§7.1) — the one screen with two data sources.
+ * Community selection — the one screen with two data sources.
  */
 class CommunityRepository {
 
     private val communityDao = ServiceLocator.database.communityDao()
 
-    /**
-     * Initial "browse all" list, fetched over **Retrofit/REST**, not the SDK.
-     * This is the course's external-API requirement; do not quietly swap it
-     * for a Firestore query (§7.1).
-     */
     fun observeAllViaRest(): Flow<UiState<List<Community>>> = flow<UiState<List<Community>>> {
         val response = RetrofitClient.publicCommunityApi.listCommunities()
         val communities = CommunityRestMapper.toCommunities(response)
@@ -44,7 +39,7 @@ class CommunityRepository {
         emit(UiState.Loading)
     }.catch { e ->
         // The REST call failed (usually offline). Fall back to the Room cache
-        // with an offline marker rather than a bare error screen (§2.1).
+        // with an offline marker rather than a bare error screen.
         val cached = runCatching {
             communityDao.observeAll().first().map { FirestoreMappers.toModel(it) }
         }.getOrDefault(emptyList())
@@ -89,7 +84,7 @@ class CommunityRepository {
     /**
      * Checks the email domain against the whitelist before writing
      * `communityId` onto the user doc; fails with a readable message when a
-     * verified community rejects the domain (§7.1).
+     * verified community rejects the domain.
      */
     suspend fun joinCommunity(communityId: String): ActionResult {
         return try {
@@ -98,7 +93,7 @@ class CommunityRepository {
                 ?: return ActionResult.Failure("Community not found")
 
             val user = FirebaseAuth.getInstance().currentUser
-            // Verified communities gate on the email domain only (§7.1). Email
+            // Verified communities gate on the email domain only. Email
             // verification is not required — just an address at an allowed domain.
             if (community.verified && !community.acceptsEmail(user?.email)) {
                 val allowed = community.domainWhitelist.joinToString(" or ") { "@$it" }
@@ -116,7 +111,7 @@ class CommunityRepository {
         }
     }
 
-    /** Seeded per community; drives the Create Session dropdowns (§7.4). */
+    /** Seeded per community; drives the Create Session dropdowns. */
     suspend fun coursesFor(communityId: String): List<Course> {
         val snapshot = FirestoreRefs.community(communityId).collection("courses").get().await()
         return snapshot.documents.map { doc ->

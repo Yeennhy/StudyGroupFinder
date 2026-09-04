@@ -10,7 +10,7 @@ import com.studyfinder.app.util.ActionResult
 import kotlinx.coroutines.tasks.await
 
 /**
- * Firebase Auth, email/password provider (§7.0).
+ * Firebase Auth, email/password provider.
  *
  * Firebase persists the session across restarts, which is why [currentUid]
  * alone decides whether Splash routes to Login or onward.
@@ -23,7 +23,7 @@ class AuthRepository {
 
     val currentEmail: String? get() = auth.currentUser?.email
 
-    /** Gates joining a *verified* community — see §7.1. */
+    /** Gates joining a *verified* community. */
     val isEmailVerified: Boolean get() = auth.currentUser?.isEmailVerified == true
 
     suspend fun reloadUser() {
@@ -42,7 +42,7 @@ class AuthRepository {
     /**
      * Creates the Auth account, writes `users/{uid}`, then sends the
      * verification email — in that order, because every downstream screen
-     * reads the user document (§7.0).
+     * reads the user document.
      */
     suspend fun signUp(
         email: String,
@@ -102,7 +102,7 @@ class AuthRepository {
         }
     }
 
-    /** Clears Auth, the Room cache and SharedPreferences flags (§7.0). */
+    /** Clears Auth, the Room cache and SharedPreferences flags. */
     suspend fun signOut() {
         auth.signOut()
         

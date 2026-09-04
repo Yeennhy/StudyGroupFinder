@@ -41,7 +41,7 @@ import kotlinx.coroutines.launch
 import kotlinx.coroutines.tasks.await
 
 /**
- * Sessions, membership and every transaction in §3.1.
+ * Sessions, membership and every transaction.
  */
 class SessionRepository {
 
@@ -54,10 +54,9 @@ class SessionRepository {
 
     fun launch(block: suspend CoroutineScope.() -> Unit) = scope.launch(block = block)
 
-    // ---------------------------------------------------------------- reads
 
     /**
-     * Home's list (§7.2).
+     * Home's list.
      */
     fun observeCommunitySessions(
         communityId: String,
@@ -82,7 +81,6 @@ class SessionRepository {
             query = query.whereEqualTo(Field.EXPECTATION_LEVEL, expectationLevel.wire)
         }
 
-        // Apply sort AFTER all equality filters
         query = query.orderBy(Field.START_TIME, Query.Direction.ASCENDING)
 
         var sawServer = false
@@ -94,9 +92,7 @@ class SessionRepository {
             if (snapshot != null) {
                 val now = System.currentTimeMillis()
                 val sessions = snapshot.documents.mapNotNull { FirestoreMappers.toSession(it) }
-                
-                // §Lazy Finishing: If we see an UPCOMING session that has ended, trigger a DB update.
-                // This works for any user because of the updated Security Rules.
+
                 sessions.forEach { session ->
                     if (session.status == SessionStatus.UPCOMING && session.isPast(now)) {
                         scope.launch { finishSession(session.id) }
@@ -111,7 +107,7 @@ class SessionRepository {
                 }
 
                 // Cache-only data *after* we've already seen the server once =
-                // the connection dropped (§2.1). The first cold-start cache tick
+                // the connection dropped. The first cold-start cache tick
                 // is skipped so the banner doesn't flash on every open.
                 val fromCache = snapshot.metadata.isFromCache
                 if (!fromCache) sawServer = true
@@ -126,7 +122,7 @@ class SessionRepository {
     }.onStart { emit(UiState.Loading) }
 
     /**
-     * Live updates while Session Detail is open (§7.3).
+     * Live updates while Session Detail is open.
      */
     fun observeSession(sessionId: String): Flow<UiState<Session>> = callbackFlow {
         var sawServer = false
@@ -138,7 +134,7 @@ class SessionRepository {
             if (snapshot != null && snapshot.exists()) {
                 val session = FirestoreMappers.toSession(snapshot)
                 if (session != null) {
-                    // §Lazy Finishing: Trigger update if user opens an expired session
+                    // Lazy Finishing: Trigger update if user opens an expired session
                     val now = System.currentTimeMillis()
                     if (session.status == SessionStatus.UPCOMING && session.isPast(now)) {
                         scope.launch { finishSession(session.id) }
@@ -169,7 +165,7 @@ class SessionRepository {
                 if (snapshot != null) {
                     val members = snapshot.documents.mapNotNull { FirestoreMappers.toSessionMember(it) }
                     
-                    // Parallel profile fetching to avoid waterfall lag (§7.5)
+                    // Parallel profile fetching to avoid waterfall lag
                     scope.launch {
                         try {
                             val membersWithProfiles = coroutineScope {
@@ -228,7 +224,7 @@ class SessionRepository {
                     val now = System.currentTimeMillis()
                     var sessions = snapshot.documents.mapNotNull { FirestoreMappers.toSession(it) }
 
-                    // §Lazy Finishing: Update user's own joined sessions if they are past due
+                    // Lazy Finishing: Update user's own joined sessions if they are past due
                     sessions.forEach { session ->
                         if (session.status == SessionStatus.UPCOMING && session.isPast(now)) {
                             scope.launch { finishSession(session.id) }
@@ -273,7 +269,7 @@ class SessionRepository {
                 if (snapshot != null) {
                     val members = snapshot.documents.mapNotNull { FirestoreMappers.toSessionMember(it) }
                     
-                    // Parallel profile fetching to avoid waterfall lag (§7.5)
+                    // Parallel profile fetching to avoid waterfall lag
                     scope.launch {
                         try {
                             val membersWithProfiles = coroutineScope {
@@ -305,10 +301,9 @@ class SessionRepository {
         }
     }
 
-    // ------------------------------------------------ reminder scheduling (§8)
+    // ------------------------------------------------ reminder scheduling
 
-    /** Default lead time before a session's start — the dev plan leaves the
-     *  exact figure open (§8). */
+    /** Default lead time before a session's start. */
     private val reminderLeadMillis = 15 * 60 * 1000L
 
     /**
@@ -373,7 +368,7 @@ class SessionRepository {
             .await()
 
         // Tell the host — a pending request that nobody is notified of is a
-        // dead end (§7.5). Best-effort: never fail the request over the notice.
+        // dead end. Best-effort: never fail the request over the notice.
         try {
             val sessionDoc = FirestoreRefs.session(sessionId).get().await()
             val hostUid = sessionDoc.getString(Field.HOST_UID)
@@ -519,7 +514,7 @@ class SessionRepository {
         if (!isSelf) {
             ServiceLocator.inboxRepository.fanOutSystemMessage(sessionId, listOf(uid), "You have been removed from the session.")
         } else {
-            // My own reminder is no longer wanted (§8).
+            // My own reminder is no longer wanted.
             cancelReminder(sessionId)
         }
 
@@ -536,7 +531,7 @@ class SessionRepository {
             val sessionRef = FirestoreRefs.sessions().document()
             val memberRef = FirestoreRefs.member(sessionRef.id, uid)
             
-            // Optimistic Create (§7.4): We commit the batch and return Success immediately.
+            // Optimistic Create: We commit the batch and return Success immediately.
             // Firestore handles the queueing and local cache update, making the transition
             // to the Success screen feel instant even on slow networks.
             db.batch().apply {
@@ -558,7 +553,7 @@ class SessionRepository {
         val sessionRef = FirestoreRefs.session(session.id)
         sessionRef.update(FirestoreMappers.sessionEditPayload(session)).await()
         
-        // Notify members - Background Fan-out (§7.5)
+        // Notify members - Background Fan-out
         val memberUids = session.memberUids.filter { it != auth.currentUser?.uid }
         if (memberUids.isNotEmpty()) {
             scope.launch {
@@ -583,7 +578,7 @@ class SessionRepository {
         sessionRef.update(Field.STATUS, SessionStatus.CANCELLED.wire).await()
         cancelReminder(sessionId)
 
-        // Notify members - Background Fan-out (§7.5)
+        // Notify members - Background Fan-out
         val memberUids = session.memberUids.filter { it != auth.currentUser?.uid }
         if (memberUids.isNotEmpty()) {
             scope.launch {
@@ -665,7 +660,7 @@ class SessionRepository {
             val toInvite = oldMemberUids.filter { it != currentUid }
             if (toInvite.isEmpty()) return ActionResult.Success
 
-            // Use a batch for efficiency (§7.5)
+            // Use a batch for efficiency
             val batch = db.batch()
             toInvite.forEach { uid ->
                 // 1. Create membership doc

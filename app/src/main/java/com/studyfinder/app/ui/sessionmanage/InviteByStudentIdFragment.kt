@@ -22,7 +22,7 @@ import kotlinx.coroutines.flow.collectLatest
 import kotlinx.coroutines.launch
 
 /**
- * Invite a member by student ID (§7.5).
+ * Fragment to invite a student to a session by their student ID.
  */
 class InviteByStudentIdFragment : Fragment() {
 

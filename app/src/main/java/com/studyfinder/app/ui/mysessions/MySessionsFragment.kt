@@ -26,7 +26,7 @@ import kotlinx.coroutines.launch
 import java.time.format.DateTimeFormatter
 
 /**
- * My sessions (§7.6).
+ * My sessions screen.
  */
 class MySessionsFragment : Fragment() {
 

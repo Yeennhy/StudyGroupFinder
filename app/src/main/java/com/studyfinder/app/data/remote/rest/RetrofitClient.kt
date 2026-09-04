@@ -4,13 +4,12 @@ import retrofit2.Retrofit
 import retrofit2.converter.moshi.MoshiConverterFactory
 
 /**
- * Retrofit setup for the single REST call in §7.1.
+ * Retrofit setup for the single REST call in
  */
 object RetrofitClient {
 
     const val BASE_URL = "https://firestore.googleapis.com/"
 
-    /** Built once, lazily; Moshi with the generated (KSP) adapters. */
     val publicCommunityApi: PublicCommunityApi by lazy {
         Retrofit.Builder()
             .baseUrl(BASE_URL)
