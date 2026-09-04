@@ -25,9 +25,6 @@ import com.studyfinder.app.util.setupNavbar
 import kotlinx.coroutines.launch
 import java.time.format.DateTimeFormatter
 
-/**
- * My sessions screen.
- */
 class MySessionsFragment : Fragment() {
 
     private var _binding: FragmentMySessionsBinding? = null

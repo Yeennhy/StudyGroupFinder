@@ -25,7 +25,6 @@ import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 
-/** ViewModel for the session history screen. */
 class HistoryViewModel : ViewModel() {
 
     private val sessionRepository = ServiceLocator.sessionRepository

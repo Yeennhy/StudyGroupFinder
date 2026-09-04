@@ -21,9 +21,6 @@ import kotlinx.coroutines.launch
 import java.time.Instant
 import java.time.ZoneId
 
-/**
- * ViewModel for [ProfileFragment].
- */
 @OptIn(ExperimentalCoroutinesApi::class)
 class ProfileViewModel : ViewModel() {
 

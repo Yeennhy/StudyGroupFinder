@@ -20,9 +20,6 @@ import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.tasks.await
 
-/**
- * ViewModel for [SessionDetailFragment].
- */
 class SessionDetailViewModel : ViewModel() {
 
     private val sessionRepository = ServiceLocator.sessionRepository

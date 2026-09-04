@@ -40,14 +40,9 @@ import kotlinx.coroutines.launch
 import java.io.File
 
 /**
- * Profile screen showing user details and activity.
- *
  * `uid == null` is **self view**: editable, with photo upload and sign-out.
  * A non-null `uid` is the **read-only view** reached from a member list,
  * where the only action is Block.
- *
- * User profile details: community, department, major, admission year,
- * name, student ID, bio.
  */
 class ProfileFragment : Fragment() {
 

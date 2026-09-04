@@ -14,9 +14,6 @@ import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.launch
 import java.time.LocalDate
 
-/**
- * ViewModel for the Inbox screen.
- */
 class InboxViewModel : ViewModel() {
 
     private val inboxRepository = ServiceLocator.inboxRepository

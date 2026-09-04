@@ -21,9 +21,6 @@ import kotlinx.coroutines.flow.*
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.tasks.await
 
-/**
- * ViewModel for [SessionManageFragment].
- */
 @OptIn(ExperimentalCoroutinesApi::class)
 class SessionManageViewModel : ViewModel() {
 

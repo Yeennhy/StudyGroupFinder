@@ -30,9 +30,6 @@ import java.text.SimpleDateFormat
 import java.util.Calendar
 import java.util.Locale
 
-/**
- * Fragment for creating a new study session.
- */
 class CreateSessionFragment : Fragment() {
 
     private var _binding: FragmentCreateSessionBinding? = null

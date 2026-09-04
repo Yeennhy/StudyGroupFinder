@@ -17,9 +17,6 @@ import com.studyfinder.app.R
 import com.studyfinder.app.databinding.FragmentLoginBinding
 import com.studyfinder.app.util.ActionResult
 
-/**
- * Fragment for user login with email and password.
- */
 class LoginFragment : Fragment() {
 
     private var _binding: FragmentLoginBinding? = null

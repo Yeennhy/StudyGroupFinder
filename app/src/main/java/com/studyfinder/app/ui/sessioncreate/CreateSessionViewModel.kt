@@ -18,9 +18,6 @@ import kotlinx.coroutines.flow.asSharedFlow
 import kotlinx.coroutines.flow.collectLatest
 import kotlinx.coroutines.launch
 
-/**
- * ViewModel for [CreateSessionFragment].
- */
 class CreateSessionViewModel : ViewModel() {
 
     private val sessionRepository = ServiceLocator.sessionRepository

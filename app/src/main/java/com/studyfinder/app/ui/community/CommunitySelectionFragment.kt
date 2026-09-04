@@ -29,9 +29,6 @@ import com.studyfinder.app.util.UiState
 import com.studyfinder.app.util.setupHeader
 import kotlinx.coroutines.launch
 
-/**
- * Fragment for selecting a community from a list of available options.
- */
 class CommunitySelectionFragment : Fragment() {
 
     private var _binding: FragmentCommunitySelectionBinding? = null

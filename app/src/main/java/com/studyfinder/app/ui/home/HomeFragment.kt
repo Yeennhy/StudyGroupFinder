@@ -40,9 +40,6 @@ import com.studyfinder.app.util.setupHeader
 import com.studyfinder.app.util.setupNavbar
 import kotlinx.coroutines.launch
 
-/**
- * Home / Upcoming sessions.
- */
 class HomeFragment : Fragment() {
 
     private var _binding: FragmentHomeBinding? = null

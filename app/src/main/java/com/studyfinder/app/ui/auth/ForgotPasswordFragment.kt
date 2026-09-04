@@ -13,9 +13,6 @@ import androidx.navigation.fragment.findNavController
 import com.studyfinder.app.databinding.FragmentForgotPasswordBinding
 import com.studyfinder.app.util.ActionResult
 
-/**
- * Fragment for requesting a password reset email.
- */
 class ForgotPasswordFragment : Fragment() {
 
     private var _binding: FragmentForgotPasswordBinding? = null
