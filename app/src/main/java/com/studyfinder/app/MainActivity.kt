@@ -6,7 +6,6 @@ import androidx.navigation.NavController
 import androidx.navigation.fragment.NavHostFragment
 import androidx.navigation.ui.setupWithNavController
 import com.studyfinder.app.databinding.ActivityMainBinding
-import com.studyfinder.app.util.DataSeeder
 
 /**
  * The single Activity for the whole app (§2 of the dev plan).
