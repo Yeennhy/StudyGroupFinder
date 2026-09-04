@@ -271,7 +271,7 @@ class ProfileFragment : Fragment() {
     }
 
     private fun updateVerificationUi(isVerified: Boolean) {
-        val showVerification = isSelfView && !isVerified
+        val showVerification = isSelfView && !isVerified && !isEditing
         binding.verifymsg.isVisible = showVerification
         binding.verifymsg2.isVisible = showVerification
         binding.tvResendVerification.isVisible = showVerification
@@ -288,7 +288,7 @@ class ProfileFragment : Fragment() {
 
     private fun updateStatusDivider() {
         val isBlockedVisible = !isSelfView && (viewModel.isBlocked.value ?: false)
-        val isVerificationVisible = isSelfView && !viewModel.isEmailVerified.value
+        val isVerificationVisible = isSelfView && !viewModel.isEmailVerified.value && !isEditing
         
         binding.divAvatarCard.isVisible = isBlockedVisible || isVerificationVisible
     }
@@ -388,6 +388,10 @@ class ProfileFragment : Fragment() {
         binding.etAdmissionYearValue.isVisible = enabled
         binding.btnEditAvatar.isVisible = enabled
         binding.btnSaveChanges.isVisible = enabled
+
+        // Hide verification UI in edit mode (§7.7)
+        updateVerificationUi(viewModel.isEmailVerified.value)
+        updateStatusDivider()
 
         // Keep edit button visible if self-view, toggle its icon
         binding.btnEditDetails.isVisible = isSelfView
