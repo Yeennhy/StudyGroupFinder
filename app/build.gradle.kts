@@ -3,12 +3,6 @@ plugins {
     alias(libs.plugins.kotlin.android)
     alias(libs.plugins.navigation.safeargs)
     alias(libs.plugins.ksp)
-
-    // TODO(Phase 1): uncomment once app/google-services.json exists.
-    // The plugin FAILS the build when that file is missing, so it stays off
-    // until the Firebase project is created (§10 Phase 1). The Firebase
-    // dependencies below still compile without it — only runtime
-    // initialisation needs the JSON.
     alias(libs.plugins.google.services)
 }
 
@@ -52,12 +46,12 @@ dependencies {
 
     implementation(libs.androidx.core.ktx)
 
-    // MVVM (§1)
+    // MVVM
     implementation(libs.androidx.lifecycle.runtime.ktx)
     implementation(libs.androidx.lifecycle.viewmodel.ktx)
     implementation(libs.androidx.lifecycle.livedata.ktx)
 
-    // XML UI baseline (§2 — this project is views, not Compose)
+    // XML UI baseline — this project is views, not Compose
     implementation(libs.androidx.appcompat)
     implementation(libs.material)
     implementation(libs.androidx.constraintlayout)
@@ -65,35 +59,35 @@ dependencies {
     implementation(libs.androidx.recyclerview)
     implementation(libs.androidx.swiperefreshlayout)
 
-    // Single-Activity navigation (§1)
+    // Single-Activity navigation
     implementation(libs.androidx.navigation.fragment.ktx)
     implementation(libs.androidx.navigation.ui.ktx)
 
-    // Room offline cache (§2.2)
+    // Room offline cache
     implementation(libs.androidx.room.runtime)
     implementation(libs.androidx.room.ktx)
     ksp(libs.androidx.room.compiler)
 
-    // Coroutines + .await() on Firebase Task<T> (§2)
+    // Coroutines + .await() on Firebase Task<T>
     implementation(libs.kotlinx.coroutines.android)
     implementation(libs.kotlinx.coroutines.play.services)
 
-    // Firebase — Auth + Firestore + Storage (§2)
+    // Firebase — Auth + Firestore + Storage
     implementation(platform(libs.firebase.bom))
     implementation(libs.firebase.auth)
     implementation(libs.firebase.firestore)
     implementation(libs.firebase.storage)
 
-    // Retrofit — the one REST call in §7.1, nothing else
+    // Retrofit — the one REST call, nothing else
     implementation(libs.retrofit)
     implementation(libs.retrofit.converter.moshi)
     implementation(libs.moshi)
     ksp(libs.moshi.kotlin.codegen)
 
-    // Local reminder notifications (§8)
+    // Local reminder notifications
     implementation(libs.androidx.work.runtime.ktx)
 
-    // One-time location fetch for the proximity sort (§7.2)
+    // One-time location fetch for the proximity sort
     implementation(libs.play.services.location)
 
     // Avatars / profile photos

@@ -18,14 +18,6 @@ import com.studyfinder.app.R
 import com.studyfinder.app.databinding.FragmentSignupBinding
 import com.studyfinder.app.util.ActionResult
 
-/**
- * Account creation (§7.0).
- *
- * Order matters: create the Auth account -> write `users/{uid}` -> send the
- * verification email -> route to Community Selection. Writing the user
- * document before navigating is required because every downstream screen
- * reads it.
- */
 class SignupFragment : Fragment() {
 
     private var _binding: FragmentSignupBinding? = null

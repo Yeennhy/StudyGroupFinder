@@ -40,9 +40,6 @@ import com.studyfinder.app.util.setupHeader
 import com.studyfinder.app.util.setupNavbar
 import kotlinx.coroutines.launch
 
-/**
- * Home / Upcoming sessions — the browse-and-join lobby (§7.2).
- */
 class HomeFragment : Fragment() {
 
     private var _binding: FragmentHomeBinding? = null
@@ -216,17 +213,11 @@ class HomeFragment : Fragment() {
                     if (loc != null) {
                         viewModel.sortByDistance(loc.latitude, loc.longitude)
                     } else {
-                        // Emulators often don't produce a fresh fix; fall back
-                        // to the last known location before giving up.
                         client.lastLocation
                             .addOnSuccessListener { last ->
                                 if (last != null) {
                                     viewModel.sortByDistance(last.latitude, last.longitude)
                                 } else {
-                                    // Permission is granted but the device has
-                                    // no location at all (common on a fresh
-                                    // emulator). Tell the user why the sort
-                                    // didn't change, then fall back to time.
                                     Toast.makeText(
                                         requireContext(),
                                         "Location unavailable — sorted by time instead",
@@ -363,7 +354,7 @@ class HomeFragment : Fragment() {
         )
     }
 
-    /** The spec's "+ button from Home" (§7.4). */
+    /** Open the session creation screen. */
     private fun openCreateSession() {
         findNavController().navigate(
             HomeFragmentDirections.actionHomeFragmentToCreateSessionFragment(

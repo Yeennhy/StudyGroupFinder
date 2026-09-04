@@ -149,7 +149,9 @@ class InviteStudentAdapter(
                 ivAvatar.setImageResource(R.drawable.ic_profile)
             }
 
-            root.setOnClickListener { onInvite(user) }
+            row.isClickable = true
+            row.isFocusable = true
+            row.setOnClickListener { onInvite(user) }
         }
     }
 

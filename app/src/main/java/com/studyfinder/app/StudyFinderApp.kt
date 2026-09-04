@@ -3,12 +3,12 @@ package com.studyfinder.app
 import android.app.Application
 import com.cloudinary.android.MediaManager
 import com.google.firebase.FirebaseApp
+import com.studyfinder.app.data.remote.cloudinary.CloudinaryConfig
 import com.studyfinder.app.notification.NotificationHelper
-import com.studyfinder.app.util.CloudinaryConfig
 
 /**
- * Application class (§5). Wires the ServiceLocator and creates the
- * notification channel the reminder worker posts into (§8).
+ * Application class. Wires the ServiceLocator and creates the
+ * notification channel the reminder worker posts into.
  */
 class StudyFinderApp : Application() {
 

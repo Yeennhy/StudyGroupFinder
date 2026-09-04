@@ -16,7 +16,6 @@ import kotlinx.coroutines.launch
 import java.time.LocalDate
 import java.time.YearMonth
 
-/** §7.6. */
 class MySessionsViewModel : ViewModel() {
 
     private val sessionRepository = ServiceLocator.sessionRepository

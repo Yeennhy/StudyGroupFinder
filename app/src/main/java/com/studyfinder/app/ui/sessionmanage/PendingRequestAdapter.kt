@@ -11,7 +11,7 @@ import com.studyfinder.app.databinding.ItemManageattendeeRowBinding
 import com.studyfinder.app.databinding.ItemRequestsRowBinding
 import com.studyfinder.app.model.SessionMember
 
-/** Pending join requests, Approve / Reject per row (§7.5). */
+/** Pending join requests. */
 class PendingRequestAdapter(
     private val onApprove: (SessionMember) -> Unit,
     private val onReject: (SessionMember) -> Unit,
@@ -61,7 +61,7 @@ class PendingRequestAdapter(
     }
 }
 
-/** The roster, with a Remove action per row (§7.5). The host cannot remove themselves. */
+/** The roster, with a Remove action per row. */
 class ManageMemberAdapter(
     private val onRemove: (SessionMember) -> Unit,
     private val onClick: (SessionMember) -> Unit,

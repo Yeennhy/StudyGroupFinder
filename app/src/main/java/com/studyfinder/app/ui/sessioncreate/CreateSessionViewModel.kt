@@ -18,7 +18,6 @@ import kotlinx.coroutines.flow.asSharedFlow
 import kotlinx.coroutines.flow.collectLatest
 import kotlinx.coroutines.launch
 
-/** §7.4. */
 class CreateSessionViewModel : ViewModel() {
 
     private val sessionRepository = ServiceLocator.sessionRepository
@@ -48,7 +47,6 @@ class CreateSessionViewModel : ViewModel() {
     }
 
     fun loadCampusLocations() {
-        // Mock data for UI testing as requested
         _locations.value = listOf(
             CampusLocation("LIB", "Main Library", 10.7629, 106.6822),
             CampusLocation("SRA", "Study Room A", 10.7631, 106.6825),
@@ -57,7 +55,7 @@ class CreateSessionViewModel : ViewModel() {
         )
     }
 
-    /** Copies every field except date/time, which must be re-picked (§7.6). */
+    /** Copies fields from an existing session for pre-filling. */
     fun prefillFrom(sessionId: String) {
         prefillSessionId = sessionId
         viewModelScope.launch {
@@ -121,8 +119,6 @@ class CreateSessionViewModel : ViewModel() {
             val result = sessionRepository.createSession(session)
             if (result is com.studyfinder.app.util.Result.Success) {
                 // If it was a "pick up", invite everyone from the old one.
-                // We launch this in a separate job so the Success screen shows
-                // immediately after the session itself is saved (§7.6).
                 prefillSessionId?.let { oldId ->
                     viewModelScope.launch {
                         sessionRepository.inviteAllFrom(oldId, result.data)

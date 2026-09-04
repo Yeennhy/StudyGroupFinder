@@ -40,14 +40,9 @@ import kotlinx.coroutines.launch
 import java.io.File
 
 /**
- * Profile (§7.7) — two viewing modes in one destination.
- *
  * `uid == null` is **self view**: editable, with photo upload and sign-out.
  * A non-null `uid` is the **read-only view** reached from a member list,
  * where the only action is Block.
- *
- * Fields per the spec: community, department, major, khóa tuyển
- * (`admissionYear`), name, student ID, bio.
  */
 class ProfileFragment : Fragment() {
 
@@ -124,13 +119,11 @@ class ProfileFragment : Fragment() {
             args.uid?.let { showUnblockConfirmationDialog(it) }
         }
 
-        // Only self-view can edit or change community (§7.7)
+        // Only self-view can edit or change community
         binding.btnEditDetails.isVisible = isSelfView
         binding.btnCommunityArrow.isVisible = isSelfView
 
         observeViewModel()
-        
-        // §7.7 Implementation: Profile fields, photo upload, etc.
     }
 
     private fun observeViewModel() {
@@ -205,7 +198,7 @@ class ProfileFragment : Fragment() {
         binding.tvProfileName.text = profile.name
         binding.tvProfileId.text = "ID: ${profile.studentId}"
         binding.tvProfileBio.text = profile.bio
-        binding.tvCommunityName.text = profile.communityId // TODO: Get name from ID
+        binding.tvCommunityName.text = profile.communityId
         binding.tvDepartmentValue.text = profile.department
         binding.tvMajorValue.text = profile.major
         binding.tvAdmissionYearValue.text = profile.admissionYear
@@ -271,7 +264,7 @@ class ProfileFragment : Fragment() {
     }
 
     private fun updateVerificationUi(isVerified: Boolean) {
-        val showVerification = isSelfView && !isVerified
+        val showVerification = isSelfView && !isVerified && !isEditing
         binding.verifymsg.isVisible = showVerification
         binding.verifymsg2.isVisible = showVerification
         binding.tvResendVerification.isVisible = showVerification
@@ -288,7 +281,7 @@ class ProfileFragment : Fragment() {
 
     private fun updateStatusDivider() {
         val isBlockedVisible = !isSelfView && (viewModel.isBlocked.value ?: false)
-        val isVerificationVisible = isSelfView && !viewModel.isEmailVerified.value
+        val isVerificationVisible = isSelfView && !viewModel.isEmailVerified.value && !isEditing
         
         binding.divAvatarCard.isVisible = isBlockedVisible || isVerificationVisible
     }
@@ -389,6 +382,10 @@ class ProfileFragment : Fragment() {
         binding.btnEditAvatar.isVisible = enabled
         binding.btnSaveChanges.isVisible = enabled
 
+        // Hide verification UI in edit mode
+        updateVerificationUi(viewModel.isEmailVerified.value)
+        updateStatusDivider()
+
         // Keep edit button visible if self-view, toggle its icon
         binding.btnEditDetails.isVisible = isSelfView
         binding.btnCommunityArrow.isVisible = isSelfView && !enabled
@@ -425,7 +422,7 @@ class ProfileFragment : Fragment() {
         viewModel.save(updatedProfile)
     }
 
-    /** The spec's "community edit in profile" entry point (§7.1). */
+    /** Navigate to community selection to change the current community. */
     private fun changeCommunity() {
         findNavController().navigate(
             ProfileFragmentDirections.actionProfileFragmentToCommunitySelectionFragment(
@@ -461,7 +458,7 @@ class ProfileFragment : Fragment() {
         }.show(parentFragmentManager, "SignOutDialog")
     }
 
-    /** Sign-out clears the Room cache, then pops the whole stack (§7.0). */
+    /** Sign-out clears the Room cache, then pops the whole stack. */
     private fun signOut() {
         viewModel.signOut()
         findNavController().navigate(

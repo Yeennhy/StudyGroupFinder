@@ -17,13 +17,6 @@ import com.studyfinder.app.R
 import com.studyfinder.app.databinding.FragmentLoginBinding
 import com.studyfinder.app.util.ActionResult
 
-/**
- * Email/password sign-in (§7.0).
- *
- * Auth errors must be distinguishable — wrong password, unknown email,
- * malformed email and network failure are four different FirebaseAuthException
- * codes and users hit all four.
- */
 class LoginFragment : Fragment() {
 
     private var _binding: FragmentLoginBinding? = null

@@ -11,8 +11,8 @@ import java.util.concurrent.TimeUnit
 
 /**
  * WorkManager job that fires a local notification when a session is about to
- * start (§8). One unique work item per session, keyed by `reminder_<id>`, so
- * re-scheduling replaces and leaving cancels cleanly.
+ * start. One unique work item per session, keyed by `reminder_<id>`, so
+ * re-scheduling replaces and leaving cancels.
  */
 class ReminderWorker(
     context: Context,

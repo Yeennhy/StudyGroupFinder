@@ -1,8 +1,4 @@
 <?xml version="1.0" encoding="utf-8"?>
-<!--
-  Spacing lives here rather than in layouts so screen-size adaptability is a
-  values-sw600dp override instead of a layout rewrite (§2.1 of the dev plan).
--->
 <resources>
     <dimen name="spacing_small">8dp</dimen>
     <dimen name="spacing_medium">16dp</dimen>

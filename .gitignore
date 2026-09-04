@@ -22,7 +22,8 @@ emulator_log.txt
 
 # Secrets and Configs
 app/google-services.json
-app/src/main/java/com/studyfinder/app/util/CloudinaryConfig.kt
+app/src/main/java/com/studyfinder/app/data/remote/cloudinary/CloudinaryConfig.kt
+app/src/main/java/com/studyfinder/app/data/remote/supabase/SupabaseClientProvider.kt
 
 # LaTeX build artifacts (Final_Mobile_Report/)
 Final_Mobile_Report/*.aux

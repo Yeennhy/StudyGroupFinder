@@ -13,12 +13,6 @@ import androidx.navigation.fragment.findNavController
 import com.studyfinder.app.databinding.FragmentForgotPasswordBinding
 import com.studyfinder.app.util.ActionResult
 
-/**
- * `sendPasswordResetEmail()` behind one field (§7.0).
- *
- * Two lines of SDK, and its absence is the single most common thing a grader
- * tries — hence a real screen rather than a deferred nicety.
- */
 class ForgotPasswordFragment : Fragment() {
 
     private var _binding: FragmentForgotPasswordBinding? = null

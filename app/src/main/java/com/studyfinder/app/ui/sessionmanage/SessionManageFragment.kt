@@ -30,9 +30,6 @@ import kotlinx.coroutines.flow.collectLatest
 import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.launch
 
-/**
- * Host-only management (§7.5).
- */
 class SessionManageFragment : Fragment() {
 
     private var _binding: FragmentSessionManageBinding? = null

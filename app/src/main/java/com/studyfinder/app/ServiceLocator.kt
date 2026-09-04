@@ -9,11 +9,7 @@ import com.studyfinder.app.data.repository.ProfileRepository
 import com.studyfinder.app.data.repository.SessionRepository
 
 /**
- * Manual dependency injection (§2).
- *
- * Deliberately not Hilt or Koin — at this size a single object that builds
- * each repository once is enough, and it avoids introducing DI as a whole new
- * concept to a team already absorbing Firebase.
+ * Manual dependency injection.
  */
 object ServiceLocator {
 

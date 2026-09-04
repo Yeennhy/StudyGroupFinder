@@ -191,10 +191,10 @@
                     android:background="@drawable/bg_input_field"
                     android:hint="What are we focusing on?"
                     android:textColor="@color/graphite"
-                    android:padding="14dp"
+                    android:padding="12dp"
                     android:gravity="top|start"
                     android:inputType="textMultiLine"
-                    android:textSize="16sp"
+                    android:textSize="14sp"
                     android:fontFamily="@font/pjsans_medium" />
 
             </LinearLayout>

@@ -4,26 +4,7 @@ import com.squareup.moshi.Json
 import com.squareup.moshi.JsonClass
 
 /**
- * DTOs for Firestore's REST *wire format* (§7.1).
- *
- * The REST API does not return flat JSON. Every field is wrapped in an object
- * naming its type:
- *
- * ```json
- * { "documents": [ {
- *     "name": "projects/xxx/databases/(default)/documents/communities/abc123",
- *     "fields": {
- *       "name":     { "stringValue": "FPT University HCM" },
- *       "verified": { "booleanValue": true },
- *       "domainWhitelist": {
- *         "arrayValue": { "values": [ { "stringValue": "fpt.edu.vn" } ] }
- *       }
- *     } } ] }
- * ```
- *
- * Two things bite here, so every property is nullable with a default:
- *  - the document ID is NOT a field — it is the last path segment of `name`
- *  - an absent field is simply missing from the `fields` map, not null
+ * DTOs for Firestore's REST API responses.
  */
 
 @JsonClass(generateAdapter = true)
@@ -45,6 +26,7 @@ data class FirestoreDocument(
 data class CommunityFields(
     @Json(name = "name") val communityName: StringValue? = null,
     val city: StringValue? = null,
+    val imageUrl: StringValue? = null,
     val verified: BoolValue? = null,
     val domainWhitelist: ArrayValue? = null,
     val createdAt: TimestampValue? = null,

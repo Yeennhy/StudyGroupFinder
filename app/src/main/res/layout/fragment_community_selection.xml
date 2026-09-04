@@ -81,7 +81,7 @@
 
     </HorizontalScrollView>
 
-    <!-- Legacy category filter row — kept in tree but hidden (§7.1 decision). -->
+    <!-- Legacy category filter row -->
     <HorizontalScrollView
         android:id="@+id/scrollCategoryFilters"
         android:layout_width="0dp"
@@ -205,7 +205,7 @@
             tools:listitem="@layout/item_community"
             tools:itemCount="4" />
 
-        <!-- ===================== UI states (§7.1 / §2.1) ===================== -->
+        <!-- ===================== UI states ===================== -->
 
         <include
             android:id="@+id/stateLoading"

@@ -25,7 +25,6 @@ import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 
-/** §7.6. Same query as My Sessions, filtered to `endTime` in the past. */
 class HistoryViewModel : ViewModel() {
 
     private val sessionRepository = ServiceLocator.sessionRepository

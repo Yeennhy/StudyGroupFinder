@@ -30,7 +30,6 @@ import java.text.SimpleDateFormat
 import java.util.Calendar
 import java.util.Locale
 
-/** §7.4. */
 class CreateSessionFragment : Fragment() {
 
     private var _binding: FragmentCreateSessionBinding? = null

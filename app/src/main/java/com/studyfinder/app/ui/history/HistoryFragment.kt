@@ -22,9 +22,6 @@ import com.studyfinder.app.util.applyFadeThroughTransitions
 import kotlinx.coroutines.flow.collectLatest
 import kotlinx.coroutines.launch
 
-/**
- * Session history (§7.6).
- */
 class HistoryFragment : Fragment() {
 
     private var _binding: FragmentHistoryBinding? = null

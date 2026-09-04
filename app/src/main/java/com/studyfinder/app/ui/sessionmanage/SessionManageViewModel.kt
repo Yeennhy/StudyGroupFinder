@@ -21,7 +21,6 @@ import kotlinx.coroutines.flow.*
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.tasks.await
 
-/** §7.5. */
 @OptIn(ExperimentalCoroutinesApi::class)
 class SessionManageViewModel : ViewModel() {
 
@@ -54,7 +53,7 @@ class SessionManageViewModel : ViewModel() {
     @OptIn(kotlinx.coroutines.FlowPreview::class)
     val searchResults: StateFlow<List<UserProfile>> = combine(_session, _searchQuery) { sessionState, query ->
         Pair(sessionState, query)
-    }.debounce(300) // Debounce search to prevent waterfall lag (§7.5)
+    }.debounce(300) // Debounce search to prevent waterfall lag
     .flatMapLatest { (sessionState, query) ->
         val communityId = (sessionState as? UiState.Success)?.data?.communityId
         flow {
@@ -161,7 +160,7 @@ class SessionManageViewModel : ViewModel() {
                     sessionRepository.editSession(sessionToSave)
                 }
 
-                // 2. Remove members in parallel (§7.5)
+                // 2. Remove members in parallel
                 if (toRemove.isNotEmpty()) {
                     coroutineScope {
                         toRemove.map { uid ->
@@ -230,7 +229,7 @@ class SessionManageViewModel : ViewModel() {
         viewModelScope.launch {
             _isLoading.value = true
             try {
-                // Use a batch to perform both actions in one request for snappiness (§7.4)
+                // Use a batch to perform both actions in one request.
                 val batch = db.batch()
                 
                 // 1. Create member doc with status INVITED

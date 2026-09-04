@@ -13,14 +13,14 @@ import com.studyfinder.app.model.InboxItem
 import com.studyfinder.app.model.InboxType
 import com.studyfinder.app.util.DateTimeUtils
 
-/** A flat row in the inbox list — either a date header or an item (§7.8). */
+/** A flat row in the inbox list — either a date header or an item. */
 sealed class InboxRow {
     data class DatePill(val label: String) : InboxRow()
     data class Item(val inboxItem: InboxItem) : InboxRow()
 }
 
 /**
- * Multi-view-type inbox list (§7.8). The item's `type` decides the buttons:
+ * Multi-view-type inbox list. The item's `type` decides the buttons:
  *  - `invite`       -> Accept (joins in place) + Details (Session Detail)
  *  - `join_request` -> Details (Session Management, host-facing)
  *  - `system`       -> tap the row to mark read
@@ -78,9 +78,13 @@ class InboxAdapter(
 
             when (item.type) {
                 InboxType.INVITE -> {
-                    primary.visibility = View.VISIBLE
-                    primary.setText(R.string.inbox_accept)
-                    primary.setOnClickListener { onAccept(item) }
+                    // Accept is only offered while the invite is still open;
+                    // once handled (read) it just links to the session.
+                    if (!item.read) {
+                        primary.visibility = View.VISIBLE
+                        primary.setText(R.string.inbox_accept)
+                        primary.setOnClickListener { onAccept(item) }
+                    }
                     if (item.sessionId != null) {
                         secondary.visibility = View.VISIBLE
                         secondary.setText(R.string.inbox_details)

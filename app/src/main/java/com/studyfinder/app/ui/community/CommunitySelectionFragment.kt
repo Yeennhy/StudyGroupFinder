@@ -29,12 +29,6 @@ import com.studyfinder.app.util.UiState
 import com.studyfinder.app.util.setupHeader
 import kotlinx.coroutines.launch
 
-/**
- * Community selection (§7.1) — two entry points, two data sources.
- *
- *  - initial "browse all" list   -> Retrofit REST call (§7.1)
- *  - search / city filter as you type -> Firestore SDK query
- */
 class CommunitySelectionFragment : Fragment() {
 
     private var _binding: FragmentCommunitySelectionBinding? = null
@@ -86,12 +80,8 @@ class CommunitySelectionFragment : Fragment() {
     private fun wireSearch() {
         searchWatcher = object : TextWatcher {
             private val runnable = Runnable {
-                val q = binding.etSearch.text?.toString().orEmpty().trim()
-                when {
-                    q.isEmpty() && selectedCity != null -> viewModel.filterByCity(selectedCity!!)
-                    q.isEmpty() -> viewModel.loadAllViaRest()
-                    else -> viewModel.search(q)
-                }
+                // Both search + city filter run client-side over the REST list.
+                viewModel.search(binding.etSearch.text?.toString().orEmpty())
             }
 
             override fun beforeTextChanged(s: CharSequence?, a: Int, b: Int, c: Int) {}
@@ -143,8 +133,7 @@ class CommunitySelectionFragment : Fragment() {
                 setOnClickListener {
                     selectedCity = if (isAll) null else label
                     binding.etSearch.text?.clear()
-                    if (selectedCity == null) viewModel.loadAllViaRest()
-                    else viewModel.filterByCity(selectedCity!!)
+                    viewModel.filterByCity(selectedCity)
                     renderCityChips(cities)
                 }
             })
@@ -165,9 +154,13 @@ class CommunitySelectionFragment : Fragment() {
                         transitionContainer = binding.layoutCommunityListContainer
                     )
                     
-                    if (state is UiState.Error) {
-                        binding.stateError.tvStateErrorDetail.visibility = View.VISIBLE
-                        binding.stateError.tvStateErrorDetail.text = state.message
+                    binding.stateError.tvStateErrorDetail.apply {
+                        if (state is UiState.Error) {
+                            text = state.message
+                            visibility = View.VISIBLE
+                        } else {
+                            visibility = View.GONE
+                        }
                     }
 
                     val list = when (state) {

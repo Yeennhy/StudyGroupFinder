@@ -4,9 +4,7 @@ import androidx.fragment.app.Fragment
 import com.google.android.material.transition.MaterialFadeThrough
 
 /**
- * One shared screen-change animation (§2.1 "Animation"). Call from a
- * fragment's onCreate so entering/leaving a destination fades through instead
- * of snapping. Pairs with the per-list layoutAnimation on the RecyclerViews.
+ * Sets up shared screen-change animations for a Fragment.
  */
 fun Fragment.applyFadeThroughTransitions() {
     enterTransition = MaterialFadeThrough()

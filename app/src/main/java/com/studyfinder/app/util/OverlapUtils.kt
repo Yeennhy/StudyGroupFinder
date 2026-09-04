@@ -3,7 +3,7 @@ package com.studyfinder.app.util
 import com.studyfinder.app.model.BusyInterval
 
 /**
- * Logic to detect sessions that overlap with user availability (§7.2).
+ * Logic to detect sessions that overlap with user availability.
  */
 object OverlapUtils {
 

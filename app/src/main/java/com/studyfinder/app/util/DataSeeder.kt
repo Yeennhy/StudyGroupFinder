@@ -5,7 +5,9 @@ import android.util.Log
 import android.widget.Toast
 import com.google.firebase.Timestamp
 import com.google.firebase.auth.FirebaseAuth
+import com.google.firebase.firestore.FirebaseFirestore
 import com.studyfinder.app.data.remote.firestore.FirestoreRefs
+import com.studyfinder.app.data.remote.firestore.FirestoreRefs.Field
 import com.studyfinder.app.model.CourseCategory
 import com.studyfinder.app.model.ExpectationLevel
 import com.studyfinder.app.model.InboxType
@@ -17,41 +19,21 @@ import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.tasks.await
+import java.time.LocalDate
+import java.time.ZoneId
 import java.util.Calendar
 import java.util.Date
 
 /**
- * Seeds a full, test-shaped dataset for every schema in §3.1 of the dev plan.
+ * Seeds a test dataset for the application.
  *
- * Covers the cases the UI branches actually need to exercise:
- *  - verified vs free-for-all communities, several cities (Community filter)
- *  - ≥3 real campus locations + multi-category course lists per community
- *  - a "serial member" (`u-mem-rach`) double-booked across overlapping sessions
- *    (OverlapUtils / BusyInterval on Home)
- *  - a blocked-user pair, where the blocked user is in a session roster
- *  - sessions across every mode × tagType × courseCategory × expectationLevel
- *  - one full session, invited/pending member rows (Inbox invite / join_request)
- *  - inbox items of all three types for the signed-in user
- *
- * SEEDING CHECKLIST — do this in order, do NOT skip step 4:
- *  1. Firebase Console → Firestore → Rules: temporarily set
- *       allow read, write: if true;
- *     for `match /databases/{database}/documents { match /{document=**} }`.
- *  2. Launch a debug build once; wait for the "Seeding complete!" toast.
- *  3. Immediately paste the real rules from §4 of the dev plan back. Do not
- *     leave the project world-writable.
- *  4. The SharedPreferences flags below stop a re-seed on the next launch. To
- *     force a re-seed, clear app data or bump [GLOBAL_SEED_VERSION].
- *
- * Global data is seeded once. Rows tied to the signed-in account (block doc +
- * inbox items) are seeded once per uid — if you seed before logging in, kill
- * and reopen the app once after your first login so those run.
+ * Covers various cases for UI testing.
  */
 object DataSeeder {
 
     private const val TAG = "DataSeeder"
     private const val PREFS = "data_seeder"
-    private const val GLOBAL_SEED_VERSION = 2
+    private const val GLOBAL_SEED_VERSION = 3
     private const val KEY_GLOBAL = "global_seed_version"
     private const val KEY_USER_PREFIX = "user_seed_"
 
@@ -104,6 +86,7 @@ object DataSeeder {
                 id = "HCMUS",
                 name = "University of Science, VNU-HCM",
                 city = "Ho Chi Minh City",
+                imageUrl = "https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcRSciw7-PqXPrl2NdiU6IxO8EzEYl8xmhdoSyA4WKKx6A&s=10",
                 verified = true,
                 domains = listOf("fitus.edu.vn", "hcmus.edu.vn"),
                 courses = listOf(
@@ -126,6 +109,7 @@ object DataSeeder {
                 id = "FPT-HCM",
                 name = "FPT University HCM",
                 city = "Ho Chi Minh City",
+                imageUrl = "https://vcdn1-vnexpress.vnecdn.net/2026/03/12/FPT-1773258207-1773258222.png?w=1200&h=0&q=100&dpr=1&fit=crop&s=T0RSDqnAhyN3TVq4sGZtIg",
                 verified = true,
                 domains = listOf("fpt.edu.vn"),
                 courses = listOf(
@@ -144,6 +128,7 @@ object DataSeeder {
                 id = "HUST",
                 name = "Hanoi University of Science and Technology",
                 city = "Hanoi",
+                imageUrl = "https://upload.wikimedia.org/wikipedia/vi/e/ef/Logo_%C4%90%E1%BA%A1i_h%E1%BB%8Dc_B%C3%A1ch_Khoa_H%C3%A0_N%E1%BB%99i.svg?utm_source=vi.wikipedia.org&utm_campaign=index&utm_content=original",
                 verified = true,
                 domains = listOf("hust.edu.vn", "sis.hust.edu.vn"),
                 courses = listOf(
@@ -162,6 +147,7 @@ object DataSeeder {
                 id = "OPEN-STUDY-DN",
                 name = "Da Nang Open Study Circle",
                 city = "Da Nang",
+                imageUrl = "https://www.udn.vn/Portals/1/logo_update.png?ver=2023-11-12-105510-093",
                 verified = false,
                 domains = emptyList(),
                 courses = listOf(
@@ -180,6 +166,7 @@ object DataSeeder {
                 id = "OPEN-STUDY-CT",
                 name = "Can Tho Learners Hub",
                 city = "Can Tho",
+                imageUrl = "https://en.ctu.edu.vn/images/2025/24CTU/1.jpg",
                 verified = false,
                 domains = emptyList(),
                 courses = listOf(
@@ -201,6 +188,7 @@ object DataSeeder {
                 mapOf(
                     "name" to comm.name,
                     "city" to comm.city,
+                    "imageUrl" to comm.imageUrl,
                     "verified" to comm.verified,
                     "domainWhitelist" to comm.domains,
                     "createdAt" to Timestamp.now(),
@@ -256,6 +244,68 @@ object DataSeeder {
         // A block pair among seeded users so member rosters have a blocked
         // person even before the signed-in user blocks anyone.
         FirestoreRefs.blocked(U_A).document(U_BLOCKED).set(mapOf("createdAt" to Timestamp.now())).await()
+    }
+
+    /**
+     * [ARCHIVED] Previously triggered by a long-press on the Profile activity graph.
+     * Generates a 90-day activity history for the specified user to test the heatmap.
+     */
+    suspend fun seedUserActivityGraph(uid: String) {
+        val db = FirebaseFirestore.getInstance()
+        try {
+            val batch = db.batch()
+            val now = LocalDate.now()
+            val random = kotlin.random.Random(System.currentTimeMillis())
+
+            for (i in 0..89) {
+                val date = now.minusDays(i.toLong())
+
+                // Weighted distribution:
+                // 0: 50%, 1: 30%, 2: 15%, 3+: 5%
+                // Adjusted by day of week: higher activity Tue-Thu (study days)
+                val dayOfWeek = date.dayOfWeek.value // 1 (Mon) - 7 (Sun)
+                val studyDayBias = if (dayOfWeek in 2..4) 0.15 else 0.0
+
+                val roll = random.nextDouble() - studyDayBias
+                val count = when {
+                    roll < 0.45 -> 0
+                    roll < 0.75 -> 1
+                    roll < 0.90 -> 2
+                    roll < 0.97 -> 3
+                    else -> 4
+                }
+
+                repeat(count) {
+                    val sessionRef = FirestoreRefs.sessions().document()
+                    // Random time between 8 AM and 8 PM
+                    val hour = 8 + random.nextInt(12)
+                    val minute = random.nextInt(60)
+                    val startTime = date.atTime(hour, minute).atZone(ZoneId.systemDefault()).toInstant().toEpochMilli()
+                    val endTime = startTime + 3600000L
+
+                    val payload = mapOf(
+                        Field.COMMUNITY_ID to "demo_community",
+                        Field.HOST_UID to uid,
+                        Field.TITLE to "Study Session: ${date.month} ${date.dayOfMonth}",
+                        Field.START_TIME to Timestamp(java.util.Date(startTime)),
+                        Field.END_TIME to Timestamp(java.util.Date(endTime)),
+                        Field.MEMBER_UIDS to listOf(uid),
+                        Field.STATUS to SessionStatus.FINISHED.wire,
+                        Field.CREATED_AT to Timestamp.now()
+                    )
+                    batch.set(sessionRef, payload)
+
+                    val memberRef = FirestoreRefs.member(sessionRef.id, uid)
+                    batch.set(memberRef, mapOf(
+                        Field.STATUS to MemberStatus.ACCEPTED.wire,
+                        Field.JOINED_AT to Timestamp.now()
+                    ))
+                }
+            }
+            batch.commit().await()
+        } catch (e: Exception) {
+            Log.e(TAG, "Activity graph seeding failed", e)
+        }
     }
 
     // ------------------------------------------------------------------ sessions
@@ -526,6 +576,7 @@ object DataSeeder {
         val id: String,
         val name: String,
         val city: String,
+        val imageUrl: String,
         val verified: Boolean,
         val domains: List<String>,
         val courses: List<CourseData>,

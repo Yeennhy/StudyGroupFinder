@@ -9,7 +9,7 @@
     android:clipToPadding="true"
     android:background="@drawable/bg_dotted_paper">
 
-    <!-- Session cards list - moved to top for lowest Z-order (drawn first) -->
+    <!-- Session cards list moved to top for lowest Z-order (drawn first) -->
     <androidx.recyclerview.widget.RecyclerView
         android:id="@+id/rvSessions"
         android:layoutAnimation="@anim/layout_animation_slide_up"
@@ -136,7 +136,7 @@
 
     </HorizontalScrollView>
 
-    <!-- Course-type filter row (CourseCategory, §7.2) -->
+    <!-- Course-type filter row -->
     <HorizontalScrollView
         android:id="@+id/scrollCourseTypeFilters"
         android:layout_width="0dp"
@@ -169,7 +169,7 @@
 
     </HorizontalScrollView>
 
-    <!-- Expectation-level filter row (ExpectationLevel, §7.2) -->
+    <!-- Expectation-level filter row -->
     <HorizontalScrollView
         android:id="@+id/scrollExpectationFilters"
         android:layout_width="0dp"
@@ -314,7 +314,7 @@
 
     </HorizontalScrollView>
 
-    <!-- ===================== UI states (§7.2 / §2.1) ===================== -->
+    <!-- ===================== UI states ===================== -->
 
     <include
         android:id="@+id/stateLoading"
@@ -398,9 +398,6 @@
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintEnd_toEndOf="parent" />
 
-    <!-- Reused header include (yellow bar, title, hourglass icon) —
-         drawn last so it renders above the search bar / filters / list,
-         which now start from the top of the screen and scroll underneath it -->
     <include
         android:id="@+id/appHeader"
         layout="@layout/layout_app_header"

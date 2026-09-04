@@ -9,9 +9,10 @@ import com.studyfinder.app.util.ActionResult
 import com.studyfinder.app.util.UiState
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.launch
+import kotlinx.coroutines.withTimeoutOrNull
 
 /**
- * Shared by Splash, Login, Signup and Forgot Password (§7.0).
+ * Shared by Splash, Login, Signup and Forgot Password.
  */
 class AuthViewModel : ViewModel() {
 
@@ -21,11 +22,11 @@ class AuthViewModel : ViewModel() {
     private val _result = MutableLiveData<ActionResult>()
     val result: LiveData<ActionResult> = _result
 
-    /** Which of the three Splash routes applies (§7.0). */
+    /** Which of the three Splash routes applies. */
     enum class StartRoute { LOGIN, COMMUNITY_SELECTION, HOME }
 
     /**
-     * Decides the Splash route (§7.0):
+     * Decides the Splash route:
      *  - no signed-in user                 -> LOGIN
      *  - signed in, no communityId yet     -> COMMUNITY_SELECTION
      *  - signed in with a community        -> HOME
@@ -38,8 +39,10 @@ class AuthViewModel : ViewModel() {
                 onResolved(StartRoute.LOGIN)
                 return@launch
             }
-            val state = profileRepository.observeCurrentProfile()
-                .first { it !is UiState.Loading }
+            // Don't let a slow / offline profile read hang the splash forever.
+            val state = withTimeoutOrNull(8_000L) {
+                profileRepository.observeCurrentProfile().first { it !is UiState.Loading }
+            }
             val route = when (state) {
                 is UiState.Success ->
                     if (state.data.hasCommunity) StartRoute.HOME

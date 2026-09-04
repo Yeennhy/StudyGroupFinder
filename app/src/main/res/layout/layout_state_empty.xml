@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="utf-8"?>
-<!-- Reusable empty state (§2.1). Set the message in code via tvStateEmptyMessage. -->
+<!-- Reusable empty state. Set the message in code via tvStateEmptyMessage. -->
 <LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
     android:layout_width="match_parent"
     android:layout_height="match_parent"

@@ -4,11 +4,11 @@ import androidx.room.Entity
 import androidx.room.PrimaryKey
 
 /**
- * Room mirrors only what a screen needs to paint while offline (§3.2).
+ * Room mirrors only what a screen needs to paint while offline.
  *
  * Firestore is the sole source of truth; nothing in the UI or a ViewModel
  * ever writes here — only the repository does, immediately after a successful
- * fetch (§2.2).
+ * fetch.
  */
 
 @Entity(tableName = "sessions")
@@ -43,13 +43,14 @@ data class CommunityEntity(
     @PrimaryKey val id: String,
     val name: String,
     val city: String,
+    val imageUrl: String,
     val verified: Boolean,
     val domainWhitelist: List<String>,
 )
 
 /**
  * A lightweight cache of the sessions the current user has joined — the
- * `whereArrayContains("memberUids", uid)` result (§7.6). Kept separate from
+ * `whereArrayContains("memberUids", uid)` result. Kept separate from
  * [SessionEntity] so the Home cache and the My Sessions cache can be
  * refreshed independently.
  */
@@ -66,7 +67,7 @@ data class MySessionEntity(
     val cachedAtMillis: Long,
 )
 
-/** Single-row table holding the signed-in user's profile (§3.2). */
+/** Single-row table holding the signed-in user's profile. */
 @Entity(tableName = "profile")
 data class ProfileEntity(
     @PrimaryKey val uid: String,

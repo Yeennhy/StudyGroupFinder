@@ -58,7 +58,7 @@
             android:fontFamily="@font/pjsans_regular" />
 
         <!-- Grey-treatment reason, shown only when the card is full / contains a
-             blocked user / overlaps the user's schedule (§7.2). -->
+             blocked user / overlaps the user's schedule. -->
         <TextView
             android:id="@+id/tvNotice"
             android:layout_width="wrap_content"

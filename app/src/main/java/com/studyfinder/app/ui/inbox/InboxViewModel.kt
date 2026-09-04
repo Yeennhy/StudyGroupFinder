@@ -14,7 +14,6 @@ import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.launch
 import java.time.LocalDate
 
-/** §7.8. */
 class InboxViewModel : ViewModel() {
 
     private val inboxRepository = ServiceLocator.inboxRepository
@@ -31,8 +30,7 @@ class InboxViewModel : ViewModel() {
     }
 
     /**
-     * Inbox stream, with items from blocked users filtered out (§7.8), then
-     * bucketed by day with a [InboxRow.DatePill] before each group.
+     * Inbox stream bucketed by day.
      */
     fun observeInbox() {
         pipeline?.cancel()

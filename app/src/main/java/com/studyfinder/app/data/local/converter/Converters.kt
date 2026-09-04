@@ -3,11 +3,8 @@ package com.studyfinder.app.data.local.converter
 import androidx.room.TypeConverter
 
 /**
- * Room stores neither lists nor Firestore Timestamps natively (§5).
+ * Room stores neither lists nor Firestore Timestamps natively.
  *
- * Timestamps are already normalised to epoch-millis `Long` in the entities, so
- * the only converter actually needed is the list one — `memberUids` and
- * `materialUrls` are both `List<String>`.
  */
 class Converters {
 
