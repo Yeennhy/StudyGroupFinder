@@ -1,0 +1,12 @@
+package com.studyfinder.app.data.remote.cloudinary
+
+/**
+ * Cloudinary credentials (§1.0).
+ *
+ * Copy this file to CloudinaryConfig.kt and fill in your credentials.
+ */
+object CloudinaryConfig {
+    const val CLOUD_NAME = "your_cloud_name"
+    const val API_KEY = "your_api_key"
+    const val API_SECRET = "your_api_secret"
+}

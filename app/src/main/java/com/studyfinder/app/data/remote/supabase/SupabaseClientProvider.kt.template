@@ -1,0 +1,21 @@
+package com.studyfinder.app.data.remote.supabase
+
+import io.github.jan.supabase.createSupabaseClient
+import io.github.jan.supabase.storage.Storage
+
+/**
+ * Supabase configuration (§2.2).
+ *
+ * Copy this file to SupabaseClientProvider.kt and fill in your credentials.
+ */
+object SupabaseClientProvider {
+    private const val SUPABASE_URL = "your_supabase_project_url"
+    private const val SUPABASE_KEY = "your_supabase_anon_key"
+
+    val client = createSupabaseClient(
+        supabaseUrl = SUPABASE_URL,
+        supabaseKey = SUPABASE_KEY
+    ) {
+        install(Storage)
+    }
+}
