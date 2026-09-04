@@ -71,7 +71,9 @@ class CommunitySelectionFragment : Fragment() {
             showAvatar = false,
         )
 
-        binding.rvCommunities.layoutManager = GridLayoutManager(requireContext(), 2)
+        val isLandscape = resources.configuration.orientation == android.content.res.Configuration.ORIENTATION_LANDSCAPE
+        val spanCount = if (isLandscape) 3 else 2
+        binding.rvCommunities.layoutManager = GridLayoutManager(requireContext(), spanCount)
         binding.rvCommunities.adapter = adapter
         binding.stateError.btnStateRetry.setOnClickListener { viewModel.loadAllViaRest() }
 
@@ -111,7 +113,7 @@ class CommunitySelectionFragment : Fragment() {
     }
 
     private fun renderCityChips(cities: List<String>) {
-        val row = binding.rowCityChips
+        val row = binding.rowCityChips as ViewGroup
         row.removeAllViews()
         val labels = listOf(getString(R.string.city_all)) + cities
         labels.forEach { label ->

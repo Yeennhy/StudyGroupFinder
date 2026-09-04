@@ -117,7 +117,8 @@ class HomeFragment : Fragment() {
             binding.chipMidterm to TagType.MIDTERM,
             binding.chipFinal to TagType.FINAL,
             binding.chipReview to TagType.NORMAL,
-        )
+        ).filter { it.first != null }.map { it.first!! to it.second }
+
         row.forEach { (chip, tag) ->
             chip.setOnClickListener {
                 selectInRow(row.map { it.first }, chip)
@@ -137,7 +138,8 @@ class HomeFragment : Fragment() {
             binding.chipTypeArts to CourseCategory.ARTS,
             binding.chipTypeSocial to CourseCategory.SOCIAL,
             binding.chipTypeOther to CourseCategory.OTHER,
-        )
+        ).filter { it.first != null }.map { it.first!! to it.second }
+
         row.forEach { (chip, category) ->
             chip.setOnClickListener {
                 selectInRow(row.map { it.first }, chip)
@@ -152,7 +154,8 @@ class HomeFragment : Fragment() {
             binding.chipExpPass to ExpectationLevel.PASS,
             binding.chipExpCasual to ExpectationLevel.CASUAL,
             binding.chipExpGrind to ExpectationLevel.OVERACHIEVING,
-        )
+        ).filter { it.first != null }.map { it.first!! to it.second }
+
         row.forEach { (chip, level) ->
             chip.setOnClickListener {
                 selectInRow(row.map { it.first }, chip)
@@ -295,6 +298,8 @@ class HomeFragment : Fragment() {
     // ------------------------------------------------------------------ helpers
 
     private fun updateFiltersVisibility(expanded: Boolean) {
+        val isLandscape = resources.configuration.orientation == android.content.res.Configuration.ORIENTATION_LANDSCAPE
+        
         // Smooth layout transition for the overall container
         TransitionManager.beginDelayedTransition(binding.root as ViewGroup, AutoTransition().apply {
             duration = 300
@@ -330,7 +335,10 @@ class HomeFragment : Fragment() {
         }
 
         val rotation = if (expanded) 90f else 0f
-        binding.btnExpandFilters.animate().rotation(rotation).setDuration(250).start()
+        // Skip rotation if landscape since chevron might be different or fixed
+        if (!isLandscape) {
+            binding.btnExpandFilters.animate().rotation(rotation).setDuration(250).start()
+        }
         
         binding.btnExpandFilters.setBackgroundResource(
             if (expanded) R.drawable.bg_toggle_selected else R.drawable.bg_toggle_unselected_offset
