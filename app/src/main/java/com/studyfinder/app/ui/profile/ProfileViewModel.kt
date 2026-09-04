@@ -55,9 +55,13 @@ class ProfileViewModel : ViewModel() {
             // Initial check using cached state
             _isEmailVerified.value = authRepository.isEmailVerified
             viewModelScope.launch {
-                authRepository.reloadUser()
-                // Update with server-authoritative state
-                _isEmailVerified.value = authRepository.isEmailVerified
+                try {
+                    authRepository.reloadUser()
+                    // Update with server-authoritative state
+                    _isEmailVerified.value = authRepository.isEmailVerified
+                } catch (e: Exception) {
+                    android.util.Log.e("ProfileViewModel", "Failed to reload user", e)
+                }
             }
         }
     }
