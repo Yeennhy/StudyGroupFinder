@@ -141,13 +141,16 @@ class ProfileFragment : Fragment() {
 
             when (state) {
                 is UiState.Success -> {
-                    // Don't overwrite the form text fields if the user is currently editing.
-                    if (!viewModel.isEditing.value) bindProfile(state.data)
-                    // But always ensure the avatar is correct (prioritizing any picked image)
+                    // Safe to call even while editing: it only ever sets the
+                    // read-only tv* views, never the et* edit fields, and it
+                    // must run regardless so a view recreated mid-edit (e.g. by
+                    // rotation, since isEditing survives but the views don't)
+                    // has real data to show once editing ends.
+                    bindProfile(state.data)
                     renderAvatar(state.data.photoUrl, viewModel.pendingAvatarUri.value)
                 }
                 is UiState.Offline -> {
-                    if (!viewModel.isEditing.value) bindProfile(state.cached)
+                    bindProfile(state.cached)
                     renderAvatar(state.cached.photoUrl, viewModel.pendingAvatarUri.value)
                 }
                 is UiState.Error -> {
