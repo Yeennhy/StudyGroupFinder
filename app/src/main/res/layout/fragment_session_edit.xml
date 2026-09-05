@@ -10,7 +10,7 @@
     <androidx.constraintlayout.widget.ConstraintLayout
         android:id="@+id/cardEditContainer"
         android:layout_width="0dp"
-        android:layout_height="wrap_content"
+        android:layout_height="0dp"
         android:background="@drawable/bg_whitebox_dropsd"
         android:paddingStart="4dp"
         android:paddingTop="4dp"
@@ -18,11 +18,13 @@
         android:paddingBottom="10dp"
         android:layout_marginStart="5dp"
         android:layout_marginEnd="5dp"
+        android:layout_marginTop="@dimen/session_edit_dialog_margin_vertical"
+        android:layout_marginBottom="@dimen/session_edit_dialog_margin_vertical"
         app:layout_constraintTop_toTopOf="parent"
         app:layout_constraintBottom_toBottomOf="parent"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintEnd_toEndOf="parent"
-        app:layout_constraintHeight_max="600dp">
+        app:layout_constraintHeight_max="@dimen/session_edit_dialog_max_height">
 
         <!-- ===== Header: "Edit Details" + close (X) button, mint/teal like mockup ===== -->
         <LinearLayout
@@ -88,7 +90,6 @@
             app:layout_constraintEnd_toEndOf="parent"
             app:layout_constraintTop_toBottomOf="@id/dialogHeader" />
 
-        <!-- ===== Scrollable form body ===== -->
         <androidx.core.widget.NestedScrollView
             android:id="@+id/scrollDialogContent"
             android:layout_width="match_parent"
@@ -96,7 +97,8 @@
             android:clipToPadding="false"
             android:fillViewport="true"
             android:layout_marginTop="2dp"
-            app:layout_constraintTop_toBottomOf="@id/dialogHeader"
+            android:minHeight="300dp"
+            app:layout_constraintTop_toBottomOf="@id/topDivider"
             app:layout_constraintStart_toStartOf="parent"
             app:layout_constraintEnd_toEndOf="parent"
             app:layout_constraintBottom_toTopOf="@id/bottomDivider">
@@ -288,6 +290,7 @@
                         android:layout_width="0dp"
                         android:layout_height="wrap_content"
                         android:text="Preparing for"
+                        android:layout_marginTop="12dp"
                         android:textStyle="bold"
                         android:textSize="12sp"
                         android:textColor="@color/graphite"
@@ -301,6 +304,7 @@
                         android:id="@+id/lblDialogExpectation"
                         android:layout_width="0dp"
                         android:layout_height="wrap_content"
+                        android:layout_marginTop="12dp"
                         android:text="Expectation Level"
                         android:textStyle="bold"
                         android:textSize="12sp"
@@ -590,6 +594,7 @@
             android:layout_width="match_parent"
             android:layout_height="2dp"
             android:background="@color/graphite"
+            app:layout_constraintBottom_toTopOf="@id/dialogFooter"
             app:layout_constraintTop_toBottomOf="@id/scrollDialogContent" />
 
         <LinearLayout

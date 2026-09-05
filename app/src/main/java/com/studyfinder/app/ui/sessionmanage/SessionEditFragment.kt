@@ -90,7 +90,7 @@ class SessionEditFragment : DialogFragment() {
         super.onStart()
         dialog?.window?.apply {
             val width = (resources.displayMetrics.widthPixels * 0.95).toInt()
-            setLayout(width, ViewGroup.LayoutParams.WRAP_CONTENT)
+            setLayout(width, ViewGroup.LayoutParams.MATCH_PARENT)
             setBackgroundDrawable(ColorDrawable(Color.TRANSPARENT))
             setDimAmount(0.6f)
         }

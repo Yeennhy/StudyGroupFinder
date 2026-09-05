@@ -3,4 +3,8 @@
     <!-- Navigation Bar - Reduced for landscape -->
     <dimen name="nav_bar_vertical_padding">8dp</dimen>
     <dimen name="nav_bar_item_vertical_padding">4dp</dimen>
+
+    <!-- Dialogs -->
+    <dimen name="session_edit_dialog_max_height">380dp</dimen>
+    <dimen name="session_edit_dialog_margin_vertical">10dp</dimen>
 </resources>
