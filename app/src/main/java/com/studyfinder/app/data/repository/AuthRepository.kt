@@ -114,12 +114,16 @@ class AuthRepository {
     /** Clears Auth, the Room cache and SharedPreferences flags. */
     suspend fun signOut() {
         auth.signOut()
-        
-        // Wipe local database
-        val db = ServiceLocator.database
-        db.sessionDao().clear()
-        db.communityDao().clear()
-        db.mySessionDao().clear()
-        db.profileDao().clear()
+
+        // Sign-out immediately navigates and drops the whole back stack, which
+        // clears the calling ViewModel's scope - run the actual wipe under
+        // NonCancellable so it can't be cut off mid-clear by that teardown.
+        kotlinx.coroutines.withContext(kotlinx.coroutines.NonCancellable) {
+            val db = ServiceLocator.database
+            db.sessionDao().clear()
+            db.communityDao().clear()
+            db.mySessionDao().clear()
+            db.profileDao().clear()
+        }
     }
 }
