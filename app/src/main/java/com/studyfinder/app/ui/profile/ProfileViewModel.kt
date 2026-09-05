@@ -107,16 +107,17 @@ class ProfileViewModel : ViewModel() {
         val targetUid = uid ?: authRepository.currentUid ?: ""
         ServiceLocator.sessionRepository.observeUserSessions(targetUid)
     }.map { state ->
-        if (state is UiState.Success) {
-            state.data.groupBy {
-                Instant.ofEpochMilli(it.startTimeMillis)
-                    .atZone(ZoneId.systemDefault())
-                    .toLocalDate()
-            }.map { (date, sessions) ->
-                ActivityCell(date, sessions.size)
-            }
-        } else {
-            emptyList()
+        val sessions = when (state) {
+            is UiState.Success -> state.data
+            is UiState.Offline -> state.cached
+            else -> emptyList()
+        }
+        sessions.groupBy {
+            Instant.ofEpochMilli(it.startTimeMillis)
+                .atZone(ZoneId.systemDefault())
+                .toLocalDate()
+        }.map { (date, sessionsOnDate) ->
+            ActivityCell(date, sessionsOnDate.size)
         }
     }.asLiveData()
 
