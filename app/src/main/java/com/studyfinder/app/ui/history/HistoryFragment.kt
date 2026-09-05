@@ -100,6 +100,9 @@ class HistoryFragment : Fragment() {
                             putBoolean("isSignupSuccess", false)
                         }
                         findNavController().navigate(R.id.action_historyFragment_to_successFragment, bundle)
+                    } else if (result is ActionResult.Failure) {
+                        Toast.makeText(context, result.message, Toast.LENGTH_SHORT).show()
+                        viewModel.resetExportResult()
                     }
                 }
             }

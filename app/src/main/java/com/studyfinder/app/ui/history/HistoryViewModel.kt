@@ -52,8 +52,15 @@ class HistoryViewModel : ViewModel() {
         .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), UiState.Loading)
 
     fun exportPdfToUri(context: Context, uri: Uri) {
-        val sessionsState = historySessions.value
-        if (sessionsState !is UiState.Success) return
+        val sessions = when (val sessionsState = historySessions.value) {
+            is UiState.Success -> sessionsState.data
+            is UiState.Offline -> sessionsState.cached
+            else -> null
+        }
+        if (sessions == null) {
+            _exportResult.value = ActionResult.Failure("No history available to export yet")
+            return
+        }
 
         viewModelScope.launch {
             try {
@@ -125,7 +132,7 @@ class HistoryViewModel : ViewModel() {
                     drawPageHeader(canvas)
                     var y = 190f
 
-                    sessionsState.data.forEach { session ->
+                    sessions.forEach { session ->
                         // Check for page overflow
                         if (y > 750f) {
                             pdfDocument.finishPage(myPage)
