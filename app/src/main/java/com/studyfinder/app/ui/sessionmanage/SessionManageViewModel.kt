@@ -51,7 +51,7 @@ class SessionManageViewModel : ViewModel() {
     val isLoading: StateFlow<Boolean> = _isLoading
     
     @OptIn(kotlinx.coroutines.FlowPreview::class)
-    val searchResults: StateFlow<List<UserProfile>> = combine(_session, _searchQuery) { sessionState, query ->
+    private val rawSearchResults: Flow<List<UserProfile>> = combine(_session, _searchQuery) { sessionState, query ->
         Pair(sessionState, query)
     }.debounce(300) // Debounce search to prevent waterfall lag
     .flatMapLatest { (sessionState, query) ->
@@ -69,6 +69,16 @@ class SessionManageViewModel : ViewModel() {
                 emit(profileRepository.searchUsers(query))
             }
         }
+    }
+
+    /**
+     * Excludes anyone who already has a member doc (host, accepted, pending or
+     * already-invited) - re-inviting them would silently reset their status
+     * without fixing up memberUids/joinedCount.
+     */
+    val searchResults: StateFlow<List<UserProfile>> = combine(rawSearchResults, _members) { results, membersState ->
+        val existingUids = (membersState as? UiState.Success)?.data?.map { it.uid }?.toSet() ?: emptySet()
+        results.filterNot { it.uid in existingUids }
     }.stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), emptyList())
 
     private val _actionResult = MutableStateFlow<ActionResult?>(null)
