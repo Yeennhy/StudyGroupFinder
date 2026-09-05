@@ -37,6 +37,9 @@ class CreateSessionFragment : Fragment() {
     private val viewModel: CreateSessionViewModel by viewModels()
     private val args: CreateSessionFragmentArgs by navArgs()
 
+    /** Set by fillUi() when prefilling; applied once viewModel.locations loads. */
+    private var pendingLocationName: String? = null
+
     override fun onCreate(savedInstanceState: android.os.Bundle?) {
         super.onCreate(savedInstanceState)
         applyFadeThroughTransitions()
@@ -286,6 +289,16 @@ class CreateSessionFragment : Fragment() {
                 }
             }
             launch {
+                // Applies the campus selection fillUi() couldn't make yet because
+                // locations hadn't loaded (a single long-lived collector, rather
+                // than one started fresh on every fillUi() call).
+                viewModel.locations.collect { locations ->
+                    val name = pendingLocationName ?: return@collect
+                    val index = locations.indexOfFirst { it.name == name }
+                    if (index != -1) binding.spinnerCampus.setSelection(index)
+                }
+            }
+            launch {
                 viewModel.createResult.collect { result ->
                     binding.stateLoading.root.isVisible = false
                     if (result is ActionResult.Success) {
@@ -327,14 +340,13 @@ class CreateSessionFragment : Fragment() {
             spinnerPreparingFor.setSelection(TagType.entries.indexOf(session.tagType))
             spinnerExpectation.setSelection(ExpectationLevel.entries.indexOf(session.expectationLevel))
             
-            // Location selection needs to wait for spinner Campus to be populated
-            viewLifecycleOwner.lifecycleScope.launch {
-                viewModel.locations.collect { locations ->
-                    val index = locations.indexOfFirst { it.name == session.locationName }
-                    if (index != -1) spinnerCampus.setSelection(index)
-                }
-            }
-            
+            // Location selection needs to wait for spinner Campus to be populated;
+            // the persistent collector in observeViewModel() applies this once it is.
+            pendingLocationName = session.locationName
+            val locationIndex = viewModel.locations.value.indexOfFirst { it.name == session.locationName }
+            if (locationIndex != -1) spinnerCampus.setSelection(locationIndex)
+
+
             viewModel.draftCapacity.value = session.capacity
             viewModel.draftIsGated.value = session.mode == com.studyfinder.app.model.SessionMode.GATED
 
