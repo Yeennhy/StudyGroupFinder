@@ -49,6 +49,7 @@ class HomeFragment : Fragment() {
     private val adapter = SessionListAdapter { session -> openSession(session.id) }
 
     private var searchWatcher: TextWatcher? = null
+    private var searchRunnable: Runnable? = null
 
     private val locationPermission = registerForActivityResult(
         ActivityResultContracts.RequestPermission()
@@ -93,11 +94,11 @@ class HomeFragment : Fragment() {
     // ------------------------------------------------------------------ wiring
 
     private fun wireSearch() {
+        val runnable = Runnable {
+            viewModel.setCourseIdQuery(binding.etSearch.text?.toString())
+        }
+        searchRunnable = runnable
         searchWatcher = object : TextWatcher {
-            private val runnable = Runnable {
-                viewModel.setCourseIdQuery(binding.etSearch.text?.toString())
-            }
-
             override fun beforeTextChanged(s: CharSequence?, a: Int, b: Int, c: Int) {}
             override fun onTextChanged(s: CharSequence?, a: Int, b: Int, c: Int) {}
             override fun afterTextChanged(s: Editable?) {
@@ -367,8 +368,10 @@ class HomeFragment : Fragment() {
     }
 
     override fun onDestroyView() {
+        searchRunnable?.let { binding.etSearch.removeCallbacks(it) }
         binding.etSearch.removeTextChangedListener(searchWatcher)
         searchWatcher = null
+        searchRunnable = null
         binding.rvSessions.adapter = null
         super.onDestroyView()
         _binding = null

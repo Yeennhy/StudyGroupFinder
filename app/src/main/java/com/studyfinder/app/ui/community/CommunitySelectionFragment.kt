@@ -40,6 +40,7 @@ class CommunitySelectionFragment : Fragment() {
     private val adapter = CommunityListAdapter { community -> viewModel.join(community.id) }
 
     private var searchWatcher: TextWatcher? = null
+    private var searchRunnable: Runnable? = null
 
     override fun onCreate(savedInstanceState: android.os.Bundle?) {
         super.onCreate(savedInstanceState)
@@ -78,12 +79,12 @@ class CommunitySelectionFragment : Fragment() {
     }
 
     private fun wireSearch() {
+        val runnable = Runnable {
+            // Both search + city filter run client-side over the REST list.
+            viewModel.search(binding.etSearch.text?.toString().orEmpty())
+        }
+        searchRunnable = runnable
         searchWatcher = object : TextWatcher {
-            private val runnable = Runnable {
-                // Both search + city filter run client-side over the REST list.
-                viewModel.search(binding.etSearch.text?.toString().orEmpty())
-            }
-
             override fun beforeTextChanged(s: CharSequence?, a: Int, b: Int, c: Int) {}
             override fun onTextChanged(s: CharSequence?, a: Int, b: Int, c: Int) {}
             override fun afterTextChanged(s: Editable?) {
@@ -204,8 +205,10 @@ class CommunitySelectionFragment : Fragment() {
     }
 
     override fun onDestroyView() {
+        searchRunnable?.let { binding.etSearch.removeCallbacks(it) }
         binding.etSearch.removeTextChangedListener(searchWatcher)
         searchWatcher = null
+        searchRunnable = null
         binding.rvCommunities.adapter = null
         super.onDestroyView()
         _binding = null
