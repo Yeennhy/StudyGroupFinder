@@ -146,13 +146,16 @@ class SessionDetailFragment : Fragment() {
                     
                     if (membersList != null && sessionData != null) {
                         val hostUid = sessionData.hostUid
-                        val attendees = membersList.filter { 
+                        val attendees = membersList.filter {
                             it.uid != hostUid && it.uid in sessionData.memberUids
                         }
                         attendeeAdapter.submitList(attendees)
-                        
-                        val pending = membersList.filter { 
-                            it.status == com.studyfinder.app.model.MemberStatus.PENDING
+
+                        val isHost = hostUid == auth.currentUser?.uid
+                        val pending = if (isHost) {
+                            membersList.filter { it.status == com.studyfinder.app.model.MemberStatus.PENDING }
+                        } else {
+                            emptyList()
                         }
                         pendingRequestAdapter.submitList(pending)
                         binding.cardPendingRq.isVisible = pending.isNotEmpty()
