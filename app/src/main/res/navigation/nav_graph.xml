@@ -269,9 +269,15 @@
             android:name="sessionId"
             app:argType="string" />
 
+        <!-- Removes this screen from the stack so Success's plain popBackStack()
+             returns straight to whichever screen launched the invite flow
+             (Session Manage or Session Detail), matching its "Back to
+             Management" button label. -->
         <action
             android:id="@+id/action_inviteByStudentIdFragment_to_successFragment"
-            app:destination="@id/successFragment" />
+            app:destination="@id/successFragment"
+            app:popUpTo="@id/inviteByStudentIdFragment"
+            app:popUpToInclusive="true" />
     </fragment>
 
     <!-- ==================== my sessions & history =================== -->
