@@ -28,7 +28,7 @@ object DataSeeder {
 
     private const val TAG = "DataSeeder"
     private const val PREFS = "data_seeder"
-    private const val GLOBAL_SEED_VERSION = 3
+    private const val GLOBAL_SEED_VERSION = 5
     private const val KEY_GLOBAL = "global_seed_version"
     private const val KEY_USER_PREFIX = "user_seed_"
 
@@ -44,11 +44,11 @@ object DataSeeder {
     private const val U_E = "u-erin"
 
     /** Entry point. Cheap to call on every launch — the flags short-circuit. */
-    fun seedAll(context: Context) {
+    fun seedAll(context: Context, force: Boolean = false) {
         val prefs = context.getSharedPreferences(PREFS, Context.MODE_PRIVATE)
         val currentUid = FirebaseAuth.getInstance().currentUser?.uid
-        val needGlobal = prefs.getInt(KEY_GLOBAL, 0) < GLOBAL_SEED_VERSION
-        val needUser = currentUid != null && !prefs.getBoolean(KEY_USER_PREFIX + currentUid, false)
+        val needGlobal = force || prefs.getInt(KEY_GLOBAL, 0) < GLOBAL_SEED_VERSION
+        val needUser = currentUid != null && (force || !prefs.getBoolean(KEY_USER_PREFIX + currentUid, false))
         if (!needGlobal && !needUser) return
 
         CoroutineScope(Dispatchers.Main).launch {
@@ -440,7 +440,7 @@ object DataSeeder {
 
             // A join_request inbox item to the host for each pending requester.
             s.pending.forEach { requester ->
-                FirestoreRefs.inbox(s.host).add(
+                FirestoreRefs.inbox(s.host).document("seed-${s.id}-$requester-join").set(
                     mapOf(
                         "type" to InboxType.JOIN_REQUEST.wire,
                         "sessionId" to s.id,
@@ -453,7 +453,7 @@ object DataSeeder {
             }
             // An invite inbox item to each invited user.
             s.invited.forEach { invitee ->
-                FirestoreRefs.inbox(invitee).add(
+                FirestoreRefs.inbox(invitee).document("seed-${s.id}-$invitee-invite").set(
                     mapOf(
                         "type" to InboxType.INVITE.wire,
                         "sessionId" to s.id,
@@ -492,7 +492,7 @@ object DataSeeder {
         val engMemberUids = engSession.get("memberUids") as? List<*>
         if (engMemberUids == null || uid !in engMemberUids) {
             writeMember("s-english-club", uid, MemberStatus.INVITED)
-            FirestoreRefs.inbox(uid).add(
+            FirestoreRefs.inbox(uid).document("seed-invite-english").set(
                 mapOf(
                     "type" to InboxType.INVITE.wire,
                     "sessionId" to "s-english-club",
@@ -541,7 +541,7 @@ object DataSeeder {
         ).await()
         writeMember("s-my-hosted", uid, MemberStatus.ADMIN)
         writeMember("s-my-hosted", U_C, MemberStatus.PENDING)
-        FirestoreRefs.inbox(uid).add(
+        FirestoreRefs.inbox(uid).document("seed-request-my-hosted").set(
             mapOf(
                 "type" to InboxType.JOIN_REQUEST.wire,
                 "sessionId" to "s-my-hosted",
@@ -553,7 +553,7 @@ object DataSeeder {
         ).await()
 
         // system
-        FirestoreRefs.inbox(uid).add(
+        FirestoreRefs.inbox(uid).document("seed-welcome").set(
             mapOf(
                 "type" to InboxType.SYSTEM.wire,
                 "sessionId" to null,
