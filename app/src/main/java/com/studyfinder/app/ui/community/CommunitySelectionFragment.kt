@@ -131,7 +131,7 @@ class CommunitySelectionFragment : Fragment() {
                 val lp = ViewGroup.MarginLayoutParams(
                     ViewGroup.LayoutParams.WRAP_CONTENT, ViewGroup.LayoutParams.WRAP_CONTENT,
                 )
-                lp.marginStart = if (isAll) 0 else 16
+                lp.marginStart = if (isAll) 0 else (16 * d).toInt()
                 layoutParams = lp
                 setOnClickListener {
                     val nextCity = if (isAll) null else label
