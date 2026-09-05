@@ -68,6 +68,11 @@ class ProfileRepository {
                     if (fromCache && sawServer) trySend(UiState.Offline(profile))
                     else trySend(UiState.Success(profile))
                 }
+            } else if (snapshot != null) {
+                // Offline with no local cache of our own document yet - Firestore
+                // fires once with a non-null, non-existent snapshot rather than
+                // hanging, so surface it instead of leaving Loading forever.
+                trySend(UiState.Error("Unable to load your profile. Check your connection and try again."))
             }
         }
         awaitClose { listener.remove() }
