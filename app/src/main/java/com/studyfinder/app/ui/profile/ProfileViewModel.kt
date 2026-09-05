@@ -44,6 +44,12 @@ class ProfileViewModel : ViewModel() {
     private val _isEmailVerified = MutableStateFlow(true) // Default to true to hide message initially
     val isEmailVerified: StateFlow<Boolean> = _isEmailVerified
 
+    private val _isEditing = MutableStateFlow(false)
+    val isEditing: StateFlow<Boolean> = _isEditing
+
+    private val _pendingAvatarUri = MutableStateFlow<Uri?>(null)
+    val pendingAvatarUri: StateFlow<Uri?> = _pendingAvatarUri
+
     private val _saveResult = MutableLiveData<ActionResult>(ActionResult.Idle)
     val saveResult: LiveData<ActionResult> = _saveResult
 
@@ -68,7 +74,19 @@ class ProfileViewModel : ViewModel() {
     fun save(profile: UserProfile) {
         viewModelScope.launch {
             _saveResult.value = profileRepository.updateProfile(profile)
+            if (_saveResult.value is ActionResult.Success) {
+                _isEditing.value = false
+                _pendingAvatarUri.value = null
+            }
         }
+    }
+
+    fun setPendingAvatarUri(uri: Uri?) {
+        _pendingAvatarUri.value = uri
+    }
+
+    fun setEditing(enabled: Boolean) {
+        _isEditing.value = enabled
     }
 
     fun clearSaveResult() {

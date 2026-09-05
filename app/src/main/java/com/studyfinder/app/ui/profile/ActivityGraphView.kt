@@ -28,6 +28,7 @@ class ActivityGraphView(context: Context, attrs: AttributeSet?) : View(context, 
 
     private var cellSize = 0f
     private var cellGap = 0f
+    private var maxCellSizeAttr = 24f * resources.displayMetrics.density
     
     private var labelAreaLeft = 30f * resources.displayMetrics.density
     private var labelAreaTop = 20f * resources.displayMetrics.density
@@ -40,6 +41,7 @@ class ActivityGraphView(context: Context, attrs: AttributeSet?) : View(context, 
             try {
                 customCellSize = getDimension(R.styleable.ActivityGraphView_cellSize, 0f)
                 customCellGap = getDimension(R.styleable.ActivityGraphView_cellGap, 0f)
+                maxCellSizeAttr = getDimension(R.styleable.ActivityGraphView_maxCellSize, 24f * resources.displayMetrics.density)
             } finally {
                 recycle()
             }
@@ -52,6 +54,8 @@ class ActivityGraphView(context: Context, attrs: AttributeSet?) : View(context, 
         invalidate()
     }
 
+    private var horizontalOffset = 0f
+
     override fun onMeasure(widthSpec: Int, heightSpec: Int) {
         val width = MeasureSpec.getSize(widthSpec)
         val columns = weeks.size.coerceAtLeast(1)
@@ -61,12 +65,16 @@ class ActivityGraphView(context: Context, attrs: AttributeSet?) : View(context, 
         cellSize = if (customCellSize > 0) {
             customCellSize
         } else {
-            (width - labelAreaLeft - cellGap * (columns - 1)) / columns
+            val calculated = (width - labelAreaLeft - cellGap * (columns - 1)) / columns
+            calculated.coerceAtMost(maxCellSizeAttr)
         }
+
+        val totalGraphWidth = labelAreaLeft + columns * cellSize + (columns - 1) * cellGap
+        horizontalOffset = if (totalGraphWidth < width) (width - totalGraphWidth) / 2f else 0f
 
         val height = (labelAreaTop + cellSize * 7 + cellGap * 6).toInt()
         val calculatedWidth = if (customCellSize > 0) {
-            (labelAreaLeft + columns * cellSize + (columns - 1) * cellGap).toInt()
+            totalGraphWidth.toInt()
         } else {
             width
         }
@@ -76,6 +84,9 @@ class ActivityGraphView(context: Context, attrs: AttributeSet?) : View(context, 
 
     override fun onDraw(canvas: Canvas) {
         if (weeks.isEmpty()) return
+        
+        canvas.save()
+        canvas.translate(horizontalOffset, 0f)
         
         drawLabels(canvas)
 
@@ -90,6 +101,7 @@ class ActivityGraphView(context: Context, attrs: AttributeSet?) : View(context, 
                 )
             }
         }
+        canvas.restore()
     }
 
     private fun drawLabels(canvas: Canvas) {

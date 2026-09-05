@@ -1,0 +1,6 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <!-- Navigation Bar - Reduced for landscape -->
+    <dimen name="nav_bar_vertical_padding">8dp</dimen>
+    <dimen name="nav_bar_item_vertical_padding">4dp</dimen>
+</resources>

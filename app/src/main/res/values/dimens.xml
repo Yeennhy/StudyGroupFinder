@@ -5,4 +5,8 @@
     <dimen name="spacing_large">24dp</dimen>
 
     <dimen name="activity_cell_gap">3dp</dimen>
+
+    <!-- Navigation Bar -->
+    <dimen name="nav_bar_vertical_padding">18dp</dimen>
+    <dimen name="nav_bar_item_vertical_padding">8dp</dimen>
 </resources>

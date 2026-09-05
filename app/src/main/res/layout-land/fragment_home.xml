@@ -72,9 +72,10 @@
 
             <!-- Group Filter Section -->
             <TextView
+                android:id="@+id/tvHeaderCategories"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:layout_marginTop="20dp"
+                android:layout_marginTop="8dp"
                 android:text="Categories"
                 android:textSize="14sp"
                 android:textStyle="bold"
@@ -85,7 +86,7 @@
                 android:id="@+id/scrollCategoryFilters"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:layout_marginTop="8dp"
+                android:layout_marginTop="4dp"
                 android:scrollbars="none">
 
                 <LinearLayout
@@ -103,9 +104,10 @@
             </HorizontalScrollView>
 
             <TextView
+                android:id="@+id/tvHeaderTypes"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:layout_marginTop="20dp"
+                android:layout_marginTop="8dp"
                 android:text="Types"
                 android:textSize="14sp"
                 android:textStyle="bold"
@@ -116,7 +118,7 @@
                 android:id="@+id/scrollCourseTypeFilters"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:layout_marginTop="8dp"
+                android:layout_marginTop="4dp"
                 android:scrollbars="none">
 
                 <LinearLayout
@@ -139,10 +141,11 @@
             </HorizontalScrollView>
 
             <TextView
+                android:id="@+id/tvHeaderExpectation"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:layout_marginTop="20dp"
-                android:text="Level"
+                android:layout_marginTop="8dp"
+                android:text="Expectance Level"
                 android:textSize="14sp"
                 android:textStyle="bold"
                 android:textColor="@color/graphite"
@@ -152,7 +155,7 @@
                 android:id="@+id/scrollExpectationFilters"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:layout_marginTop="8dp"
+                android:layout_marginTop="4dp"
                 android:scrollbars="none">
 
                 <LinearLayout
@@ -170,9 +173,10 @@
             </HorizontalScrollView>
 
             <TextView
+                android:id="@+id/tvHeaderOptions"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:layout_marginTop="20dp"
+                android:layout_marginTop="8dp"
                 android:text="Options"
                 android:textSize="14sp"
                 android:textStyle="bold"
@@ -180,9 +184,10 @@
                 android:fontFamily="@font/bricolagegrotesque_bold" />
 
             <LinearLayout
+                android:id="@+id/rowOptions"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:layout_marginTop="8dp"
+                android:layout_marginTop="4dp"
                 android:orientation="horizontal">
 
                 <ImageButton
@@ -210,7 +215,7 @@
                     android:paddingStart="12dp"
                     android:paddingEnd="12dp"
                     android:paddingTop="8dp"
-                    android:paddingBottom="8dp"
+                    android:paddingBottom="11dp"
                     android:fontFamily="@font/pjsans_bold" />
 
             </LinearLayout>
@@ -226,7 +231,7 @@
                 android:textStyle="bold"
                 android:gravity="center"
                 android:paddingTop="8dp"
-                android:paddingBottom="8dp"
+                android:paddingBottom="11dp"
                 android:fontFamily="@font/pjsans_bold" />
 
             <!-- Hidden toggles for animation consistency -->
@@ -255,6 +260,7 @@
         android:paddingEnd="20dp"
         android:paddingBottom="20dp"
         android:clipToPadding="false"
+        app:spanCount="2"
         app:layout_constraintTop_toBottomOf="@id/appHeader"
         app:layout_constraintBottom_toTopOf="@id/navBar"
         app:layout_constraintStart_toEndOf="@id/guideline"

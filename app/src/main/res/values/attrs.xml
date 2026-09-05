@@ -3,5 +3,6 @@
     <declare-styleable name="ActivityGraphView">
         <attr name="cellSize" format="dimension" />
         <attr name="cellGap" format="dimension" />
+        <attr name="maxCellSize" format="dimension" />
     </declare-styleable>
 </resources>

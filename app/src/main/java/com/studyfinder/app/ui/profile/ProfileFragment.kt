@@ -52,10 +52,8 @@ class ProfileFragment : Fragment() {
     private val viewModel: ProfileViewModel by viewModels()
 
     private val isSelfView: Boolean get() = args.uid == null
-    private var isEditing: Boolean = false
 
     private var tempCameraUri: Uri? = null
-    private var pendingAvatarUri: Uri? = null
 
     private val pickMedia = registerForActivityResult(ActivityResultContracts.PickVisualMedia()) { uri ->
         if (uri != null) {
@@ -131,23 +129,26 @@ class ProfileFragment : Fragment() {
         binding.stateError.btnStateRetry.setOnClickListener { activity?.recreate() }
 
         viewModel.profile.observe(viewLifecycleOwner) { state ->
-            // Don't yank the form out from under an in-progress edit.
-            if (!isEditing) {
-                com.studyfinder.app.ui.common.StateRenderer.render(
-                    state = state,
-                    loadingView = binding.stateLoading.root,
-                    emptyView = binding.stateEmpty.root,
-                    errorView = binding.stateError.root,
-                    offlineView = binding.stateOfflineBanner.root,
-                    contentView = binding.scrollContent,
-                )
-            }
+            // Always render the state (loading/success/error) to ensure the container is visible.
+            com.studyfinder.app.ui.common.StateRenderer.render(
+                state = state,
+                loadingView = binding.stateLoading.root,
+                emptyView = binding.stateEmpty.root,
+                errorView = binding.stateError.root,
+                offlineView = binding.stateOfflineBanner.root,
+                contentView = binding.scrollContent,
+            )
+
             when (state) {
                 is UiState.Success -> {
-                    if (!isEditing) bindProfile(state.data)
+                    // Don't overwrite the form text fields if the user is currently editing.
+                    if (!viewModel.isEditing.value) bindProfile(state.data)
+                    // But always ensure the avatar is correct (prioritizing any picked image)
+                    renderAvatar(state.data.photoUrl, viewModel.pendingAvatarUri.value)
                 }
                 is UiState.Offline -> {
-                    if (!isEditing) bindProfile(state.cached)
+                    if (!viewModel.isEditing.value) bindProfile(state.cached)
+                    renderAvatar(state.cached.photoUrl, viewModel.pendingAvatarUri.value)
                 }
                 is UiState.Error -> {
                     Toast.makeText(context, state.message, Toast.LENGTH_SHORT).show()
@@ -163,9 +164,24 @@ class ProfileFragment : Fragment() {
 
         viewLifecycleOwner.lifecycleScope.launch {
             viewLifecycleOwner.repeatOnLifecycle(Lifecycle.State.STARTED) {
-                viewModel.isEmailVerified.collect { isVerified ->
-                    updateVerificationUi(isVerified)
-                    updateStatusDivider()
+                launch {
+                    viewModel.isEmailVerified.collect { isVerified ->
+                        updateVerificationUi(isVerified)
+                        updateStatusDivider()
+                    }
+                }
+                launch {
+                    viewModel.isEditing.collect { editing ->
+                        setEditMode(enabled = editing, populate = false)
+                    }
+                }
+                launch {
+                    viewModel.pendingAvatarUri.collect { uri ->
+                        // Re-render avatar when a new image is picked or cleared
+                        val currentUrl = (viewModel.profile.value as? UiState.Success)?.data?.photoUrl
+                            ?: (viewModel.profile.value as? UiState.Offline)?.cached?.photoUrl
+                        renderAvatar(currentUrl, uri)
+                    }
                 }
             }
         }
@@ -174,8 +190,6 @@ class ProfileFragment : Fragment() {
             when (result) {
                 is ActionResult.Success -> {
                     Toast.makeText(context, "Profile updated", Toast.LENGTH_SHORT).show()
-                    isEditing = false
-                    setEditMode(false)
                     // Refresh UI with the latest data from the ViewModel
                     (viewModel.profile.value as? UiState.Success)?.data?.let { bindProfile(it) }
                     viewModel.clearSaveResult()
@@ -204,18 +218,6 @@ class ProfileFragment : Fragment() {
         binding.tvAdmissionYearValue.text = profile.admissionYear
 
         updateStatusDivider()
-
-        if (profile.photoUrl.isNotBlank()) {
-            applyAvatarStyle(true)
-            Glide.with(this)
-                .load(profile.photoUrl)
-                .circleCrop()
-                .placeholder(R.drawable.bg_pill_dark)
-                .transition(DrawableTransitionOptions.withCrossFade())
-                .into(binding.ivAvatar)
-        } else {
-            applyAvatarStyle(false)
-        }
     }
 
     private fun showAvatarSourceDialog() {
@@ -253,18 +255,27 @@ class ProfileFragment : Fragment() {
     }
 
     private fun updateAvatarUi(uri: Uri) {
-        pendingAvatarUri = uri
-        applyAvatarStyle(true)
-        Glide.with(this)
-            .load(uri)
-            .circleCrop()
-            .placeholder(R.drawable.bg_pill_dark)
-            .transition(DrawableTransitionOptions.withCrossFade())
-            .into(binding.ivAvatar)
+        viewModel.setPendingAvatarUri(uri)
+    }
+
+    private fun renderAvatar(photoUrl: String?, pendingUri: Uri?) {
+        val hasSource = !photoUrl.isNullOrBlank() || pendingUri != null
+        applyAvatarStyle(hasSource)
+
+        val source: Any? = pendingUri ?: photoUrl?.takeIf { it.isNotBlank() }
+        
+        if (source != null) {
+            Glide.with(this)
+                .load(source)
+                .circleCrop()
+                .placeholder(R.drawable.bg_pill_dark)
+                .transition(DrawableTransitionOptions.withCrossFade())
+                .into(binding.ivAvatar)
+        }
     }
 
     private fun updateVerificationUi(isVerified: Boolean) {
-        val showVerification = isSelfView && !isVerified && !isEditing
+        val showVerification = isSelfView && !isVerified && !viewModel.isEditing.value
         binding.verifymsg.isVisible = showVerification
         binding.verifymsg2.isVisible = showVerification
         binding.tvResendVerification.isVisible = showVerification
@@ -281,7 +292,7 @@ class ProfileFragment : Fragment() {
 
     private fun updateStatusDivider() {
         val isBlockedVisible = !isSelfView && (viewModel.isBlocked.value ?: false)
-        val isVerificationVisible = isSelfView && !viewModel.isEmailVerified.value && !isEditing
+        val isVerificationVisible = isSelfView && !viewModel.isEmailVerified.value && !viewModel.isEditing.value
         
         binding.divAvatarCard.isVisible = isBlockedVisible || isVerificationVisible
     }
@@ -356,11 +367,15 @@ class ProfileFragment : Fragment() {
     private fun toggleEditMode() {
         if (!isSelfView) return
         
-        isEditing = !isEditing
-        setEditMode(isEditing)
+        val target = !viewModel.isEditing.value
+        if (target) {
+            // Populate data when entering edit mode
+            setEditMode(enabled = true, populate = true)
+        }
+        viewModel.setEditing(target)
     }
 
-    private fun setEditMode(enabled: Boolean) {
+    private fun setEditMode(enabled: Boolean, populate: Boolean = true) {
         // Toggle visibility of read-only views
         binding.tvProfileName.isVisible = !enabled
         binding.tvProfileId.isVisible = !enabled
@@ -394,8 +409,8 @@ class ProfileFragment : Fragment() {
             if (enabled) R.drawable.ic_x else R.drawable.ic_edit_pencil
         )
 
-        if (enabled) {
-            // Copy data to EditTexts
+        if (enabled && populate) {
+            // Copy data to EditTexts only when manually entering edit mode
             binding.etProfileName.setText(binding.tvProfileName.text)
             binding.etProfileBio.setText(binding.tvProfileBio.text)
             binding.etDepartmentValue.setText(binding.tvDepartmentValue.text)
@@ -407,7 +422,7 @@ class ProfileFragment : Fragment() {
     private fun saveChanges() {
         val currentProfile = (viewModel.profile.value as? UiState.Success)?.data ?: return
         
-        pendingAvatarUri?.let {
+        viewModel.pendingAvatarUri.value?.let {
             viewModel.uploadPhoto(it)
         }
         

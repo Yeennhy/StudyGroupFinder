@@ -296,10 +296,13 @@ class HomeFragment : Fragment() {
             duration = 300
         })
 
-        val filterRows = listOf(
+        val filterRows = listOfNotNull(
             binding.scrollCategoryFilters,
             binding.scrollCourseTypeFilters,
-            binding.scrollExpectationFilters
+            binding.scrollExpectationFilters,
+            if (isLandscape) binding.tvHeaderCategories else null,
+            if (isLandscape) binding.tvHeaderTypes else null,
+            if (isLandscape) binding.tvHeaderExpectation else null
         )
 
         filterRows.forEachIndexed { index, view ->
@@ -312,7 +315,7 @@ class HomeFragment : Fragment() {
                     .alpha(1f)
                     .translationY(0f)
                     .setDuration(300)
-                    .setStartDelay(index * 70L)
+                    .setStartDelay(index * 40L) // Slightly faster stagger
                     .start()
             } else {
                 // Exit: Fade out quickly

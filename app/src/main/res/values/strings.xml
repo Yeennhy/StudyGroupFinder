@@ -61,4 +61,23 @@
     <string name="empty_profile">We couldn\'t load this profile.</string>
     <string name="empty_session_members">No members have joined yet.</string>
     <string name="empty_student_search">No student found with that ID.</string>
+
+    <!-- Profile -->
+    <string name="cd_profile_pic">Profile picture</string>
+    <string name="profile_name_label">Profile Name</string>
+    <string name="profile_bio_label">Bio</string>
+    <string name="profile_blocked_msg">You blocked this user</string>
+    <string name="btn_unblock">Unblock</string>
+    <string name="profile_unverified_msg">Your account has not been verified yet</string>
+    <string name="profile_resend_email">Resend verification email</string>
+    <string name="profile_community_label">Community</string>
+    <string name="profile_details_label">Personal Details</string>
+    <string name="profile_dept_tag">Department</string>
+    <string name="profile_major_tag">Major</string>
+    <string name="profile_year_tag">Admission Year</string>
+    <string name="profile_activity_label">Session Activity</string>
+    <string name="profile_activity_range">Last 90 days</string>
+    <string name="profile_activity_less">Less</string>
+    <string name="profile_activity_more">More</string>
+    <string name="btn_save_changes">Save Changes</string>
 </resources>

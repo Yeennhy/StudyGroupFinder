@@ -92,7 +92,7 @@ class ConfirmationDialogFragment : DialogFragment() {
         super.onStart()
         dialog?.window?.apply {
             val width = (resources.displayMetrics.widthPixels * 0.9).toInt()
-            setLayout(width, ViewGroup.LayoutParams.MATCH_PARENT)
+            setLayout(width, ViewGroup.LayoutParams.WRAP_CONTENT)
             setBackgroundDrawable(ColorDrawable(Color.TRANSPARENT))
             setDimAmount(0.6f)
         }
