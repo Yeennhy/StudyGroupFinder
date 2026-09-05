@@ -28,6 +28,8 @@ import com.studyfinder.app.util.UiState
 import com.studyfinder.app.util.setupHeader
 import kotlinx.coroutines.flow.collectLatest
 import kotlinx.coroutines.flow.combine
+import kotlinx.coroutines.flow.filterNotNull
+import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.launch
 
 class SessionManageFragment : Fragment() {
@@ -214,7 +216,16 @@ class SessionManageFragment : Fragment() {
             )
             dialog.setOnConfirmListener {
                 viewModel.submitChanges()
-                findNavController().popBackStack()
+                // Wait for the result instead of popping immediately: popping
+                // right away would tear down this view (and the actionResult
+                // collector below) before the write resolves, silently
+                // swallowing a failure. The existing collector still shows the
+                // success/error Toast either way.
+                viewLifecycleOwner.lifecycleScope.launch {
+                    if (viewModel.actionResult.filterNotNull().first() is ActionResult.Success) {
+                        findNavController().popBackStack()
+                    }
+                }
             }
             dialog.setOnGoBackListener {
                 findNavController().popBackStack()
