@@ -258,12 +258,13 @@ class SessionManageFragment : Fragment() {
     }
 
     private fun updateSessionMode(mode: SessionMode) {
-        val sessionState = viewModel.session.value
-        if (sessionState is UiState.Success) {
-            val updated = sessionState.data.copy(mode = mode)
-            viewModel.saveEdits(updated)
-        }
+        val current = currentSessionOrNull() ?: return
+        viewModel.saveEdits(current.copy(mode = mode))
     }
+
+    /** The session as it would be saved right now: any pending edit, or the original. */
+    private fun currentSessionOrNull(): Session? =
+        viewModel.pendingSession.value ?: (viewModel.session.value as? UiState.Success)?.data
 
     private fun setupRecyclerViews() {
         binding.rvPendingRequests.apply {
@@ -342,11 +343,9 @@ class SessionManageFragment : Fragment() {
     }
 
     private fun openEditDialog() {
-        val sessionState = viewModel.session.value
-        if (sessionState is UiState.Success) {
-            val dialog = SessionEditFragment.newInstance(sessionState.data)
-            dialog.show(childFragmentManager, "SessionEditFragment")
-        }
+        val current = currentSessionOrNull() ?: return
+        val dialog = SessionEditFragment.newInstance(current)
+        dialog.show(childFragmentManager, "SessionEditFragment")
     }
 
     private fun openInviteByStudentId() {
