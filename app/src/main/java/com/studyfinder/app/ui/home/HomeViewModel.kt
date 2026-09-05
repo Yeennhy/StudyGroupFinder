@@ -68,7 +68,17 @@ class HomeViewModel : ViewModel() {
         pipeline = viewModelScope.launch {
             val profileState = profileRepository.observeCurrentProfile()
                 .first { it !is UiState.Loading }
-            val rawCommunityId = (profileState as? UiState.Success)?.data?.communityId
+
+            if (profileState is UiState.Error) {
+                _state.value = UiState.Error(profileState.message, profileState.cause)
+                return@launch
+            }
+
+            val rawCommunityId = when (profileState) {
+                is UiState.Success -> profileState.data.communityId
+                is UiState.Offline -> profileState.cached.communityId
+                else -> null
+            }
             val communityId = rawCommunityId?.uppercase() // Force uppercase to match normalized data
 
             if (communityId.isNullOrBlank()) {
