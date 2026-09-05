@@ -3,6 +3,7 @@ package com.studyfinder.app.util
 import androidx.core.content.res.ResourcesCompat
 import androidx.fragment.app.Fragment
 import androidx.navigation.fragment.findNavController
+import androidx.navigation.navOptions
 import com.studyfinder.app.R
 import com.studyfinder.app.databinding.FragmentNavbarBinding
 
@@ -32,7 +33,15 @@ fun Fragment.setupNavbar(binding: FragmentNavbarBinding) {
 
         layout.setOnClickListener {
             if (currentDestinationId != destinationId) {
-                navController.navigate(destinationId)
+                // Anchor every tab switch to homeFragment so the back stack never
+                // grows past [home, currentTab] no matter how many tabs are tapped,
+                // and the system Back button returns to Home instead of replaying
+                // tab-switch history.
+                navController.navigate(
+                    destinationId,
+                    null,
+                    navOptions { popUpTo(R.id.homeFragment) { inclusive = false } }
+                )
             }
         }
     }
