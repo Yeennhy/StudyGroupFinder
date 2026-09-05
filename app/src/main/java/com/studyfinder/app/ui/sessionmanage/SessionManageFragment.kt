@@ -306,7 +306,7 @@ class SessionManageFragment : Fragment() {
     private fun bindSession(session: Session) {
         binding.apply {
             tvSessionTitle.text = session.title
-            tvSessionTime.text = DateTimeUtils.formatTime(session.startTimeMillis)
+            tvSessionTime.text = DateTimeUtils.formatDateTime(session.startTimeMillis)
             tvSessionLocation.text = session.locationName
             
             val durationMinutes = ((session.endTimeMillis - session.startTimeMillis) / 60000).toInt()
