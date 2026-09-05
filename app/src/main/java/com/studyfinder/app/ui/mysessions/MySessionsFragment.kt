@@ -96,18 +96,18 @@ class MySessionsFragment : Fragment() {
             adapter = listAdapter
         }
 
-        binding.stateEmpty.tvStateEmptyMessage.setText(R.string.empty_my_sessions)
-        binding.stateError.btnStateRetry.setOnClickListener { activity?.recreate() }
+        binding.listStateEmpty.tvStateEmptyMessage.setText(R.string.empty_my_sessions)
+        binding.listStateError.btnStateRetry.setOnClickListener { activity?.recreate() }
 
         viewLifecycleOwner.lifecycleScope.launch {
             viewModel.listItems.collect { state ->
                 StateRenderer.render(
                     state = state,
-                    loadingView = binding.stateLoading.root,
-                    emptyView = binding.stateEmpty.root,
-                    errorView = binding.stateError.root,
+                    loadingView = binding.listStateLoading.root,
+                    emptyView = binding.listStateEmpty.root,
+                    errorView = binding.listStateError.root,
                     offlineView = binding.stateOfflineBanner.root,
-                    contentView = binding.mainScrollView,
+                    contentView = binding.rvSessions,
                 )
 
                 val items = when (state) {
@@ -130,6 +130,9 @@ class MySessionsFragment : Fragment() {
             layoutManager = LinearLayoutManager(context)
             adapter = calendarSessionAdapter
         }
+
+        binding.calendarStateEmpty.tvStateEmptyMessage.setText(R.string.empty_my_sessions_day)
+        binding.calendarStateError.btnStateRetry.setOnClickListener { activity?.recreate() }
 
         binding.btnNextMonth.setOnClickListener { viewModel.nextMonth() }
         binding.btnPrevMonth.setOnClickListener { viewModel.prevMonth() }
@@ -154,7 +157,21 @@ class MySessionsFragment : Fragment() {
                 }
             }
             launch {
-                viewModel.selectedDateSessions.collect { sessions ->
+                viewModel.selectedDateSessions.collect { state ->
+                    StateRenderer.render(
+                        state = state,
+                        loadingView = binding.calendarStateLoading.root,
+                        emptyView = binding.calendarStateEmpty.root,
+                        errorView = binding.calendarStateError.root,
+                        offlineView = null, // Global banner already handled by List view flow
+                        contentView = binding.rvSelectedDateSessions
+                    )
+
+                    val sessions = when (state) {
+                        is UiState.Success -> state.data
+                        is UiState.Offline -> state.cached
+                        else -> emptyList()
+                    }
                     calendarSessionAdapter.submitList(sessions)
                 }
             }

@@ -61,6 +61,7 @@
     <string name="empty_profile">We couldn\'t load this profile.</string>
     <string name="empty_session_members">No members have joined yet.</string>
     <string name="empty_student_search">No student found with that ID.</string>
+    <string name="empty_my_sessions_day">No sessions for this day.</string>
 
     <!-- Profile -->
     <string name="cd_profile_pic">Profile picture</string>

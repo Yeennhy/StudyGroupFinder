@@ -116,15 +116,23 @@ class MySessionsViewModel : ViewModel() {
         days
     }.stateIn(viewModelScope, SharingStarted.Lazily, emptyList())
 
-    val selectedDateSessions: StateFlow<List<Session>> = combine(
+    val selectedDateSessions: StateFlow<UiState<List<Session>>> = combine(
         upcomingSessions, _selectedDate
     ) { state, date ->
-        if (state is UiState.Success) {
-            state.data.filter { DateTimeUtils.toLocalDate(it.startTimeMillis) == date }
-        } else {
-            emptyList()
+        when (state) {
+            is UiState.Success -> {
+                val filtered = state.data.filter { DateTimeUtils.toLocalDate(it.startTimeMillis) == date }
+                if (filtered.isEmpty()) UiState.Empty() else UiState.Success(filtered)
+            }
+            is UiState.Offline -> {
+                val filtered = state.cached.filter { DateTimeUtils.toLocalDate(it.startTimeMillis) == date }
+                if (filtered.isEmpty()) UiState.Empty() else UiState.Offline(filtered)
+            }
+            is UiState.Error -> UiState.Error(state.message, state.cause)
+            is UiState.Empty -> UiState.Empty(state.message)
+            is UiState.Loading -> UiState.Loading
         }
-    }.stateIn(viewModelScope, SharingStarted.Lazily, emptyList())
+    }.stateIn(viewModelScope, SharingStarted.Lazily, UiState.Loading)
 
     fun setViewType(type: ViewType) {
         _viewType.value = type
