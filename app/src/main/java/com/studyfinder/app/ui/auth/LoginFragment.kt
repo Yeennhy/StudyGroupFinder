@@ -35,10 +35,8 @@ class LoginFragment : Fragment() {
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
         
-        // Clear previous state
-        viewModel.clearResult()
-        binding.tvEmailError.isVisible = false
-        binding.tvPasswordError.isVisible = false
+        // Clear previous state on fresh entry
+        if (savedInstanceState == null) viewModel.clearResult()
 
         // Apply underlines to links
         binding.tvForgotPassword.paintFlags = binding.tvForgotPassword.paintFlags or Paint.UNDERLINE_TEXT_FLAG
@@ -116,12 +114,14 @@ class LoginFragment : Fragment() {
     }
 
     private fun goToSignup() {
+        viewModel.clearResult()
         findNavController().navigate(
             LoginFragmentDirections.actionLoginFragmentToSignupFragment()
         )
     }
 
     private fun goToForgotPassword() {
+        viewModel.clearResult()
         findNavController().navigate(
             LoginFragmentDirections.actionLoginFragmentToForgotPasswordFragment()
         )

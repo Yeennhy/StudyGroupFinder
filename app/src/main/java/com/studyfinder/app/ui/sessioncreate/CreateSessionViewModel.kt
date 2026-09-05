@@ -32,6 +32,28 @@ class CreateSessionViewModel : ViewModel() {
     private val _createResult = MutableSharedFlow<ActionResult>(replay = 0)
     val createResult: SharedFlow<ActionResult> = _createResult.asSharedFlow()
 
+    // Draft Session Data (Persists across rotation)
+    val draftDate = MutableStateFlow(java.util.Calendar.getInstance())
+    val draftDurationMinutes = MutableStateFlow(90)
+    val draftCapacity = MutableStateFlow(4)
+    val draftIsGated = MutableStateFlow(false)
+    private val _draftTags = MutableStateFlow<List<String>>(emptyList())
+    val draftTags: StateFlow<List<String>> = _draftTags
+
+    fun addDraftTag(tag: String) {
+        if (!_draftTags.value.contains(tag)) {
+            _draftTags.value = _draftTags.value + tag
+        }
+    }
+
+    fun removeDraftTag(tag: String) {
+        _draftTags.value = _draftTags.value - tag
+    }
+
+    fun setDraftTags(tags: List<String>) {
+        _draftTags.value = tags
+    }
+
     private var currentCommunityId: String? = null
     private var prefillSessionId: String? = null
 

@@ -37,12 +37,6 @@ class CreateSessionFragment : Fragment() {
     private val viewModel: CreateSessionViewModel by viewModels()
     private val args: CreateSessionFragmentArgs by navArgs()
 
-    private var selectedDate = Calendar.getInstance()
-    private var durationMinutes = 90
-    private var capacity = 4
-    private var isGated = false
-    private val selectedTags = mutableListOf<String>()
-
     override fun onCreate(savedInstanceState: android.os.Bundle?) {
         super.onCreate(savedInstanceState)
         applyFadeThroughTransitions()
@@ -100,33 +94,27 @@ class CreateSessionFragment : Fragment() {
 
     private fun setupToggles() {
         binding.toggleOpenToAll.setOnClickListener {
-            isGated = false
-            updateToggleUI()
+            viewModel.draftIsGated.value = false
         }
         binding.toggleOnlyRequests.setOnClickListener {
-            isGated = true
-            updateToggleUI()
+            viewModel.draftIsGated.value = true
         }
-        updateToggleUI()
     }
 
-    private fun updateToggleUI() {
+    private fun updateToggleUI(isGated: Boolean) {
         binding.toggleOpenToAll.setBackgroundResource(if (!isGated) R.drawable.bg_segment_selected else android.R.color.transparent)
         binding.toggleOnlyRequests.setBackgroundResource(if (isGated) R.drawable.bg_segment_selected else android.R.color.transparent)
     }
 
     private fun setupSchedule() {
-        updateDateText()
-        updateTimeText()
-
         binding.etDate.setOnClickListener {
             val picker = MaterialDatePicker.Builder.datePicker()
-                .setSelection(selectedDate.timeInMillis)
+                .setSelection(viewModel.draftDate.value.timeInMillis)
                 .build()
             picker.addOnPositiveButtonClickListener { selection ->
                 if (selection != null) {
-                    selectedDate.timeInMillis = selection
-                    updateDateText()
+                    val cal = Calendar.getInstance().apply { timeInMillis = selection }
+                    viewModel.draftDate.value = cal
                 }
             }
             picker.show(parentFragmentManager, "DATE_PICKER")
@@ -135,52 +123,46 @@ class CreateSessionFragment : Fragment() {
         binding.etTime.setOnClickListener {
             val picker = MaterialTimePicker.Builder()
                 .setTimeFormat(TimeFormat.CLOCK_12H)
-                .setHour(selectedDate.get(Calendar.HOUR_OF_DAY))
-                .setMinute(selectedDate.get(Calendar.MINUTE))
+                .setHour(viewModel.draftDate.value.get(Calendar.HOUR_OF_DAY))
+                .setMinute(viewModel.draftDate.value.get(Calendar.MINUTE))
                 .build()
             picker.addOnPositiveButtonClickListener {
-                selectedDate.set(Calendar.HOUR_OF_DAY, picker.hour)
-                selectedDate.set(Calendar.MINUTE, picker.minute)
-                updateTimeText()
+                val cal = Calendar.getInstance().apply { 
+                    timeInMillis = viewModel.draftDate.value.timeInMillis
+                    set(Calendar.HOUR_OF_DAY, picker.hour)
+                    set(Calendar.MINUTE, picker.minute)
+                }
+                viewModel.draftDate.value = cal
             }
             picker.show(parentFragmentManager, "TIME_PICKER")
         }
 
         binding.seekDuration.setOnSeekBarChangeListener(object : SeekBar.OnSeekBarChangeListener {
             override fun onProgressChanged(seekBar: SeekBar?, progress: Int, fromUser: Boolean) {
-                // Map 0-6 to 30m, 1h, 1h30m, 2h, 2h30m, 3h, 3h30m
-                durationMinutes = (progress + 1) * 30
-                val hours = durationMinutes / 60
-                val mins = durationMinutes % 60
-                binding.tvDurationValue.text = if (hours > 0) {
-                    if (mins > 0) "${hours}h ${mins}m" else "${hours}h"
-                } else "${mins}m"
+                if (fromUser) {
+                    viewModel.draftDurationMinutes.value = (progress + 1) * 30
+                }
             }
             override fun onStartTrackingTouch(p0: SeekBar?) {}
             override fun onStopTrackingTouch(p0: SeekBar?) {}
         })
-        // Set initial text
-        binding.seekDuration.progress = 2 // 1h 30m
     }
 
-    private fun updateDateText() {
-        binding.etDate.setText(SimpleDateFormat("dd/MM/yyyy", Locale.getDefault()).format(selectedDate.time))
+    private fun updateDateText(date: java.util.Date) {
+        binding.etDate.setText(SimpleDateFormat("dd/MM/yyyy", Locale.getDefault()).format(date))
     }
 
-    private fun updateTimeText() {
-        binding.etTime.setText(SimpleDateFormat("hh:mm a", Locale.getDefault()).format(selectedDate.time))
+    private fun updateTimeText(date: java.util.Date) {
+        binding.etTime.setText(SimpleDateFormat("hh:mm a", Locale.getDefault()).format(date))
     }
 
     private fun setupCapacity() {
-        binding.tvCapacity.text = capacity.toString()
         binding.btnCapacityPlus.setOnClickListener {
-            capacity++
-            binding.tvCapacity.text = capacity.toString()
+            viewModel.draftCapacity.value++
         }
         binding.btnCapacityMinus.setOnClickListener {
-            if (capacity > 2) {
-                capacity--
-                binding.tvCapacity.text = capacity.toString()
+            if (viewModel.draftCapacity.value > 2) {
+                viewModel.draftCapacity.value--
             }
         }
     }
@@ -217,11 +199,11 @@ class CreateSessionFragment : Fragment() {
                 location = location,
                 tagType = tagType,
                 expectation = expectation,
-                startTimeMillis = selectedDate.timeInMillis,
-                durationMinutes = durationMinutes,
-                capacity = capacity,
-                isGated = isGated,
-                tags = selectedTags
+                startTimeMillis = viewModel.draftDate.value.timeInMillis,
+                durationMinutes = viewModel.draftDurationMinutes.value,
+                capacity = viewModel.draftCapacity.value,
+                isGated = viewModel.draftIsGated.value,
+                tags = viewModel.draftTags.value
             )
         }
     }
@@ -234,7 +216,7 @@ class CreateSessionFragment : Fragment() {
             .setPositiveButton("Add") { _, _ ->
                 val tag = editText.text.toString().trim()
                 if (tag.isNotBlank()) {
-                    addTagToUi(tag)
+                    viewModel.addDraftTag(tag)
                 }
             }
             .setNegativeButton("Cancel", null)
@@ -242,8 +224,6 @@ class CreateSessionFragment : Fragment() {
     }
 
     private fun addTagToUi(tag: String) {
-        if (selectedTags.contains(tag)) return
-        selectedTags.add(tag)
         val chip = Chip(requireContext()).apply {
             text = tag
             isCloseIconVisible = true
@@ -258,8 +238,7 @@ class CreateSessionFragment : Fragment() {
             setEnsureMinTouchTargetSize(false)
 
             setOnCloseIconClickListener {
-                selectedTags.remove(tag)
-                binding.tagContainer.removeView(this)
+                viewModel.removeDraftTag(tag)
             }
         }
         binding.tagContainer.addView(chip, binding.tagContainer.childCount - 1)
@@ -267,6 +246,40 @@ class CreateSessionFragment : Fragment() {
 
     private fun observeViewModel() {
         viewLifecycleOwner.lifecycleScope.launch {
+            launch {
+                viewModel.draftDate.collect { cal ->
+                    updateDateText(cal.time)
+                    updateTimeText(cal.time)
+                }
+            }
+            launch {
+                viewModel.draftDurationMinutes.collect { mins ->
+                    val hours = mins / 60
+                    val m = mins % 60
+                    binding.tvDurationValue.text = if (hours > 0) {
+                        if (m > 0) "${hours}h ${m}m" else "${hours}h"
+                    } else "${m}m"
+                    val progress = (mins / 30) - 1
+                    if (binding.seekDuration.progress != progress) {
+                        binding.seekDuration.progress = progress
+                    }
+                }
+            }
+            launch {
+                viewModel.draftCapacity.collect { cap ->
+                    binding.tvCapacity.text = cap.toString()
+                }
+            }
+            launch {
+                viewModel.draftIsGated.collect { gated ->
+                    updateToggleUI(gated)
+                }
+            }
+            launch {
+                viewModel.draftTags.collect { tags ->
+                    syncTagsToUi(tags)
+                }
+            }
             launch {
                 viewModel.prefilledSession.collect { session ->
                     session?.let { fillUi(it) }
@@ -292,6 +305,15 @@ class CreateSessionFragment : Fragment() {
         }
     }
 
+    private fun syncTagsToUi(tags: List<String>) {
+        // Simple sync: remove all chips (except add button) and re-add
+        val count = binding.tagContainer.childCount
+        if (count > 1) {
+            binding.tagContainer.removeViews(0, count - 1)
+        }
+        tags.forEach { addTagToUi(it) }
+    }
+
     private fun fillUi(session: Session) {
         binding.apply {
             etCourseId.setText(session.courseId)
@@ -313,16 +335,14 @@ class CreateSessionFragment : Fragment() {
                 }
             }
             
-            capacity = session.capacity
-            tvCapacity.text = capacity.toString()
-            
-            isGated = session.mode == com.studyfinder.app.model.SessionMode.GATED
-            updateToggleUI()
+            viewModel.draftCapacity.value = session.capacity
+            viewModel.draftIsGated.value = session.mode == com.studyfinder.app.model.SessionMode.GATED
 
-            tagContainer.removeAllViews()
-            session.tags.forEach { addTagToUi(it) }
-            // Add back the "+" button
-            tagContainer.addView(btnAddTag)
+            val cal = Calendar.getInstance().apply { timeInMillis = session.startTimeMillis }
+            viewModel.draftDate.value = cal
+            viewModel.draftDurationMinutes.value = ((session.endTimeMillis - session.startTimeMillis) / 60000).toInt()
+
+            viewModel.setDraftTags(session.tags)
         }
     }
 

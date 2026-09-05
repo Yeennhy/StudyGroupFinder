@@ -27,6 +27,7 @@ import com.studyfinder.app.ui.common.StateRenderer
 import com.studyfinder.app.util.ActionResult
 import com.studyfinder.app.util.UiState
 import com.studyfinder.app.util.setupHeader
+import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.launch
 
 class CommunitySelectionFragment : Fragment() {
@@ -39,7 +40,6 @@ class CommunitySelectionFragment : Fragment() {
     private val adapter = CommunityListAdapter { community -> viewModel.join(community.id) }
 
     private var searchWatcher: TextWatcher? = null
-    private var selectedCity: String? = null
 
     override fun onCreate(savedInstanceState: android.os.Bundle?) {
         super.onCreate(savedInstanceState)
@@ -97,12 +97,14 @@ class CommunitySelectionFragment : Fragment() {
     private fun observeCities() {
         viewLifecycleOwner.lifecycleScope.launch {
             viewLifecycleOwner.repeatOnLifecycle(Lifecycle.State.STARTED) {
-                viewModel.cities.collect { renderCityChips(it) }
+                combine(viewModel.cities, viewModel.selectedCity) { cities, selected ->
+                    renderCityChips(cities, selected)
+                }.collect { }
             }
         }
     }
 
-    private fun renderCityChips(cities: List<String>) {
+    private fun renderCityChips(cities: List<String>, selectedCity: String?) {
         val row = binding.rowCityChips as ViewGroup
         row.removeAllViews()
         val labels = listOf(getString(R.string.city_all)) + cities
@@ -131,10 +133,9 @@ class CommunitySelectionFragment : Fragment() {
                 lp.marginStart = if (isAll) 0 else 16
                 layoutParams = lp
                 setOnClickListener {
-                    selectedCity = if (isAll) null else label
+                    val nextCity = if (isAll) null else label
                     binding.etSearch.text?.clear()
-                    viewModel.filterByCity(selectedCity)
-                    renderCityChips(cities)
+                    viewModel.filterByCity(nextCity)
                 }
             })
         }

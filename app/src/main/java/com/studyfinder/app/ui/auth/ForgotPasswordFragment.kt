@@ -31,9 +31,8 @@ class ForgotPasswordFragment : Fragment() {
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
         
-        // Clear previous state
-        viewModel.clearResult()
-        binding.tvEmailError.isVisible = false
+        // Clear previous state on fresh entry
+        if (savedInstanceState == null) viewModel.clearResult()
 
         // Apply underlines
         binding.tvSignUp.paintFlags = binding.tvSignUp.paintFlags or Paint.UNDERLINE_TEXT_FLAG

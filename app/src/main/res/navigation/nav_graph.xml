@@ -120,6 +120,11 @@
             app:destination="@id/homeFragment"
             app:popUpTo="@id/nav_graph"
             app:popUpToInclusive="true" />
+        <action
+            android:id="@+id/action_successFragment_to_mySessionsFragment"
+            app:destination="@id/mySessionsFragment"
+            app:popUpTo="@id/nav_graph"
+            app:popUpToInclusive="true" />
     </fragment>
 
     <!-- ====================== community selection ==================== -->

@@ -25,6 +25,7 @@ class CommunityViewModel : ViewModel() {
     private val _source = MutableStateFlow<UiState<List<Community>>>(UiState.Loading)
     private val _query = MutableStateFlow("")
     private val _city = MutableStateFlow<String?>(null)
+    val selectedCity: StateFlow<String?> = _city
 
     private val _joinResult = MutableLiveData<ActionResult>(ActionResult.Idle)
     val joinResult: LiveData<ActionResult> = _joinResult

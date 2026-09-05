@@ -58,11 +58,23 @@ class SessionEditFragment : DialogFragment() {
             @Suppress("DEPRECATION")
             arguments?.getSerializable(ARG_SESSION) as Session
         }
-        selectedDate.timeInMillis = session.startTimeMillis
-        durationMinutes = ((session.endTimeMillis - session.startTimeMillis) / 60000).toInt()
-        capacity = session.capacity
+        selectedDate.timeInMillis = savedInstanceState?.getLong("date") ?: session.startTimeMillis
+        durationMinutes = savedInstanceState?.getInt("duration") ?: ((session.endTimeMillis - session.startTimeMillis) / 60000).toInt()
+        capacity = savedInstanceState?.getInt("capacity") ?: session.capacity
         selectedTags.clear()
-        selectedTags.addAll(session.tags)
+        if (savedInstanceState != null) {
+            selectedTags.addAll(savedInstanceState.getStringArrayList("tags") ?: emptyList())
+        } else {
+            selectedTags.addAll(session.tags)
+        }
+    }
+
+    override fun onSaveInstanceState(outState: Bundle) {
+        super.onSaveInstanceState(outState)
+        outState.putLong("date", selectedDate.timeInMillis)
+        outState.putInt("duration", durationMinutes)
+        outState.putInt("capacity", capacity)
+        outState.putStringArrayList("tags", ArrayList(selectedTags))
     }
 
     override fun onCreateView(
@@ -78,7 +90,7 @@ class SessionEditFragment : DialogFragment() {
         super.onStart()
         dialog?.window?.apply {
             val width = (resources.displayMetrics.widthPixels * 0.95).toInt()
-            setLayout(width, ViewGroup.LayoutParams.MATCH_PARENT)
+            setLayout(width, ViewGroup.LayoutParams.WRAP_CONTENT)
             setBackgroundDrawable(ColorDrawable(Color.TRANSPARENT))
             setDimAmount(0.6f)
         }
