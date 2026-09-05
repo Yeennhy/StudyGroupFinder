@@ -50,10 +50,14 @@ class AuthRepository {
         name: String,
         studentId: String,
     ): ActionResult {
-        return try {
-            val result = auth.createUserWithEmailAndPassword(email, password).await()
-            val uid = result.user?.uid ?: return ActionResult.Failure("Account creation failed")
+        val uid = try {
+            auth.createUserWithEmailAndPassword(email, password).await().user?.uid
+                ?: return ActionResult.Failure("Account creation failed")
+        } catch (e: Exception) {
+            return handleException(e, "Registration failed")
+        }
 
+        return try {
             // Write user doc immediately
             val profile = UserProfile(
                 uid = uid,
@@ -63,11 +67,16 @@ class AuthRepository {
             )
             FirestoreRefs.user(uid).set(FirestoreMappers.profilePayload(profile)).await()
 
-            // Send verification email
-            auth.currentUser?.sendEmailVerification()?.await()
+            // Best-effort: resendVerificationEmail() covers retrying this step,
+            // so it shouldn't fail an otherwise-complete signup.
+            runCatching { auth.currentUser?.sendEmailVerification()?.await() }
 
             ActionResult.Success
         } catch (e: Exception) {
+            // The Auth account exists but the profile write failed - roll it back
+            // so the account doesn't become a signed-in ghost with no profile doc,
+            // and the same email can be retried cleanly.
+            runCatching { auth.currentUser?.delete()?.await() }
             handleException(e, "Registration failed")
         }
     }
