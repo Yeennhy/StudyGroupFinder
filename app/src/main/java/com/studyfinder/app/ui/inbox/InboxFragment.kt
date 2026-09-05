@@ -81,6 +81,7 @@ class InboxFragment : Fragment() {
                         errorView = binding.stateError.root,
                         offlineView = binding.stateOfflineBanner.root,
                         contentView = binding.rvInbox,
+                        transitionContainer = binding.root
                     )
                     val rows = when (state) {
                         is UiState.Success -> state.data

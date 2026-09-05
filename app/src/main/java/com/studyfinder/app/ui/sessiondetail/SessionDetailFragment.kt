@@ -33,9 +33,6 @@ import kotlinx.coroutines.flow.collectLatest
 import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.launch
 
-/**
- * Fragment showing details of a study session.
- */
 class SessionDetailFragment : Fragment() {
 
     private var _binding: FragmentSessionDetailBinding? = null
@@ -94,6 +91,7 @@ class SessionDetailFragment : Fragment() {
                         errorView = binding.stateError.root,
                         offlineView = binding.stateOfflineBanner.root,
                         contentView = binding.scrollContent,
+                        transitionContainer = binding.root
                     )
                     when (state) {
                         is UiState.Success -> {

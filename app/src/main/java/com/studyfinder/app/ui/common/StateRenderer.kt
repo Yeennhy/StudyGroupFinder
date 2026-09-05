@@ -5,6 +5,7 @@ import android.view.ViewGroup
 import com.studyfinder.app.util.UiState
 import com.studyfinder.app.util.gone
 import com.studyfinder.app.util.visible
+import com.studyfinder.app.R
 
 /**
  * Switches loading / empty / error / offline state views for a [UiState].
@@ -21,6 +22,17 @@ object StateRenderer {
         /** Accepted for source compatibility; unused. */
         transitionContainer: ViewGroup? = null,
     ) {
+        val lastState = transitionContainer?.getTag(R.id.state_renderer_last_state)
+        val newState = state::class.simpleName
+        
+        if (lastState == newState && (state is UiState.Success || state is UiState.Offline)) {
+            // Already showing content, just ensure it's visible without re-animating
+            contentView?.visible()
+            if (state is UiState.Offline) offlineView?.visible()
+            return
+        }
+        transitionContainer?.setTag(R.id.state_renderer_last_state, newState)
+
         loadingView?.gone()
         emptyView?.gone()
         errorView?.gone()

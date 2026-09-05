@@ -99,6 +99,7 @@ class SessionManageFragment : Fragment() {
                         errorView = binding.stateError.root,
                         offlineView = binding.stateOfflineBanner.root,
                         contentView = null,
+                        transitionContainer = binding.root
                     )
                     
                     val session = (state as? UiState.Success)?.data ?: (state as? UiState.Offline)?.cached
@@ -216,11 +217,6 @@ class SessionManageFragment : Fragment() {
             )
             dialog.setOnConfirmListener {
                 viewModel.submitChanges()
-                // Wait for the result instead of popping immediately: popping
-                // right away would tear down this view (and the actionResult
-                // collector below) before the write resolves, silently
-                // swallowing a failure. The existing collector still shows the
-                // success/error Toast either way.
                 viewLifecycleOwner.lifecycleScope.launch {
                     if (viewModel.actionResult.filterNotNull().first() is ActionResult.Success) {
                         findNavController().popBackStack()
@@ -273,7 +269,6 @@ class SessionManageFragment : Fragment() {
         viewModel.saveEdits(current.copy(mode = mode))
     }
 
-    /** The session as it would be saved right now: any pending edit, or the original. */
     private fun currentSessionOrNull(): Session? =
         viewModel.pendingSession.value ?: (viewModel.session.value as? UiState.Success)?.data
 

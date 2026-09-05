@@ -159,7 +159,6 @@ class CalendarDayAdapter(
             }
             tvDayNumber.typeface = typeFace
             
-            // Faint color for days not in current month
             tvDayNumber.alpha = if (day.inCurrentMonth) 1.0f else 0.4f
 
             // Busy highlight

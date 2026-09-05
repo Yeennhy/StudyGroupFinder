@@ -108,6 +108,7 @@ class MySessionsFragment : Fragment() {
                     errorView = binding.listStateError.root,
                     offlineView = binding.stateOfflineBanner.root,
                     contentView = binding.rvSessions,
+                    transitionContainer = binding.root
                 )
 
                 val items = when (state) {
@@ -164,7 +165,8 @@ class MySessionsFragment : Fragment() {
                         emptyView = binding.calendarStateEmpty.root,
                         errorView = binding.calendarStateError.root,
                         offlineView = null, // Global banner already handled by List view flow
-                        contentView = binding.rvSelectedDateSessions
+                        contentView = binding.rvSelectedDateSessions,
+                        transitionContainer = binding.root
                     )
 
                     val sessions = when (state) {

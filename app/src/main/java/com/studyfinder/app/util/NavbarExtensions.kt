@@ -33,10 +33,6 @@ fun Fragment.setupNavbar(binding: FragmentNavbarBinding) {
 
         layout.setOnClickListener {
             if (currentDestinationId != destinationId) {
-                // Anchor every tab switch to homeFragment so the back stack never
-                // grows past [home, currentTab] no matter how many tabs are tapped,
-                // and the system Back button returns to Home instead of replaying
-                // tab-switch history.
                 navController.navigate(
                     destinationId,
                     null,

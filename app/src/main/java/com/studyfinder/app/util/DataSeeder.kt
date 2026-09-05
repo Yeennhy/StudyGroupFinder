@@ -24,11 +24,6 @@ import java.time.ZoneId
 import java.util.Calendar
 import java.util.Date
 
-/**
- * Seeds a test dataset for the application.
- *
- * Covers various cases for UI testing.
- */
 object DataSeeder {
 
     private const val TAG = "DataSeeder"

@@ -30,9 +30,6 @@ import java.time.Instant
 import java.time.LocalDate
 import java.time.ZoneId
 
-/**
- * Profile, photo upload, block list and the activity graph.
- */
 class ProfileRepository {
 
     private val auth = FirebaseAuth.getInstance()
@@ -69,9 +66,6 @@ class ProfileRepository {
                     else trySend(UiState.Success(profile))
                 }
             } else if (snapshot != null) {
-                // Offline with no local cache of our own document yet - Firestore
-                // fires once with a non-null, non-existent snapshot rather than
-                // hanging, so surface it instead of leaving Loading forever.
                 trySend(UiState.Error("Unable to load your profile. Check your connection and try again."))
             }
         }
@@ -110,8 +104,8 @@ class ProfileRepository {
         }
     }
 
-    suspend fun uploadProfilePhoto(localUri: Uri): ActionResult {
-        val uid = auth.currentUser?.uid ?: return ActionResult.Failure("Not signed in")
+    suspend fun uploadProfilePhoto(localUri: Uri): com.studyfinder.app.util.Result<String> {
+        val uid = auth.currentUser?.uid ?: return com.studyfinder.app.util.Result.Error("Not signed in")
 
         return try {
             val secureUrl = suspendCancellableCoroutine<String?> { continuation ->
@@ -137,12 +131,12 @@ class ProfileRepository {
 
             if (secureUrl != null) {
                 FirestoreRefs.user(uid).update(Field.PHOTO_URL, secureUrl).await()
-                ActionResult.Success
+                com.studyfinder.app.util.Result.Success(secureUrl)
             } else {
-                ActionResult.Failure("Upload to Cloudinary failed")
+                com.studyfinder.app.util.Result.Error("Upload to Cloudinary failed")
             }
         } catch (e: Exception) {
-            ActionResult.Failure(e.message ?: "Upload failed", e)
+            com.studyfinder.app.util.Result.Error(e.message ?: "Upload failed", e)
         }
     }
 

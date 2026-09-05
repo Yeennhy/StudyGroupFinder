@@ -40,9 +40,6 @@ import kotlinx.coroutines.flow.onStart
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.tasks.await
 
-/**
- * Sessions, membership and every transaction.
- */
 class SessionRepository {
 
     private val db = FirebaseFirestore.getInstance()
@@ -165,7 +162,6 @@ class SessionRepository {
                 if (snapshot != null) {
                     val members = snapshot.documents.mapNotNull { FirestoreMappers.toSessionMember(it) }
                     
-                    // Parallel profile fetching to avoid waterfall lag
                     scope.launch {
                         try {
                             val membersWithProfiles = coroutineScope {
@@ -269,7 +265,6 @@ class SessionRepository {
                 if (snapshot != null) {
                     val members = snapshot.documents.mapNotNull { FirestoreMappers.toSessionMember(it) }
                     
-                    // Parallel profile fetching to avoid waterfall lag
                     scope.launch {
                         try {
                             val membersWithProfiles = coroutineScope {
@@ -480,7 +475,7 @@ class SessionRepository {
                 val inboxRef = FirestoreRefs.inbox(uid).document()
                 inboxRef.set(FirestoreMappers.inboxPayload(item, auth.currentUser?.uid ?: "")).await()
             } catch (e: Exception) {
-                // Background notification failure shouldn't crash the app
+                // Ignore background notification failures
             }
         }
 
@@ -537,7 +532,7 @@ class SessionRepository {
             db.batch().apply {
                 set(sessionRef, FirestoreMappers.sessionCreatePayload(session, uid))
                 set(memberRef, FirestoreMappers.memberPayload(MemberStatus.ADMIN))
-            }.commit() // No await() here for snappiness
+            }.commit()
 
             // Schedule reminder immediately using the local data
             val createdSession = session.copy(id = sessionRef.id)
@@ -553,7 +548,6 @@ class SessionRepository {
         val sessionRef = FirestoreRefs.session(session.id)
         sessionRef.update(FirestoreMappers.sessionEditPayload(session)).await()
         
-        // Notify members - Background Fan-out
         val memberUids = session.memberUids.filter { it != auth.currentUser?.uid }
         if (memberUids.isNotEmpty()) {
             scope.launch {
@@ -578,7 +572,6 @@ class SessionRepository {
         sessionRef.update(Field.STATUS, SessionStatus.CANCELLED.wire).await()
         cancelReminder(sessionId)
 
-        // Notify members - Background Fan-out
         val memberUids = session.memberUids.filter { it != auth.currentUser?.uid }
         if (memberUids.isNotEmpty()) {
             scope.launch {
@@ -660,7 +653,6 @@ class SessionRepository {
             val toInvite = oldMemberUids.filter { it != currentUid }
             if (toInvite.isEmpty()) return ActionResult.Success
 
-            // Use a batch for efficiency
             val batch = db.batch()
             toInvite.forEach { uid ->
                 // 1. Create membership doc

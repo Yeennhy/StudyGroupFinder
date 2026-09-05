@@ -32,7 +32,6 @@ class CreateSessionViewModel : ViewModel() {
     private val _createResult = MutableSharedFlow<ActionResult>(replay = 0)
     val createResult: SharedFlow<ActionResult> = _createResult.asSharedFlow()
 
-    // Draft Session Data (Persists across rotation)
     val draftDate = MutableStateFlow(java.util.Calendar.getInstance())
     val draftDurationMinutes = MutableStateFlow(90)
     val draftCapacity = MutableStateFlow(4)

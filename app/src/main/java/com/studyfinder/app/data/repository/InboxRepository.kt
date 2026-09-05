@@ -16,9 +16,6 @@ import kotlinx.coroutines.flow.callbackFlow
 import kotlinx.coroutines.flow.onStart
 import kotlinx.coroutines.tasks.await
 
-/**
- * Invites + notifications merged into one screen.
- */
 class InboxRepository {
 
     private val auth = FirebaseAuth.getInstance()
@@ -98,11 +95,6 @@ class InboxRepository {
         }
     }
 
-    /**
-     * Client-side fan-out after an edit or cancellation — iterate the
-     * session's `memberUids`, which is exactly the recipient list and is
-     * already loaded. No Cloud Function needed at this scale.
-     */
     suspend fun fanOutSystemMessage(
         sessionId: String,
         recipientUids: List<String>,

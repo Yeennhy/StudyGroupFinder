@@ -71,7 +71,6 @@ class HistoryViewModel : ViewModel() {
                 withContext(Dispatchers.IO) {
                     val pdfDocument = PdfDocument()
                     
-                    // Paints for styling
                     val headerBgPaint = Paint().apply { color = Color.parseColor("#FFD54F") } // Ginkgo Yellow
                     val headerTextPaint = Paint().apply {
                         typeface = Typeface.create(Typeface.DEFAULT, Typeface.BOLD)

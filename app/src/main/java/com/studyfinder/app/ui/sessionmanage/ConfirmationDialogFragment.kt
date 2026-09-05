@@ -38,7 +38,6 @@ class ConfirmationDialogFragment : DialogFragment() {
             subtitle: String,
             buttonText: String,
             goBackText: String = "Go Back",
-            cancelText: String? = null, // Alias for ProfileFragment
             secondaryButtonText: String? = null,
             iconRes: Int = R.drawable.ic_tick,
             iconBgColor: Int = Color.parseColor("#AAD6A7"),
@@ -50,7 +49,7 @@ class ConfirmationDialogFragment : DialogFragment() {
                 this.title = title
                 this.subtitle = subtitle
                 this.buttonText = buttonText
-                this.goBackText = cancelText ?: goBackText
+                this.goBackText = goBackText
                 this.secondaryButtonText = secondaryButtonText
                 this.iconRes = iconRes
                 this.iconBgColor = iconBgColor
@@ -69,7 +68,6 @@ class ConfirmationDialogFragment : DialogFragment() {
         this.onGoBack = listener
     }
 
-    // Alias for ProfileFragment
     fun setOnCancelListener(listener: () -> Unit) {
         this.onGoBack = listener
     }

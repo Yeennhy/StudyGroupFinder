@@ -129,7 +129,6 @@ class ProfileFragment : Fragment() {
         binding.stateError.btnStateRetry.setOnClickListener { activity?.recreate() }
 
         viewModel.profile.observe(viewLifecycleOwner) { state ->
-            // Always render the state (loading/success/error) to ensure the container is visible.
             com.studyfinder.app.ui.common.StateRenderer.render(
                 state = state,
                 loadingView = binding.stateLoading.root,
@@ -137,15 +136,11 @@ class ProfileFragment : Fragment() {
                 errorView = binding.stateError.root,
                 offlineView = binding.stateOfflineBanner.root,
                 contentView = binding.scrollContent,
+                transitionContainer = binding.root
             )
 
             when (state) {
                 is UiState.Success -> {
-                    // Safe to call even while editing: it only ever sets the
-                    // read-only tv* views, never the et* edit fields, and it
-                    // must run regardless so a view recreated mid-edit (e.g. by
-                    // rotation, since isEditing survives but the views don't)
-                    // has real data to show once editing ends.
                     bindProfile(state.data)
                     renderAvatar(state.data.photoUrl, viewModel.pendingAvatarUri.value)
                 }
@@ -176,6 +171,11 @@ class ProfileFragment : Fragment() {
                 launch {
                     viewModel.isEditing.collect { editing ->
                         setEditMode(enabled = editing, populate = false)
+                    }
+                }
+                launch {
+                    viewModel.isSaving.collect { saving ->
+                        binding.savingOverlay.isVisible = saving
                     }
                 }
                 launch {
@@ -228,7 +228,7 @@ class ProfileFragment : Fragment() {
             title = "Change Photo",
             subtitle = "Select your profile picture source",
             buttonText = "Camera",
-            cancelText = "Gallery",
+            goBackText = "Gallery",
             secondaryButtonText = "Cancel",
             iconRes = R.drawable.ic_profile,
             iconBgColor = ContextCompat.getColor(requireContext(), R.color.theme_gray),
@@ -336,7 +336,7 @@ class ProfileFragment : Fragment() {
                         title = "Block User",
                         subtitle = "Are you sure you want to block this user?",
                         buttonText = "Block",
-                        cancelText = "Cancel",
+                        goBackText = "Cancel",
                         iconRes = R.drawable.ic_block,
                         iconBgColor = ContextCompat.getColor(requireContext(), R.color.deep_red),
                         iconTint = ContextCompat.getColor(requireContext(), R.color.white),
@@ -423,10 +423,10 @@ class ProfileFragment : Fragment() {
     }
 
     private fun saveChanges() {
-        val currentProfile = (viewModel.profile.value as? UiState.Success)?.data ?: return
-        
-        viewModel.pendingAvatarUri.value?.let {
-            viewModel.uploadPhoto(it)
+        val currentProfile = when (val state = viewModel.profile.value) {
+            is UiState.Success -> state.data
+            is UiState.Offline -> state.cached
+            else -> return
         }
         
         val updatedProfile = currentProfile.copy(
@@ -437,7 +437,7 @@ class ProfileFragment : Fragment() {
             admissionYear = binding.etAdmissionYearValue.text.toString()
         )
 
-        viewModel.save(updatedProfile)
+        viewModel.save(updatedProfile, viewModel.pendingAvatarUri.value)
     }
 
     /** Navigate to community selection to change the current community. */
@@ -454,7 +454,7 @@ class ProfileFragment : Fragment() {
             title = "Unblock User",
             subtitle = "Are you sure you want to unblock this user?",
             buttonText = "Unblock",
-            cancelText = "Cancel",
+            goBackText = "Cancel",
             iconRes = R.drawable.ic_block,
             iconBgColor = ContextCompat.getColor(requireContext(), R.color.theme_gray),
             iconTint = ContextCompat.getColor(requireContext(), R.color.graphite)
@@ -468,7 +468,7 @@ class ProfileFragment : Fragment() {
             title = "Sign Out",
             subtitle = "Are you sure you want to sign out?",
             buttonText = "Sign Out",
-            cancelText = "Cancel",
+            goBackText = "Cancel",
             iconRes = R.drawable.ic_signout,
             iconBgColor = ContextCompat.getColor(requireContext(), R.color.theme_gray)
         ).apply {

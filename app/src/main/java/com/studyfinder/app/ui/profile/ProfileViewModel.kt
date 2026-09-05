@@ -47,6 +47,9 @@ class ProfileViewModel : ViewModel() {
     private val _isEditing = MutableStateFlow(false)
     val isEditing: StateFlow<Boolean> = _isEditing
 
+    private val _isSaving = MutableStateFlow(false)
+    val isSaving: StateFlow<Boolean> = _isSaving
+
     private val _pendingAvatarUri = MutableStateFlow<Uri?>(null)
     val pendingAvatarUri: StateFlow<Uri?> = _pendingAvatarUri
 
@@ -71,12 +74,27 @@ class ProfileViewModel : ViewModel() {
         }
     }
 
-    fun save(profile: UserProfile) {
+    fun save(profile: UserProfile, avatarUri: Uri? = null) {
         viewModelScope.launch {
-            _saveResult.value = profileRepository.updateProfile(profile)
-            if (_saveResult.value is ActionResult.Success) {
-                _isEditing.value = false
-                _pendingAvatarUri.value = null
+            _isSaving.value = true
+            try {
+                // Launch photo upload in background so it doesn't block closing edit mode
+                avatarUri?.let { uri ->
+                    viewModelScope.launch {
+                        profileRepository.uploadProfilePhoto(uri)
+                    }
+                }
+
+                // Immediately update text profile data
+                val result = profileRepository.updateProfile(profile)
+                _saveResult.value = result
+                
+                if (result is ActionResult.Success) {
+                    _isEditing.value = false
+                    _pendingAvatarUri.value = null
+                }
+            } finally {
+                _isSaving.value = false
             }
         }
     }
@@ -96,7 +114,12 @@ class ProfileViewModel : ViewModel() {
     /** Same Storage path for both the camera Intent and the Photo Picker. */
     fun uploadPhoto(uri: Uri) {
         viewModelScope.launch {
-            _saveResult.value = profileRepository.uploadProfilePhoto(uri)
+            val result = profileRepository.uploadProfilePhoto(uri)
+            if (result is com.studyfinder.app.util.Result.Success) {
+                _saveResult.value = ActionResult.Success
+            } else if (result is com.studyfinder.app.util.Result.Error) {
+                _saveResult.value = ActionResult.Failure(result.message, result.cause)
+            }
         }
     }
 

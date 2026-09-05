@@ -37,7 +37,6 @@ class HomeViewModel : ViewModel() {
         val courseCategory: CourseCategory? = null,
         val expectationLevel: ExpectationLevel? = null,
         val sort: SessionSort = SessionSort.TIME,
-        /** Grey out rather than hide, so the list never silently shrinks. */
         val hideOverlapping: Boolean = false,
     )
 

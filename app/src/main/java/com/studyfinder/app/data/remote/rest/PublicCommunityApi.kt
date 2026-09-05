@@ -6,8 +6,7 @@ import retrofit2.http.GET
 import retrofit2.http.Query
 
 /**
- * The one deliberate REST call in the whole app.Everything else in the app
- * goes through the Firebase SDK instead.
+ * Public REST endpoint for the `communities` collection.
  */
 interface PublicCommunityApi {
     @GET("v1/projects/studygroupfinder-42da7/databases/(default)/documents/communities")

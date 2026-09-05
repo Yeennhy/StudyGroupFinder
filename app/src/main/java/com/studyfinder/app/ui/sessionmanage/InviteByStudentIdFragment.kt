@@ -22,9 +22,6 @@ import com.studyfinder.app.util.setupHeader
 import kotlinx.coroutines.flow.collectLatest
 import kotlinx.coroutines.launch
 
-/**
- * Fragment to invite a student to a session by their student ID.
- */
 class InviteByStudentIdFragment : Fragment() {
 
     private var _binding: FragmentInviteByStudentIdBinding? = null

@@ -53,7 +53,7 @@ class SessionManageViewModel : ViewModel() {
     @OptIn(kotlinx.coroutines.FlowPreview::class)
     private val rawSearchResults: Flow<List<UserProfile>> = combine(_session, _searchQuery) { sessionState, query ->
         Pair(sessionState, query)
-    }.debounce(300) // Debounce search to prevent waterfall lag
+    }.debounce(300)
     .flatMapLatest { (sessionState, query) ->
         val communityId = (sessionState as? UiState.Success)?.data?.communityId
         flow {
@@ -71,11 +71,6 @@ class SessionManageViewModel : ViewModel() {
         }
     }
 
-    /**
-     * Excludes anyone who already has a member doc (host, accepted, pending or
-     * already-invited) - re-inviting them would silently reset their status
-     * without fixing up memberUids/joinedCount.
-     */
     val searchResults: StateFlow<List<UserProfile>> = combine(rawSearchResults, _members) { results, membersState ->
         val existingUids = (membersState as? UiState.Success)?.data?.map { it.uid }?.toSet() ?: emptySet()
         results.filterNot { it.uid in existingUids }
@@ -91,7 +86,6 @@ class SessionManageViewModel : ViewModel() {
     }
 
     private fun loadCampusLocations() {
-        // Mock data for UI testing as requested
         _locations.value = listOf(
             CampusLocation("LIB", "Main Library", 10.7629, 106.6822),
             CampusLocation("SRA", "Study Room A", 10.7631, 106.6825),
@@ -239,7 +233,6 @@ class SessionManageViewModel : ViewModel() {
         viewModelScope.launch {
             _isLoading.value = true
             try {
-                // Use a batch to perform both actions in one request.
                 val batch = db.batch()
                 
                 // 1. Create member doc with status INVITED
@@ -257,8 +250,6 @@ class SessionManageViewModel : ViewModel() {
                 val inboxRef = FirestoreRefs.inbox(uid).document()
                 batch.set(inboxRef, FirestoreMappers.inboxPayload(item, myUid))
                 
-                // Fire-and-forget: The write is committed to the local cache and the
-                // network queue immediately. We don't await the network confirmation.
                 batch.commit()
                 
                 _actionResult.value = ActionResult.Success

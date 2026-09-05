@@ -80,6 +80,7 @@ class HistoryFragment : Fragment() {
                         errorView = binding.stateError.root,
                         offlineView = binding.stateOfflineBanner.root,
                         contentView = binding.rvHistory,
+                        transitionContainer = binding.root
                     )
                     val items = when (state) {
                         is UiState.Success -> state.data

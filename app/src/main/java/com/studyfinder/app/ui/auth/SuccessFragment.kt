@@ -41,9 +41,6 @@ class SuccessFragment : Fragment() {
                     SuccessFragmentDirections.actionSuccessFragmentToMySessionsFragment()
                 )
             } else if (args.message == "Invitation Sent!" || args.message == "History Exported!") {
-                // Both callers pop their intermediate screen off the stack before
-                // reaching Success (see nav_graph.xml), so a plain pop lands back
-                // on whichever screen actually launched the flow.
                 findNavController().popBackStack()
             } else {
                 findNavController().navigate(

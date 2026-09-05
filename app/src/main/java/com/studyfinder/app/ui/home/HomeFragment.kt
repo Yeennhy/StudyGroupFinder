@@ -255,9 +255,6 @@ class HomeFragment : Fragment() {
                             }
                         )
 
-                        // Re-apply chip/toggle selection from the ViewModel's
-                        // filter state, which survives view recreation (e.g.
-                        // rotation) even though the chip views themselves don't.
                         sessionTypeRow().find { it.second == f.tagType }?.let { (chip, _) ->
                             selectInRow(sessionTypeRow().map { it.first }, chip)
                         }
@@ -286,6 +283,7 @@ class HomeFragment : Fragment() {
                         errorView = binding.stateError.root,
                         offlineView = binding.stateOfflineBanner.root,
                         contentView = binding.rvSessions,
+                        transitionContainer = binding.root
                     )
                     
                     if (state is UiState.Error) {
@@ -312,7 +310,6 @@ class HomeFragment : Fragment() {
     private fun updateFiltersVisibility(expanded: Boolean) {
         val isLandscape = resources.configuration.orientation == android.content.res.Configuration.ORIENTATION_LANDSCAPE
         
-        // Smooth layout transition for the overall container
         TransitionManager.beginDelayedTransition(binding.root as ViewGroup, AutoTransition().apply {
             duration = 300
         })
@@ -328,7 +325,6 @@ class HomeFragment : Fragment() {
 
         filterRows.forEachIndexed { index, view ->
             if (expanded) {
-                // Staggered entrance: Fade in + slide up from a slight offset
                 view.isVisible = true
                 view.alpha = 0f
                 view.translationY = 20f
@@ -336,10 +332,9 @@ class HomeFragment : Fragment() {
                     .alpha(1f)
                     .translationY(0f)
                     .setDuration(300)
-                    .setStartDelay(index * 40L) // Slightly faster stagger
+                    .setStartDelay(index * 40L)
                     .start()
             } else {
-                // Exit: Fade out quickly
                 view.animate()
                     .alpha(0f)
                     .setDuration(150)
@@ -350,7 +345,6 @@ class HomeFragment : Fragment() {
         }
 
         val rotation = if (expanded) 90f else 0f
-        // Skip rotation if landscape since chevron might be different or fixed
         if (!isLandscape) {
             binding.btnExpandFilters.animate().rotation(rotation).setDuration(250).start()
         }

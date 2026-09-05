@@ -9,12 +9,6 @@ import com.studyfinder.app.model.UserProfile
 import com.studyfinder.app.util.ActionResult
 import kotlinx.coroutines.tasks.await
 
-/**
- * Firebase Auth, email/password provider.
- *
- * Firebase persists the session across restarts, which is why [currentUid]
- * alone decides whether Splash routes to Login or onward.
- */
 class AuthRepository {
 
     private val auth: FirebaseAuth get() = FirebaseAuth.getInstance()
@@ -39,11 +33,6 @@ class AuthRepository {
         }
     }
 
-    /**
-     * Creates the Auth account, writes `users/{uid}`, then sends the
-     * verification email — in that order, because every downstream screen
-     * reads the user document.
-     */
     suspend fun signUp(
         email: String,
         password: String,
@@ -58,7 +47,6 @@ class AuthRepository {
         }
 
         return try {
-            // Write user doc immediately
             val profile = UserProfile(
                 uid = uid,
                 name = name,
@@ -67,15 +55,10 @@ class AuthRepository {
             )
             FirestoreRefs.user(uid).set(FirestoreMappers.profilePayload(profile)).await()
 
-            // Best-effort: resendVerificationEmail() covers retrying this step,
-            // so it shouldn't fail an otherwise-complete signup.
             runCatching { auth.currentUser?.sendEmailVerification()?.await() }
 
             ActionResult.Success
         } catch (e: Exception) {
-            // The Auth account exists but the profile write failed - roll it back
-            // so the account doesn't become a signed-in ghost with no profile doc,
-            // and the same email can be retried cleanly.
             runCatching { auth.currentUser?.delete()?.await() }
             handleException(e, "Registration failed")
         }
@@ -111,13 +94,9 @@ class AuthRepository {
         }
     }
 
-    /** Clears Auth, the Room cache and SharedPreferences flags. */
     suspend fun signOut() {
         auth.signOut()
 
-        // Sign-out immediately navigates and drops the whole back stack, which
-        // clears the calling ViewModel's scope - run the actual wipe under
-        // NonCancellable so it can't be cut off mid-clear by that teardown.
         kotlinx.coroutines.withContext(kotlinx.coroutines.NonCancellable) {
             val db = ServiceLocator.database
             db.sessionDao().clear()
