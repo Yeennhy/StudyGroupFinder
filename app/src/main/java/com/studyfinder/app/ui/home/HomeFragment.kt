@@ -109,14 +109,34 @@ class HomeFragment : Fragment() {
         binding.etSearch.addTextChangedListener(searchWatcher)
     }
 
-    private fun wireSessionTypeChips() {
-        val row = listOf(
-            binding.chipAllSessions to null,
-            binding.chipMidterm to TagType.MIDTERM,
-            binding.chipFinal to TagType.FINAL,
-            binding.chipReview to TagType.NORMAL,
-        ).filter { it.first != null }.map { it.first!! to it.second }
+    private fun sessionTypeRow(): List<Pair<TextView, TagType?>> = listOf(
+        binding.chipAllSessions to null,
+        binding.chipMidterm to TagType.MIDTERM,
+        binding.chipFinal to TagType.FINAL,
+        binding.chipReview to TagType.NORMAL,
+    ).filter { it.first != null }.map { it.first!! to it.second }
 
+    private fun courseTypeRow(): List<Pair<TextView, CourseCategory?>> = listOf(
+        binding.chipTypeAll to null,
+        binding.chipTypePhysics to CourseCategory.PHYSICS,
+        binding.chipTypeCalculus to CourseCategory.CALCULUS,
+        binding.chipTypeDsa to CourseCategory.DSA,
+        binding.chipTypeProgramming to CourseCategory.PROGRAMMING,
+        binding.chipTypeEnglish to CourseCategory.ENGLISH,
+        binding.chipTypeArts to CourseCategory.ARTS,
+        binding.chipTypeSocial to CourseCategory.SOCIAL,
+        binding.chipTypeOther to CourseCategory.OTHER,
+    ).filter { it.first != null }.map { it.first!! to it.second }
+
+    private fun expectationLevelRow(): List<Pair<TextView, ExpectationLevel?>> = listOf(
+        binding.chipExpAll to null,
+        binding.chipExpPass to ExpectationLevel.PASS,
+        binding.chipExpCasual to ExpectationLevel.CASUAL,
+        binding.chipExpGrind to ExpectationLevel.OVERACHIEVING,
+    ).filter { it.first != null }.map { it.first!! to it.second }
+
+    private fun wireSessionTypeChips() {
+        val row = sessionTypeRow()
         row.forEach { (chip, tag) ->
             chip.setOnClickListener {
                 selectInRow(row.map { it.first }, chip)
@@ -126,18 +146,7 @@ class HomeFragment : Fragment() {
     }
 
     private fun wireCourseTypeChips() {
-        val row = listOf(
-            binding.chipTypeAll to null,
-            binding.chipTypePhysics to CourseCategory.PHYSICS,
-            binding.chipTypeCalculus to CourseCategory.CALCULUS,
-            binding.chipTypeDsa to CourseCategory.DSA,
-            binding.chipTypeProgramming to CourseCategory.PROGRAMMING,
-            binding.chipTypeEnglish to CourseCategory.ENGLISH,
-            binding.chipTypeArts to CourseCategory.ARTS,
-            binding.chipTypeSocial to CourseCategory.SOCIAL,
-            binding.chipTypeOther to CourseCategory.OTHER,
-        ).filter { it.first != null }.map { it.first!! to it.second }
-
+        val row = courseTypeRow()
         row.forEach { (chip, category) ->
             chip.setOnClickListener {
                 selectInRow(row.map { it.first }, chip)
@@ -147,13 +156,7 @@ class HomeFragment : Fragment() {
     }
 
     private fun wireExpectationLevelChips() {
-        val row = listOf(
-            binding.chipExpAll to null,
-            binding.chipExpPass to ExpectationLevel.PASS,
-            binding.chipExpCasual to ExpectationLevel.CASUAL,
-            binding.chipExpGrind to ExpectationLevel.OVERACHIEVING,
-        ).filter { it.first != null }.map { it.first!! to it.second }
-
+        val row = expectationLevelRow()
         row.forEach { (chip, level) ->
             chip.setOnClickListener {
                 selectInRow(row.map { it.first }, chip)
@@ -250,6 +253,23 @@ class HomeFragment : Fragment() {
                                 SessionSort.NAME_DESC -> R.string.home_sort_name_desc
                                 SessionSort.DISTANCE -> R.string.home_sort_distance
                             }
+                        )
+
+                        // Re-apply chip/toggle selection from the ViewModel's
+                        // filter state, which survives view recreation (e.g.
+                        // rotation) even though the chip views themselves don't.
+                        sessionTypeRow().find { it.second == f.tagType }?.let { (chip, _) ->
+                            selectInRow(sessionTypeRow().map { it.first }, chip)
+                        }
+                        courseTypeRow().find { it.second == f.courseCategory }?.let { (chip, _) ->
+                            selectInRow(courseTypeRow().map { it.first }, chip)
+                        }
+                        expectationLevelRow().find { it.second == f.expectationLevel }?.let { (chip, _) ->
+                            selectInRow(expectationLevelRow().map { it.first }, chip)
+                        }
+                        binding.toggleConflicting.tag = f.hideOverlapping
+                        binding.toggleConflicting.setBackgroundResource(
+                            if (f.hideOverlapping) R.drawable.bg_toggle_selected else R.drawable.bg_toggle_unselected_offset
                         )
                     }
                 }
